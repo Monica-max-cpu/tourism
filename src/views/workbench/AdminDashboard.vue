@@ -109,41 +109,71 @@ const kpi = computed(() => data.value?.kpi);
 </script>
 
 <template>
-  <PageWrapper title="B2B 工作台" :subtitle="`欢迎回来，${user?.realName || '管理员'}`">
+  <PageWrapper title="B2B 工作台" :subtitle="`欢迎回来，${user?.realName || '管理员'}`" hero>
     <template #extra>
       <Badge variant="secondary">数据每 5 分钟自动刷新</Badge>
     </template>
 
-    <!-- KPI 区 -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 animate-fade-in-up" v-auth="'b2b:profit:view'">
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">门店销售总额（近 12 月）</div>
-          <div class="text-2xl font-semibold tabular-nums">{{ kpi ? formatCurrency(kpi.totalSales) : '—' }}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">供应商采购总额</div>
-          <div class="text-2xl font-semibold tabular-nums">{{ kpi ? formatCurrency(kpi.totalCost) : '—' }}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">累计毛利</div>
-          <div class="text-2xl font-semibold tabular-nums text-[hsl(var(--status-success))]">
-            {{ kpi ? formatCurrency(kpi.totalProfit) : '—' }}
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">综合毛利率</div>
-          <div class="text-2xl font-semibold tabular-nums text-[hsl(var(--status-success))]">
-            {{ kpi ? kpi.profitRate.toFixed(1) + '%' : '—' }}
-          </div>
-        </CardContent>
-      </Card>
+    <!-- KPI 区 — 浮在 Hero 上 -->
+    <section class="-mt-16 relative z-10 mb-6" v-auth="'b2b:profit:view'">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">门店销售总额（近 12 月）</p>
+                <h3 class="text-3xl font-bold tracking-tight">{{ kpi ? formatCurrency(kpi.totalSales) : '—' }}</h3>
+              </div>
+              <div class="p-4 rounded-xl bg-primary/5 text-primary">
+                <TrendingUp class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.08s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">供应商采购总额</p>
+                <h3 class="text-3xl font-bold tracking-tight">{{ kpi ? formatCurrency(kpi.totalCost) : '—' }}</h3>
+              </div>
+              <div class="p-4 rounded-xl bg-primary/5 text-primary">
+                <ShoppingCart class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.16s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">累计毛利</p>
+                <h3 class="text-3xl font-bold tracking-tight text-[hsl(var(--status-success))]">
+                  {{ kpi ? formatCurrency(kpi.totalProfit) : '—' }}
+                </h3>
+              </div>
+              <div class="p-4 rounded-xl bg-emerald-50 text-emerald-600">
+                <Wallet class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.24s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">综合毛利率</p>
+                <h3 class="text-3xl font-bold tracking-tight text-[hsl(var(--status-success))]">
+                  {{ kpi ? kpi.profitRate.toFixed(1) + '%' : '—' }}
+                </h3>
+              </div>
+              <div class="p-4 rounded-xl bg-emerald-50 text-emerald-600">
+                <TrendingUp class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </section>
 
     <!-- 图表：销售/采购/毛利 趋势 + 供应商分布 -->

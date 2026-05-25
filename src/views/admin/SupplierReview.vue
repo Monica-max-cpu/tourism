@@ -2,6 +2,8 @@
 /**
  * 平台管理员 - 供应商入驻审核 */
 import { reactive, ref, h } from 'vue';
+import { useRouter } from 'vue-router';
+import { Plus } from 'lucide-vue-next';
 import {
   Badge, Button, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -18,10 +20,12 @@ import {
   rejectSupplierApplyApi,
 } from '/@/api/admin';
 import { APPLY_STATUS_LABEL, APPLY_STATUS_VARIANT, APPLY_STATUS_OPTIONS } from '/@/constants/b2bStatus';
+import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { formatDateTime } from '/@/utils/format';
 import type { SupplierApply } from '/#/b2b';
 
 const search = reactive({ keyword: '', status: '' });
+const router = useRouter();
 
 const [registerTable, { reload }] = useTable();
 
@@ -31,7 +35,7 @@ async function loadData(params: any) {
 
 const columns: BasicColumn[] = [
   { field: 'applyNo', title: '申请编号', width: 160 },
-  { field: 'supplierName', title: '供应商名称', minWidth: 220 },
+  { field: 'supplierName', title: '供应商名称', minWidth: 180, align: 'center' },
   { field: 'contactPerson', title: '联系人', width: 100 },
   { field: 'contactPhone', title: '联系电话', width: 130 },
   { field: 'province', title: '省份', width: 90 },
@@ -93,7 +97,14 @@ function onReset() {
 </script>
 
 <template>
-  <PageWrapper title="供应商入驻审核" subtitle="审核供应商提交的入驻申请">
+  <PageWrapper title="供应商入驻审核" subtitle="审核供应商提交的入驻申请" variant="hero">
+    <template #extra>
+      <Button class="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-6 py-6 rounded-xl" @click="router.push(ROUTE_PATHS.APPLY_SUPPLIER)">
+        <Plus class="mr-2 h-5 w-5" />
+        邀请新供应商
+      </Button>
+    </template>
+
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">关键词</Label>

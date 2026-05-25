@@ -9,7 +9,7 @@
  */
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { Tags, Truck, Boxes, Wallet, GitMerge, AlertTriangle } from 'lucide-vue-next';
+import { Tags, Truck, Boxes, Wallet, GitMerge, AlertTriangle, FileCheck } from 'lucide-vue-next';
 import { Card, CardContent, Badge } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicChart, B2B_COLOR_PALETTE, type ChartOption } from '/@/components/ECharts';
@@ -147,39 +147,69 @@ function go(to: string) { router.push(to); }
 </script>
 
 <template>
-  <PageWrapper title="供应商工作台" :subtitle="`欢迎，${user?.realName || '供应商'}`">
+  <PageWrapper title="供应商工作台" :subtitle="`欢迎，${user?.realName || '供应商'}`" hero>
     <template #extra>
       <Badge variant="secondary">仅展示与您相关的数据</Badge>
     </template>
 
-    <!-- KPI 4 卡 -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 animate-fade-in-up">
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">12 周累计接单</div>
-          <div class="text-2xl font-semibold tabular-nums">{{ kpi ? formatNumber(kpi.totalOrders) : '—' }}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">12 周累计发货</div>
-          <div class="text-2xl font-semibold tabular-nums">{{ kpi ? formatNumber(kpi.totalShipped) : '—' }}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">报价提交数</div>
-          <div class="text-2xl font-semibold tabular-nums">{{ kpi ? formatNumber(kpi.totalQuotes) : '—' }}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">报价通过率</div>
-          <div class="text-2xl font-semibold tabular-nums text-[hsl(var(--status-success))]">
-            {{ kpi ? kpi.approveRate.toFixed(1) + '%' : '—' }}
-          </div>
-        </CardContent>
-      </Card>
+    <!-- KPI 4 卡 — 浮在 Hero 上 -->
+    <section class="-mt-16 relative z-10 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">12 周累计接单</p>
+                <h3 class="text-3xl font-bold tracking-tight">{{ kpi ? formatNumber(kpi.totalOrders) : '—' }}</h3>
+              </div>
+              <div class="p-4 rounded-xl bg-primary/5 text-primary">
+                <Tags class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.08s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">12 周累计发货</p>
+                <h3 class="text-3xl font-bold tracking-tight">{{ kpi ? formatNumber(kpi.totalShipped) : '—' }}</h3>
+              </div>
+              <div class="p-4 rounded-xl bg-primary/5 text-primary">
+                <Truck class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.16s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">报价提交数</p>
+                <h3 class="text-3xl font-bold tracking-tight">{{ kpi ? formatNumber(kpi.totalQuotes) : '—' }}</h3>
+              </div>
+              <div class="p-4 rounded-xl bg-primary/5 text-primary">
+                <FileCheck class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.24s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">报价通过率</p>
+                <h3 class="text-3xl font-bold tracking-tight text-[hsl(var(--status-success))]">
+                  {{ kpi ? kpi.approveRate.toFixed(1) + '%' : '—' }}
+                </h3>
+              </div>
+              <div class="p-4 rounded-xl bg-emerald-50 text-emerald-600">
+                <GitMerge class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </section>
 
     <!-- 接单趋势 + 报价转化率 -->

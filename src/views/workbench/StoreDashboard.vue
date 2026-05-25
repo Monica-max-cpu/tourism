@@ -9,7 +9,7 @@
  */
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { CreditCard, Truck, PackageCheck, ClipboardList, ShoppingBag, Wallet } from 'lucide-vue-next';
+import { CreditCard, Truck, PackageCheck, ClipboardList, ShoppingBag, Wallet, TrendingUp } from 'lucide-vue-next';
 import { Card, CardContent, Badge } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicChart, B2B_COLOR_PALETTE, type ChartOption } from '/@/components/ECharts';
@@ -146,41 +146,71 @@ function go(to: string) { router.push(to); }
 </script>
 
 <template>
-  <PageWrapper title="门店工作台" :subtitle="`欢迎，${user?.realName || '门店'}`">
+  <PageWrapper title="门店工作台" :subtitle="`欢迎，${user?.realName || '门店'}`" hero>
     <template #extra>
       <Badge variant="secondary">价格按平台销售价展示</Badge>
     </template>
 
-    <!-- KPI 4 卡 -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 animate-fade-in-up">
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">本月采购金额</div>
-          <div class="text-2xl font-semibold tabular-nums">{{ kpi ? formatCurrency(kpi.monthPurchase) : '—' }}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">本月销售金额</div>
-          <div class="text-2xl font-semibold tabular-nums text-[hsl(var(--status-success))]">
-            {{ kpi ? formatCurrency(kpi.monthSales) : '—' }}
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">在途订单</div>
-          <div class="text-2xl font-semibold tabular-nums">{{ kpi ? formatNumber(kpi.shippingOrders) : '—' }}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-1">库存周转率</div>
-          <div class="text-2xl font-semibold tabular-nums">
-            {{ kpi ? kpi.turnoverRate.toFixed(1) : '—' }}<span class="text-sm text-muted-foreground font-normal ml-1">次/月</span>
-          </div>
-        </CardContent>
-      </Card>
+    <!-- KPI 4 卡 — 浮在 Hero 上 -->
+    <section class="-mt-16 relative z-10 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">本月采购金额</p>
+                <h3 class="text-3xl font-bold tracking-tight">{{ kpi ? formatCurrency(kpi.monthPurchase) : '—' }}</h3>
+              </div>
+              <div class="p-4 rounded-xl bg-primary/5 text-primary">
+                <ShoppingBag class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.08s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">本月销售金额</p>
+                <h3 class="text-3xl font-bold tracking-tight text-[hsl(var(--status-success))]">
+                  {{ kpi ? formatCurrency(kpi.monthSales) : '—' }}
+                </h3>
+              </div>
+              <div class="p-4 rounded-xl bg-emerald-50 text-emerald-600">
+                <TrendingUp class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.16s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">在途订单</p>
+                <h3 class="text-3xl font-bold tracking-tight">{{ kpi ? formatNumber(kpi.shippingOrders) : '—' }}</h3>
+              </div>
+              <div class="p-4 rounded-xl bg-primary/5 text-primary">
+                <Truck class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.24s">
+          <CardContent class="py-16 px-3">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <p class="text-sm font-medium text-muted-foreground">库存周转率</p>
+                <h3 class="text-3xl font-bold tracking-tight">
+                  {{ kpi ? kpi.turnoverRate.toFixed(1) : '—' }}<span class="text-sm text-muted-foreground font-normal ml-1">次/月</span>
+                </h3>
+              </div>
+              <div class="p-4 rounded-xl bg-primary/5 text-primary">
+                <PackageCheck class="w-6 h-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </section>
 
     <!-- 月度采购金额 + 库存周转率 -->

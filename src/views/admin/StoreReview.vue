@@ -3,10 +3,13 @@
  * 平台管理员 - 门店入驻审核
  */
 import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { Plus } from 'lucide-vue-next';
 import {
   Badge, Button, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '/@/components/ui';
+import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
 import { BasicModal, useModal } from '/@/components/BasicModal';
@@ -24,6 +27,7 @@ import {
 import { formatDateTime } from '/@/utils/format';
 import type { StoreApply } from '/#/b2b';
 
+const router = useRouter();
 const search = reactive({ keyword: '', status: '', storeType: '' });
 const [registerTable, { reload }] = useTable();
 
@@ -86,7 +90,13 @@ function onReset() {
 </script>
 
 <template>
-  <PageWrapper title="门店入驻审核" subtitle="审核门店提交的入驻申请">
+  <PageWrapper title="门店入驻审核" subtitle="审核门店提交的入驻申请" variant="hero">
+    <template #extra>
+      <Button class="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-6 py-6 rounded-xl" @click="router.push(ROUTE_PATHS.APPLY_STORE)">
+        <Plus class="mr-2 h-5 w-5" />
+        邀请新门店
+      </Button>
+    </template>
 
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">

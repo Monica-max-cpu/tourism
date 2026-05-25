@@ -151,6 +151,19 @@ defineExpose(tableAction);
     --vxe-table-border-color: hsl(var(--border));
     --vxe-table-row-hover-background-color: hsl(var(--accent) / 0.3);
   }
+  :deep(.vxe-header--column) {
+    background: hsl(var(--muted));
+    font-weight: 600;
+    font-size: 13px;
+    color: hsl(var(--foreground));
+    text-align: center;
+    padding: 6px 12px;
+    border-bottom: 2px solid hsl(var(--border));
+  }
+  :deep(.vxe-body--column) {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
   :deep(.vxe-pager) {
     border-top: 1px solid hsl(var(--border));
   }

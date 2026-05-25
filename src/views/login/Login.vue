@@ -1,8 +1,8 @@
 <script setup lang="ts">
-console.log('🔥 修改后的 Login.vue 加载了');
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ArrowRight, Eye, EyeOff, Shield } from 'lucide-vue-next';
+import { onMounted, onUnmounted } from 'vue';
+import { ArrowRight, Eye, EyeOff, Shield, BarChart3, Store, Truck, CreditCard, Users, Building2, Store as StoreIcon } from 'lucide-vue-next';
 import {
   Badge,
   Button,
@@ -13,6 +13,11 @@ import {
   CardContent,
   Input,
   Label,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from '/@/components/ui';
 import { useUserStore } from '/@/stores/modules/user';
 import { usePermissionStore } from '/@/stores/modules/permission';
@@ -35,11 +40,81 @@ const form = reactive({
 // update-end--author:claude---date:2026-05-24---for:【修复】登录页移除角色下拉，按用户名自动派发角色
 
 const stats = [
-  { label: '合作景区', value: '120+', icon: '🏛️' },
-  { label: '入驻门店', value: '2,800+', icon: '🏪' },
-  { label: '供应商', value: '450+', icon: '🚛' },
-  { label: '月交易额', value: '¥8.5M', icon: '💰' },
+  { label: '合作景区', value: '120+', icon: 'icon-building' },
+  { label: '入驻门店', value: '2,800+', icon: 'icon-store' },
+  { label: '供应商', value: '450+', icon: 'icon-truck' },
+  { label: '月交易额', value: '¥8.5M', icon: 'icon-chart' },
 ];
+
+// Features Section 数据
+const features = [
+  {
+    icon: BarChart3,
+    title: '数据看板',
+    description: '实时监控集采数据和门店销售情况，提供多维度数据分析',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+  },
+  {
+    icon: Store,
+    title: '门店管理',
+    description: '门店入驻审核、采购管理、授信额度申请等一站式服务',
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-50',
+  },
+  {
+    icon: Truck,
+    title: '供应链管理',
+    description: '供应商入驻、商品管理、订单跟踪，构建完整供应链生态',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+  },
+  {
+    icon: CreditCard,
+    title: '授信服务',
+    description: '类白条的授信额度管理，支持免息期和分期还款',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+  },
+];
+
+// CTA / 入驻 Dialog 状态
+const showApplyDialog = ref(false);
+const featuresSection = ref<HTMLElement | null>(null);
+const ctaSection = ref<HTMLElement | null>(null);
+const isFeaturesVisible = ref(false);
+const isCtaVisible = ref(false);
+
+let featuresObs: IntersectionObserver | null = null;
+let ctaObs: IntersectionObserver | null = null;
+
+onMounted(() => {
+  featuresObs = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      isFeaturesVisible.value = true;
+      featuresObs?.disconnect();
+    }
+  }, { threshold: 0.1 });
+  if (featuresSection.value) featuresObs.observe(featuresSection.value);
+
+  ctaObs = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      isCtaVisible.value = true;
+      ctaObs?.disconnect();
+    }
+  }, { threshold: 0.1 });
+  if (ctaSection.value) ctaObs.observe(ctaSection.value);
+});
+
+onUnmounted(() => {
+  featuresObs?.disconnect();
+  ctaObs?.disconnect();
+});
+
+function navigateToApply(type: 'supplier' | 'store') {
+  showApplyDialog.value = false;
+  router.push(type === 'supplier' ? ROUTE_PATHS.APPLY_SUPPLIER : ROUTE_PATHS.APPLY_STORE);
+}
 
 const ROLE_HOME: Record<UserRole, string> = {
   ADMIN: ROUTE_PATHS.ADMIN_WORKBENCH,
@@ -71,6 +146,8 @@ async function handleLogin(e: Event) {
     <div class="absolute inset-0 -z-10 opacity-[0.55] pointer-events-none"
       style="background-image: url('https://pic.rmb.bdstatic.com/bjh/events/35203320101a8fabbfdec81a01935cf2.jpeg@h_1280'); background-size: cover; background-position: center; filter: grayscale(40%) sepia(10%);">
     </div>
+    <!-- 白色半透明遮罩 -->
+    <div class="absolute inset-0 -z-10 bg-white/50 pointer-events-none" />
 
     <!-- Hero 区 -->
     <section class="flex-1 flex items-center px-4 py-16 lg:py-24">
@@ -98,7 +175,7 @@ async function handleLogin(e: Event) {
                 class="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 animate-fade-in-up"
                 :style="{ animationDelay: `${0.1 + idx * 0.08}s` }"
               >
-                <div class="text-2xl mb-1">{{ s.icon }}</div>
+                <div class="text-2xl mb-1"><i :class="['iconfont', s.icon]" /></div>
                 <div class="text-2xl font-bold text-primary">{{ s.value }}</div>
                 <div class="text-sm text-muted-foreground">{{ s.label }}</div>
               </div>
@@ -175,7 +252,128 @@ async function handleLogin(e: Event) {
       </div>
     </section>
 
-    <footer class="py-6 border-t border-border/50 bg-card/30">
+    <!-- Features Section -->
+    <section ref="featuresSection" class="py-24 bg-white">
+      <div class="container mx-auto px-4 max-w-7xl">
+        <div
+          class="text-center mb-16 transition-all duration-700 ease-out"
+          :class="isFeaturesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'"
+        >
+          <h2 class="text-3xl lg:text-4xl font-bold mb-6">核心功能模块</h2>
+          <p class="text-xl text-muted-foreground max-w-3xl mx-auto">
+            基于集采产业特色，打造数据驱动的智能化管理平台
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div
+            v-for="(feat, idx) in features"
+            :key="feat.title"
+            class="group transition-all duration-700 ease-out"
+            :class="isFeaturesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'"
+            :style="{ transitionDelay: `${idx * 0.1}s` }"
+          >
+            <Card class="h-full p-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/50 group-hover:-translate-y-2">
+              <CardHeader class="pb-4">
+                <div
+                  :class="[feat.bgColor, 'w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110']"
+                >
+                  <component :is="feat.icon" :class="[feat.color, 'w-6 h-6']" />
+                </div>
+                <CardTitle class="text-xl font-bold">{{ feat.title }}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p class="text-muted-foreground leading-relaxed">{{ feat.description }}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section ref="ctaSection" class="py-24 relative overflow-hidden bg-white">
+      <div class="absolute inset-0 z-0 bg-gradient-to-r from-primary/90 to-accent/90" />
+
+      <div class="relative z-10 container mx-auto px-4 text-center max-w-4xl">
+        <div
+          class="space-y-8 transition-all duration-700 ease-out"
+          :class="isCtaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'"
+        >
+          <h2 class="text-3xl lg:text-5xl font-bold text-white">
+            开启数字化集采新时代
+          </h2>
+          <p class="text-xl text-white/90 leading-relaxed">
+            加入我们的平台，享受一站式集采管理服务，
+            让数据驱动业务增长，让科技赋能产业发展。
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button
+              size="lg"
+              variant="secondary"
+              class="px-8 py-4 text-lg font-semibold"
+              @click="showApplyDialog = true"
+            >
+              <Users class="w-5 h-5 mr-2" />
+              申请入驻
+              <ArrowRight class="w-5 h-5 ml-2" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              class="px-8 py-4 text-lg font-semibold !bg-transparent !border-white/30 !text-white hover:!bg-white/10"
+              @click="featuresSection?.scrollIntoView({ behavior: 'smooth' })"
+            >
+              了解更多
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Apply Dialog -->
+    <Dialog :open="showApplyDialog" @update:open="showApplyDialog = $event">
+      <DialogContent class="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle class="text-xl font-bold text-center">选择入驻类型</DialogTitle>
+          <DialogDescription class="text-center">
+            请选择您要申请的合作身份，平台将在 1-3 个工作日内完成审核
+          </DialogDescription>
+        </DialogHeader>
+        <div class="grid grid-cols-2 gap-4 pt-4">
+          <Card
+            class="p-6 border-border/40 hover:shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer text-center group"
+            @click="navigateToApply('supplier')"
+          >
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+              <Building2 class="w-6 h-6 text-purple-600" />
+            </div>
+            <h3 class="font-bold text-lg mb-2">供应商入驻</h3>
+            <p class="text-sm text-muted-foreground mb-4">成为平台供应商，向门店提供商品和服务</p>
+            <Button variant="outline" size="sm" class="w-full">
+              去申请
+              <ArrowRight class="w-4 h-4 ml-1" />
+            </Button>
+          </Card>
+          <Card
+            class="p-6 border-border/40 hover:shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer text-center group"
+            @click="navigateToApply('store')"
+          >
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+              <StoreIcon class="w-6 h-6 text-emerald-600" />
+            </div>
+            <h3 class="font-bold text-lg mb-2">门店入驻</h3>
+            <p class="text-sm text-muted-foreground mb-4">加入平台门店网络，享受集采价格和授信服务</p>
+            <Button variant="outline" size="sm" class="w-full">
+              去申请
+              <ArrowRight class="w-4 h-4 ml-1" />
+            </Button>
+          </Card>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <footer class="py-6 border-t border-border/50 bg-white">
       <div class="container mx-auto px-4 text-center text-sm text-muted-foreground">
         © 2026 B2B 集采管理平台 · 数字化集采产业管理
       </div>
