@@ -1,0 +1,47 @@
+import type { RouteRecordRaw } from 'vue-router';
+import { ROUTE_PATHS } from '/@/constants/routePaths';
+
+export const basicRoutes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'Root',
+    redirect: ROUTE_PATHS.LOGIN,
+    meta: { hidden: true },
+  },
+  {
+    path: ROUTE_PATHS.LOGIN,
+    name: 'Login',
+    component: () => import('/@/views/login/Login.vue'),
+    meta: { title: '登录', hidden: true },
+  },
+  {
+    path: ROUTE_PATHS.APPLY_SUPPLIER,
+    name: 'SupplierApply',
+    component: () => import('/@/views/apply/SupplierApply.vue'),
+    meta: { title: '供应商入驻申请', hidden: true },
+  },
+  {
+    path: ROUTE_PATHS.APPLY_STORE,
+    name: 'StoreApply',
+    component: () => import('/@/views/apply/StoreApply.vue'),
+    meta: { title: '门店入驻申请', hidden: true },
+  },
+  {
+    path: ROUTE_PATHS.APPLY_RESULT,
+    name: 'ApplyResult',
+    component: () => import('/@/views/apply/ApplyResult.vue'),
+    meta: { title: '提交成功', hidden: true },
+  },
+  {
+    path: ROUTE_PATHS.NOT_FOUND,
+    name: 'NotFound',
+    component: () => import('/@/views/exception/404.vue'),
+    meta: { title: '页面不存在', hidden: true },
+  },
+  {
+    path: ROUTE_PATHS.FORBIDDEN,
+    name: 'Forbidden',
+    component: () => import('/@/views/exception/403.vue'),
+    meta: { title: '无权访问', hidden: true },
+  },
+];

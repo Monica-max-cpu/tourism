@@ -1,0 +1,214 @@
+<script setup lang="ts">
+/**
+ * 平台管理员 - 待确认收款 */
+import { reactive, ref } from 'vue';
+import { CreditCard, Wallet, FileImage } from 'lucide-vue-next';
+import {
+  Badge, Button, Input, Label,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '/@/components/ui';
+import { PageWrapper } from '/@/components/PageWrapper';
+import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
+import { BasicModal, useModal } from '/@/components/BasicModal';
+import { TableAction } from '/@/components/TableAction';
+import { SearchBar } from '/@/components/SearchBar';
+import { listPaymentsApi, confirmPaymentApi, rejectPaymentApi } from '/@/api/admin/operations';
+import {
+  PAYMENT_STATUS_LABEL, PAYMENT_STATUS_VARIANT, PAYMENT_STATUS_OPTIONS,
+  PAYMENT_METHOD_LABEL,
+} from '/@/constants/b2b2bStatus';
+import { formatCurrency, formatDateTime } from '/@/utils/format';
+import type { PaymentRecord } from '/#/b2b-2b';
+
+const search = reactive({ keyword: '', status: 'PENDING_CONFIRM', method: '' });
+const [registerTable, { reload }] = useTable();
+
+async function loadData(params: any) {
+  return await listPaymentsApi({ ...params, searchInfo: { ...search } });
+}
+
+function methodIcon(m: string) {
+  if (m === 'OFFLINE_TRANSFER') return Wallet;
+  return CreditCard;
+}
+
+const columns: BasicColumn[] = [
+  { field: 'paymentNo', title: '支付编号', width: 160 },
+  { field: 'orderNo', title: '关联订单号', width: 160 },
+  { field: 'storeName', title: '门店', minWidth: 180 },
+  { field: 'amount', title: '金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'method', title: '支付方式', width: 110, slots: { default: 'method' } },
+  { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
+  { field: 'submittedAt', title: '提交时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'confirmedAt', title: '确认时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'action', title: '操作', width: 200, fixed: 'right', slots: { default: 'action' } },
+];
+
+const detailModal = useModal<PaymentRecord>();
+const rejectModal = useModal<PaymentRecord>();
+const rejectReason = ref('');
+const submitting = ref(false);
+
+function openDetail(row: PaymentRecord) {
+  detailModal.open(row);
+}
+
+async function confirm(row: PaymentRecord) {
+  submitting.value = true;
+  try {
+    await confirmPaymentApi(row.id);
+    detailModal.close();
+    reload();
+  } finally {
+    submitting.value = false;
+  }
+}
+
+function openReject(row: PaymentRecord) {
+  rejectReason.value = '';
+  rejectModal.open(row);
+}
+
+async function confirmReject() {
+  if (!rejectReason.value.trim() || !rejectModal.data.value) return;
+  submitting.value = true;
+  try {
+    await rejectPaymentApi(rejectModal.data.value.id, rejectReason.value.trim());
+    rejectModal.close();
+    detailModal.close();
+    reload();
+  } finally {
+    submitting.value = false;
+  }
+}
+
+function onSearch() { reload({ pageNo: 1 }); }
+function onReset() {
+  search.keyword = ''; search.status = ''; search.method = '';
+  reload({ pageNo: 1 });
+}
+</script>
+
+<template>
+  <PageWrapper title="支付管理" subtitle="确认门店提交的支付记录">
+
+    <SearchBar @search="onSearch" @reset="onReset">
+      <div class="flex items-center gap-2">
+        <Label class="text-xs text-muted-foreground">关键词</Label>
+        <Input v-model="search.keyword" placeholder="支付单号 / 订单号 / 门店" class="w-60" @keyup.enter="onSearch" />
+      </div>
+      <div class="flex items-center gap-2">
+        <Label class="text-xs text-muted-foreground">状态</Label>
+        <Select v-model="search.status">
+          <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="o in PAYMENT_STATUS_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div class="flex items-center gap-2">
+        <Label class="text-xs text-muted-foreground">支付方式</Label>
+        <Select v-model="search.method">
+          <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">全部</SelectItem>
+            <SelectItem value="OFFLINE_TRANSFER">线下转账</SelectItem>
+            <SelectItem value="ONLINE_WECHAT">微信支付</SelectItem>
+            <SelectItem value="ONLINE_ALIPAY">支付宝</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </SearchBar>
+
+    <BasicTable :columns="columns" :api="loadData" row-key="id" @register="registerTable">
+      <template #method="{ row }">
+        <div class="flex items-center gap-1.5">
+          <component :is="methodIcon(row.method)" class="w-3.5 h-3.5 text-muted-foreground" />
+          {{ PAYMENT_METHOD_LABEL[row.method] }}
+        </div>
+      </template>
+      <template #status="{ row }">
+        <Badge :variant="PAYMENT_STATUS_VARIANT[row.status]">{{ PAYMENT_STATUS_LABEL[row.status] }}</Badge>
+      </template>
+      <template #action="{ row }">
+        <TableAction
+          :actions="[
+            { label: '查看', onClick: () => openDetail(row) },
+            { label: '确认收款', authCode: 'b2b:payment:confirm', hidden: row.status !== 'PENDING_CONFIRM', onClick: () => confirm(row) },
+            { label: '驳回', authCode: 'b2b:payment:confirm', hidden: row.status !== 'PENDING_CONFIRM', onClick: () => openReject(row) },
+          ]"
+        />
+      </template>
+    </BasicTable>
+
+    <BasicModal
+      v-model:open="detailModal.visible.value"
+      title="支付记录详情"
+      width="640px"
+      hide-footer
+    >
+      <div v-if="detailModal.data.value" class="space-y-4 text-sm">
+        <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div><span class="text-muted-foreground">支付编号：</span><span class="font-mono">{{ detailModal.data.value.paymentNo }}</span></div>
+          <div>
+            <span class="text-muted-foreground">状态：</span>
+            <Badge :variant="PAYMENT_STATUS_VARIANT[detailModal.data.value.status]">{{ PAYMENT_STATUS_LABEL[detailModal.data.value.status] }}</Badge>
+          </div>
+          <div><span class="text-muted-foreground">关联订单号：</span><span class="font-mono">{{ detailModal.data.value.orderNo }}</span></div>
+          <div><span class="text-muted-foreground">门店：</span>{{ detailModal.data.value.storeName }}</div>
+          <div class="col-span-2">
+            <span class="text-muted-foreground">金额：</span>
+            <span class="text-2xl font-semibold text-foreground">{{ formatCurrency(detailModal.data.value.amount) }}</span>
+          </div>
+          <div><span class="text-muted-foreground">支付方式：</span>{{ PAYMENT_METHOD_LABEL[detailModal.data.value.method] }}</div>
+          <div v-if="detailModal.data.value.transactionNo">
+            <span class="text-muted-foreground">流水号：</span><span class="font-mono text-xs">{{ detailModal.data.value.transactionNo }}</span>
+          </div>
+          <div><span class="text-muted-foreground">提交时间：</span>{{ formatDateTime(detailModal.data.value.submittedAt) }}</div>
+          <div v-if="detailModal.data.value.confirmedAt">
+            <span class="text-muted-foreground">确认时间：</span>{{ formatDateTime(detailModal.data.value.confirmedAt) }}
+          </div>
+          <div v-if="detailModal.data.value.rejectReason" class="col-span-2 text-destructive">
+            <span class="text-muted-foreground">驳回原因：</span>{{ detailModal.data.value.rejectReason }}
+          </div>
+        </div>
+
+        <div v-if="detailModal.data.value.voucherUrl" class="pt-3 border-t border-border">
+          <div class="flex items-center gap-2 mb-2">
+            <FileImage class="w-4 h-4 text-muted-foreground" />
+            <span class="font-medium">转账凭证</span>
+          </div>
+          <a :href="detailModal.data.value.voucherUrl" target="_blank" class="block">
+            <img
+              :src="detailModal.data.value.voucherUrl"
+              alt="凭证"
+              class="max-h-72 w-full object-contain rounded border border-border bg-muted/30"
+              loading="lazy"
+            />
+          </a>
+        </div>
+
+        <div v-if="detailModal.data.value.status === 'PENDING_CONFIRM'" v-auth="'b2b:payment:confirm'" class="flex justify-end gap-2 pt-3 border-t border-border">
+          <Button variant="outline" :disabled="submitting" @click="openReject(detailModal.data.value)">驳回</Button>
+          <Button :disabled="submitting" @click="confirm(detailModal.data.value)">确认收款</Button>
+        </div>
+      </div>
+    </BasicModal>
+
+    <BasicModal
+      v-model:open="rejectModal.visible.value"
+      title="驳回支付"
+      :description="rejectModal.data.value ? `${rejectModal.data.value.storeName} - ${formatCurrency(rejectModal.data.value.amount)}` : ''"
+      confirm-text="确认驳回"
+      confirm-variant="destructive"
+      :confirm-loading="submitting"
+      :confirm-disabled="!rejectReason.trim()"
+      @confirm="confirmReject"
+    >
+      <div class="space-y-2">
+        <Label>驳回原因 <span class="text-destructive">*</span></Label>
+        <Input v-model="rejectReason" placeholder="如：金额不符、凭证不清晰、流水号有误..." />
+      </div>
+    </BasicModal>
+  </PageWrapper>
+</template>
