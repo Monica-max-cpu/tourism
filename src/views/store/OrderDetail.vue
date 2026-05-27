@@ -1,15 +1,13 @@
 <script setup lang="ts">
 /**
  * 门店 - 订单详情（含支付提交）
- * update-begin--author:claude---date:2026-05-27---for:【阶段7】订单详情页重设计
- * - 状态时间线同步订单 + 支付状态
- * - 商品明细与收货信息合并为一卡展示
- * - UI 对齐项目整体设计风格
- * update-end--author:claude---date:2026-05-27---for:【阶段7】订单详情页重设计
  */
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { CreditCard, Wallet, Smartphone, Receipt, PackageCheck, MapPin, Truck, AlertCircle, XCircle, CheckCheck } from 'lucide-vue-next';
+import {
+  CreditCard, Wallet, Smartphone, Receipt, PackageCheck, MapPin, Truck,
+  AlertCircle, XCircle, Package, CheckCircle2,
+} from 'lucide-vue-next';
 import {
   Badge, Button, Input, Label, Card, CardContent,
   Tabs, TabsList, TabsTrigger, TabsContent,
@@ -113,103 +111,51 @@ async function confirmCancel() {
   }
 }
 
-// ====== 状态时间线（固定 5 步，同步订单 + 支付状态） ======
-interface TimelineStep {
+// ====== 进度条：5 步固定 ======
+interface ProgressStep {
   label: string;
-  desc?: string;
-  time?: string | null;
+  icon: any;
   done: boolean;
   active: boolean;
   error: boolean;
+  errorMsg?: string;
 }
 
-const timeline = computed<TimelineStep[]>(() => {
+const progressSteps = computed<ProgressStep[]>(() => {
   const o = order.value;
   const p = payment.value;
   if (!o) return [];
 
-  const paymentSubmitted = !!p;
-  const paymentApproved = p?.status === 1;
-  const paymentRejected = p?.status === 2;
-  const firstDelivery = o.deliveries?.[0];
-
-  // 支付步骤的状态文字
-  let payLabel = '待支付';
-  let payDesc = '';
-  let payError = false;
-  if (paymentRejected) {
-    payLabel = '支付驳回';
-    payDesc = p?.rejectReason || '凭证审核未通过';
-    payError = true;
-  } else if (paymentApproved) {
-    payLabel = '支付通过';
-  } else if (paymentSubmitted) {
-    payLabel = '支付待审';
-    payDesc = '平台正在审核凭证';
-  }
-
-  // 支付是否已完成（通过）
-  const payDone = paymentApproved || o.orderStatus >= 1;
-  // 支付是否当前步骤
+  const payDone = o.orderStatus >= 1 || p?.status === 1;
   const payActive = o.orderStatus === 0;
-
-  // 发货
-  const shipDone = o.orderStatus >= 4;
-  const shipActive = o.orderStatus === 3;
-  const shipLabel = o.orderStatus >= 3 ? (firstDelivery?.shippedTime ? '已发货' : '配送中') : '待发货';
-
-  // 收货
-  const receiveDone = o.orderStatus >= 4;
-  const receiveActive = o.orderStatus === 4;
-
-  // 完成
+  const payRejected = p?.status === 2;
+  const shipDone = o.orderStatus >= 3;
+  const shipActive = o.orderStatus >= 1 && o.orderStatus <= 2;
+  const receiveDone = o.orderStatus >= 5;
+  const receiveActive = o.orderStatus >= 3 && o.orderStatus <= 4;
   const completeDone = o.orderStatus === 5;
 
   return [
+    { label: '提交订单', icon: CheckCircle2, done: true, active: false, error: false },
     {
-      label: '下单',
-      time: o.createTime,
-      done: true,
-      active: false,
-      error: false,
-    },
-    {
-      label: payLabel,
-      desc: payDesc,
-      time: p?.submittedAt || o.paymentTime || null,
-      done: payDone,
+      label: payRejected ? '支付驳回' : '支付待审',
+      icon: payRejected ? XCircle : CheckCircle2,
+      done: payDone && !payRejected,
       active: payActive,
-      error: payError,
+      error: payRejected,
+      errorMsg: payRejected ? (p?.rejectReason || '凭证审核未通过') : undefined,
     },
-    {
-      label: shipLabel,
-      time: firstDelivery?.shippedTime || null,
-      done: shipDone,
-      active: shipActive,
-      error: false,
-    },
-    {
-      label: o.orderStatus === 4 ? '部分收货' : '收货',
-      time: null,
-      done: receiveDone,
-      active: receiveActive,
-      error: false,
-    },
-    {
-      label: '完成',
-      time: null,
-      done: completeDone,
-      active: false,
-      error: false,
-    },
+    { label: '待发货', icon: Package, done: shipDone, active: shipActive, error: false },
+    { label: '待收货', icon: Truck, done: receiveDone, active: receiveActive, error: false },
+    { label: '完成', icon: CheckCircle2, done: completeDone, active: false, error: false },
   ];
 });
 </script>
 
 <template>
   <PageWrapper
-    :title="order ? `订单详情 ${order.orderNo}` : '订单详情'"
-    :subtitle="order ? `下单时间 ${formatDateTime(order.createTime)}` : ''"
+    :title="order ? order.orderNo : '订单详情'"
+    :subtitle="order ? formatDateTime(order.createTime) : ''"
     show-back
   >
     <template v-if="order" #extra>
@@ -222,19 +168,19 @@ const timeline = computed<TimelineStep[]>(() => {
     <div v-else-if="!order" class="text-center text-muted-foreground py-16">订单不存在或无访问权限</div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-      <!-- 左：状态时间线 + 商品 & 收货合并卡 -->
-      <div class="space-y-6">
-        <!-- 状态时间线 -->
-        <Card>
-          <CardContent class="p-5">
-            <h3 class="text-sm font-semibold mb-4">订单进度</h3>
+      <!-- 左侧主信息区 -->
+      <div class="space-y-5">
+
+        <!-- 订单进度条卡片 -->
+        <Card class="rounded-lg shadow-sm">
+          <CardContent class="p-6">
+            <h3 class="text-sm font-semibold mb-5">订单进度</h3>
             <div class="flex items-start gap-0">
-              <template v-for="(step, idx) in timeline" :key="idx">
-                <div class="flex flex-col items-center" style="min-width:80px;flex:1">
-                  <!-- 节点 -->
+              <template v-for="(step, idx) in progressSteps" :key="idx">
+                <div class="flex flex-col items-center" style="min-width:72px;flex:1">
                   <div
                     :class="[
-                      'w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors',
+                      'w-10 h-10 rounded-full flex items-center justify-center transition-colors',
                       step.error
                         ? 'bg-destructive/10 text-destructive border-2 border-destructive'
                         : step.done
@@ -244,133 +190,149 @@ const timeline = computed<TimelineStep[]>(() => {
                             : 'bg-muted text-muted-foreground',
                     ]"
                   >
-                    <CheckCheck v-if="step.done && !step.error" class="w-4 h-4" />
-                    <XCircle v-else-if="step.error" class="w-4 h-4" />
-                    <span v-else>{{ idx + 1 }}</span>
+                    <component :is="step.icon" :class="step.done || step.error ? 'w-5 h-5' : 'w-4 h-4'" />
                   </div>
-                  <!-- 文字 -->
                   <div class="mt-2 text-center">
                     <div
                       :class="[
-                        'text-xs font-medium',
+                        'text-xs font-medium leading-tight',
                         step.error ? 'text-destructive' : step.done || step.active ? 'text-foreground' : 'text-muted-foreground',
                       ]"
                     >
                       {{ step.label }}
                     </div>
-                    <div v-if="step.desc" :class="['text-[10px] mt-0.5', step.error ? 'text-destructive/80' : 'text-muted-foreground']">
-                      {{ step.desc }}
-                    </div>
-                    <div v-if="step.time" class="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
-                      {{ formatDateTime(step.time).slice(5, 16) }}
+                    <div v-if="step.errorMsg" class="text-[10px] text-destructive/80 mt-0.5 max-w-[80px] leading-tight">
+                      {{ step.errorMsg }}
                     </div>
                   </div>
                 </div>
-                <!-- 连线 -->
                 <div
-                  v-if="idx < timeline.length - 1"
-                  :class="['flex-1 h-0.5 mt-[18px] -mx-1', step.done ? 'bg-primary' : 'bg-border']"
+                  v-if="idx < progressSteps.length - 1"
+                  :class="['flex-1 h-0.5 mt-[20px] -mx-1 rounded-full', step.done && !step.error ? 'bg-primary' : 'bg-border']"
                 />
               </template>
             </div>
           </CardContent>
         </Card>
 
-        <!-- 商品明细 + 收货/物流信息（合并卡） -->
-        <Card>
+        <!-- 商品明细卡片 -->
+        <Card class="rounded-lg shadow-sm">
           <CardContent class="p-0">
-            <!-- 商品列表头 -->
-            <div class="px-5 py-3 border-b border-border">
+            <div class="px-6 py-4 border-b border-border">
               <h3 class="text-sm font-semibold">商品明细</h3>
             </div>
 
-            <!-- 商品行 -->
+            <!-- 表头 -->
+            <div class="hidden sm:grid grid-cols-[auto_1fr_100px_100px_80px_100px] gap-4 px-6 py-2.5 text-xs text-muted-foreground bg-muted/30 border-b border-border">
+              <span class="w-14"></span>
+              <span>商品信息</span>
+              <span class="text-right">单价</span>
+              <span class="text-right">数量</span>
+              <span class="text-right">小计</span>
+            </div>
+
             <div v-if="order.items?.length">
               <div
                 v-for="(it, idx) in order.items"
                 :key="idx"
-                class="px-5 py-3 border-b border-border last:border-b-0 flex items-center gap-4"
+                class="grid grid-cols-1 sm:grid-cols-[auto_1fr_100px_100px_80px_100px] gap-x-4 gap-y-2 px-6 py-4 border-b border-border last:border-b-0 items-center"
               >
-                <div class="flex-1 min-w-0">
+                <!-- 缩略图 -->
+                <div class="w-14 h-14 rounded-lg bg-muted/50 border border-border/50 overflow-hidden shrink-0">
+                  <img
+                    v-if="it.imageUrl"
+                    :src="it.imageUrl"
+                    :alt="it.productName"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <Package class="w-5 h-5" />
+                  </div>
+                </div>
+                <!-- 商品信息 -->
+                <div class="min-w-0">
                   <div class="text-sm font-medium truncate">{{ it.productName }}</div>
                   <div class="text-xs text-muted-foreground mt-0.5">
-                    {{ it.spec || it.unit }}
-                    <span v-if="it.catalogId" class="ml-2">SKU {{ it.catalogId }}</span>
-                    <span v-if="it.receivedQty != null" class="ml-2 text-primary">
-                      已收 {{ it.receivedQty }} / {{ it.quantity }}
-                    </span>
+                    <span v-if="it.spec">{{ it.spec }}</span>
+                    <span v-if="it.catalogId" class="ml-2 font-mono">SKU: {{ it.catalogId }}</span>
+                  </div>
+                  <div v-if="it.receivedQty != null" class="text-xs text-primary mt-0.5">
+                    已收货 {{ it.receivedQty }} / {{ it.quantity }}
                   </div>
                 </div>
-                <div class="text-sm tabular-nums text-muted-foreground whitespace-nowrap">
-                  <span v-if="it.catalogPrice !== it.actualPrice" class="line-through mr-1 text-xs">{{ formatCurrency(it.catalogPrice) }}</span>
-                  {{ formatCurrency(it.actualPrice) }} × {{ it.quantity }}
+                <!-- 单价 -->
+                <div class="text-sm text-right tabular-nums">
+                  <div v-if="it.catalogPrice !== it.actualPrice" class="text-xs text-muted-foreground line-through">{{ formatCurrency(it.catalogPrice) }}</div>
+                  <div class="text-foreground font-medium">{{ formatCurrency(it.actualPrice) }}</div>
                 </div>
-                <div class="text-sm font-semibold text-primary tabular-nums w-24 text-right whitespace-nowrap">
-                  {{ formatCurrency(it.subtotal) }}
-                </div>
+                <!-- 数量 -->
+                <div class="text-sm text-right tabular-nums text-muted-foreground">×{{ it.quantity }}</div>
+                <!-- 小计 -->
+                <div class="text-sm text-right tabular-nums font-semibold text-primary">{{ formatCurrency(it.subtotal) }}</div>
               </div>
             </div>
-            <div v-else class="px-5 py-8 text-center text-muted-foreground text-sm">暂无商品明细</div>
+            <div v-else class="px-6 py-10 text-center text-muted-foreground text-sm">暂无商品明细</div>
 
-            <!-- 金额汇总 -->
-            <div class="px-5 py-3 flex items-center justify-between border-t border-border bg-muted/30">
-              <span class="text-sm text-muted-foreground">
-                共 {{ order.itemCount || order.items?.length || 0 }} 件商品
+            <!-- 底部汇总 -->
+            <div class="px-6 py-4 flex items-center justify-end border-t border-border bg-muted/20">
+              <span class="text-sm text-muted-foreground mr-2">
+                共 {{ order.itemCount || order.items?.length || 0 }} 件商品，商品总额
               </span>
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-muted-foreground">订单总额</span>
-                <span class="text-xl font-bold text-primary tabular-nums">{{ formatCurrency(order.totalAmount) }}</span>
-              </div>
+              <span class="text-xl font-bold text-primary tabular-nums">{{ formatCurrency(order.totalAmount) }}</span>
             </div>
+          </CardContent>
+        </Card>
 
-            <!-- 分割线 -->
-            <div class="border-t border-border" />
-
-            <!-- 收货地址（内嵌在商品卡下方） -->
-            <div class="px-5 py-4">
-              <h3 class="text-sm font-semibold mb-3">收货信息</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <!-- 收货地址 -->
-                <div class="flex items-start gap-3">
-                  <div class="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0">
-                    <MapPin class="w-4 h-4" />
+        <!-- 收货及物流卡片（双栏） -->
+        <Card class="rounded-lg shadow-sm">
+          <CardContent class="p-6">
+            <h3 class="text-sm font-semibold mb-4">收货及物流</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- 左栏：收货信息 -->
+              <div>
+                <div class="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                  <MapPin class="w-3.5 h-3.5" />
+                  收货信息
+                </div>
+                <div v-if="order.deliveryAddress" class="space-y-1.5">
+                  <div class="text-sm font-medium">
+                    {{ order.deliveryAddress.receiverName }}
+                    <span class="text-muted-foreground font-normal ml-2">{{ order.deliveryAddress.receiverPhone }}</span>
                   </div>
-                  <div v-if="order.deliveryAddress">
-                    <div class="font-medium">{{ order.deliveryAddress.receiverName }} {{ order.deliveryAddress.receiverPhone }}</div>
-                    <div class="text-muted-foreground mt-0.5">
-                      {{ order.deliveryAddress.province }}{{ order.deliveryAddress.city }} {{ order.deliveryAddress.address }}
+                  <div class="text-sm text-muted-foreground">
+                    {{ order.deliveryAddress.province }}{{ order.deliveryAddress.city }} {{ order.deliveryAddress.address }}
+                  </div>
+                </div>
+                <div v-else class="text-sm text-muted-foreground">暂无收货信息</div>
+
+                <!-- 订单备注 -->
+                <div v-if="order.remark" class="mt-4 pt-4 border-t border-border">
+                  <div class="text-xs text-muted-foreground mb-1">订单备注</div>
+                  <div class="text-sm">{{ order.remark }}</div>
+                </div>
+              </div>
+
+              <!-- 右栏：物流信息 -->
+              <div>
+                <div class="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                  <Truck class="w-3.5 h-3.5" />
+                  物流追踪
+                </div>
+                <template v-if="order.deliveries?.length">
+                  <div v-for="(d, di) in order.deliveries" :key="di" class="space-y-1.5" :class="di > 0 ? 'mt-4 pt-4 border-t border-border' : ''">
+                    <div class="text-sm font-medium">{{ d.logisticsCompany || '待分配物流' }}</div>
+                    <div v-if="d.trackingNo" class="text-sm">
+                      <span class="text-muted-foreground">运单号：</span>
+                      <span class="font-mono tabular-nums">{{ d.trackingNo }}</span>
+                    </div>
+                    <div class="text-xs text-muted-foreground">
+                      {{ d.statusLabel }}
+                      <span v-if="d.shippedTime"> · {{ formatDateTime(d.shippedTime) }}</span>
                     </div>
                   </div>
-                  <div v-else class="text-muted-foreground">暂无收货信息</div>
-                </div>
-
-                <!-- 物流信息 -->
-                <div class="flex items-start gap-3">
-                  <div class="p-2 rounded-lg bg-violet-50 text-violet-600 shrink-0">
-                    <Truck class="w-4 h-4" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <template v-if="order.deliveries?.length">
-                      <div v-for="(d, di) in order.deliveries" :key="di" :class="['text-sm', di > 0 ? 'mt-2 pt-2 border-t border-border' : '']">
-                        <div class="font-medium">{{ d.logisticsCompany || '待分配物流' }}</div>
-                        <div v-if="d.trackingNo" class="text-xs text-muted-foreground mt-0.5">
-                          运单号：<span class="font-mono">{{ d.trackingNo }}</span>
-                        </div>
-                        <div class="text-xs text-muted-foreground mt-0.5">
-                          {{ d.statusLabel }}<span v-if="d.shippedTime"> · {{ d.shippedTime }}</span>
-                        </div>
-                      </div>
-                    </template>
-                    <div v-else class="text-muted-foreground text-sm">待发货</div>
-                  </div>
-                </div>
+                </template>
+                <div v-else class="text-sm text-muted-foreground">待发货</div>
               </div>
-            </div>
-
-            <!-- 备注 -->
-            <div v-if="order.remark" class="px-5 py-3 border-t border-border bg-muted/20">
-              <span class="text-xs text-muted-foreground">备注：</span>
-              <span class="text-sm">{{ order.remark }}</span>
             </div>
           </CardContent>
         </Card>
@@ -378,19 +340,18 @@ const timeline = computed<TimelineStep[]>(() => {
 
       <!-- 右：支付 / 操作 -->
       <div class="space-y-4 lg:sticky lg:top-20 h-fit">
-        <!-- 应付金额 & 操作 -->
-        <Card>
-          <CardContent class="p-5">
+        <Card class="rounded-lg shadow-sm">
+          <CardContent class="p-6">
             <div class="text-sm text-muted-foreground">应付金额</div>
             <div class="text-3xl font-bold text-primary tabular-nums mt-1">{{ formatCurrency(order.totalAmount) }}</div>
 
-            <div v-if="order.orderStatus === 0 && (!payment || payment.status !== 2)" class="mt-4 space-y-2">
+            <div v-if="order.orderStatus === 0 && (!payment || payment.status !== 2)" class="mt-5 space-y-2">
               <Button class="w-full" @click="payModal.open()">
                 <CreditCard class="w-4 h-4 mr-1.5" />立即支付
               </Button>
               <Button variant="outline" class="w-full" @click="onCancel">取消订单</Button>
             </div>
-            <div v-else-if="order.orderStatus === 0 && payment?.status === 2" class="mt-4 space-y-2">
+            <div v-else-if="order.orderStatus === 0 && payment?.status === 2" class="mt-5 space-y-2">
               <div class="flex items-center gap-1.5 text-sm text-destructive mb-2">
                 <AlertCircle class="w-4 h-4" />
                 支付凭证被驳回
@@ -398,25 +359,25 @@ const timeline = computed<TimelineStep[]>(() => {
               <Button class="w-full" @click="payModal.open()">重新提交凭证</Button>
               <Button variant="outline" class="w-full" @click="onCancel">取消订单</Button>
             </div>
-            <div v-else-if="order.orderStatus === 3 || order.orderStatus === 4" class="mt-4">
+            <div v-else-if="order.orderStatus === 3 || order.orderStatus === 4" class="mt-5">
               <Button v-auth="'b2b:store:receive'" class="w-full" @click="onConfirmReceive">
                 <PackageCheck class="w-4 h-4 mr-1.5" />确认收货
               </Button>
             </div>
-            <div v-else-if="order.orderStatus === 5" class="mt-4">
+            <div v-else-if="order.orderStatus === 5" class="mt-5">
               <Badge variant="success" class="w-full justify-center py-2 text-sm">订单已完成</Badge>
             </div>
-            <div v-else-if="order.orderStatus === 6" class="mt-4">
+            <div v-else-if="order.orderStatus === 6" class="mt-5">
               <Badge variant="muted" class="w-full justify-center py-2 text-sm">订单已取消</Badge>
             </div>
-            <div v-else class="mt-4">
+            <div v-else class="mt-5">
               <Badge variant="secondary" class="w-full justify-center py-2 text-sm">订单进行中</Badge>
             </div>
           </CardContent>
         </Card>
 
         <!-- 付款记录 -->
-        <Card v-if="payment">
+        <Card v-if="payment" class="rounded-lg shadow-sm">
           <CardContent class="p-5 space-y-2">
             <div class="flex items-center justify-between">
               <div class="text-sm font-medium flex items-center gap-1.5">
@@ -432,14 +393,14 @@ const timeline = computed<TimelineStep[]>(() => {
             <div v-if="payment.transactionNo" class="text-xs">
               流水号：<span class="font-mono">{{ payment.transactionNo }}</span>
             </div>
-            <div v-if="payment.status === 2 && payment.rejectReason" class="text-xs text-destructive bg-destructive/5 rounded p-2">
+            <div v-if="payment.status === 2 && payment.rejectReason" class="text-xs text-destructive bg-destructive/5 rounded-lg p-2.5">
               驳回原因：{{ payment.rejectReason }}
             </div>
             <img
               v-if="payment.voucherUrl"
               :src="payment.voucherUrl"
               alt="支付凭证"
-              class="rounded border border-border w-full mt-2 cursor-pointer hover:opacity-90 transition-opacity"
+              class="rounded-lg border border-border w-full mt-2 cursor-pointer hover:opacity-90 transition-opacity"
             />
           </CardContent>
         </Card>

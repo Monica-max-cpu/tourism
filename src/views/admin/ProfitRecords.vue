@@ -18,7 +18,9 @@ const [registerTable, { reload }] = useTable();
 const summary = ref({ totalSale: 0, totalCost: 0, totalProfit: 0, profitRate: 0, orderCount: 0 });
 
 async function loadSummary() {
-  summary.value = await getProfitSummaryApi();
+  try {
+    summary.value = await getProfitSummaryApi();
+  } catch { /* summary 加载失败不影响页面 */ }
 }
 
 async function loadData(params: any) {
@@ -49,7 +51,7 @@ onMounted(loadSummary);
 </script>
 
 <template>
-  <PageWrapper v-auth="'b2b:profit:view'" title="利润记录" subtitle="平台所有集采的销成本-毛利明细">
+  <PageWrapper title="利润记录" subtitle="平台所有集采的销成本-毛利明细">
     <!-- 汇总卡 -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
       <Card>

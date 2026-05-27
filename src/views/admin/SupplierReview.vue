@@ -118,7 +118,7 @@ function onReset() {
 </script>
 
 <template>
-  <PageWrapper title="供应商入驻审核" subtitle="审核供应商提交的入驻申请" variant="hero">
+  <PageWrapper title="供应商入驻审核" subtitle="审核供应商提交的入驻申请">
     <template #extra>
       <Button class="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-6 py-6 rounded-xl" @click="router.push(ROUTE_PATHS.APPLY_SUPPLIER)">
         <Plus class="mr-2 h-5 w-5" />
