@@ -14,6 +14,8 @@ export const ROUTE_PATHS = {
   ADMIN_STORES: '/admin/stores',
   ADMIN_QUOTES: '/admin/quotes',
   ADMIN_CATALOGS: '/admin/catalogs',
+  ADMIN_CATALOG_CREATE: '/admin/catalog/create',
+  ADMIN_CATALOG_EDIT: '/admin/catalog/:id/edit',
   ADMIN_STOCKS: '/admin/stocks',
   ADMIN_STORE_ORDERS: '/admin/store-orders',
   ADMIN_PAYMENTS_PENDING: '/admin/payments/pending',
@@ -29,6 +31,8 @@ export const ROUTE_PATHS = {
   // update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商路由路径
   SUPPLIER_WORKBENCH: '/supplier/workbench',
   SUPPLIER_QUOTES_MANAGE: '/supplier/quotes/manage',
+  SUPPLIER_QUOTE_CREATE: '/supplier/quote/create',
+  SUPPLIER_QUOTE_EDIT: '/supplier/quote/:id/edit',
   SUPPLIER_QUOTES_HISTORY: '/supplier/quotes/history',
   SUPPLIER_PRODUCTS: '/supplier/products',
   SUPPLIER_PRODUCT_CREATE: '/supplier/product/create',

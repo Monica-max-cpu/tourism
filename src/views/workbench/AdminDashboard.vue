@@ -115,7 +115,8 @@ const kpi = computed(() => data.value?.kpi);
     </template>
 
     <!-- KPI 区 — 浮在 Hero 上 -->
-    <section class="-mt-16 relative z-10 mb-6" v-auth="'b2b:profit:view'">
+     <section class="-mt-16 relative z-10 mb-6">
+    <!-- <section class="-mt-16 relative z-10 mb-6" v-auth="'b2b:profit:view'"> -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
         <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0s">
           <CardContent class="py-16 px-3">
