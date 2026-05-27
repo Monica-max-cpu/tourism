@@ -16,6 +16,7 @@ import VxeUI from 'vxe-pc-ui';
 import 'vxe-pc-ui/lib/style.css';
 import VxeUITable from 'vxe-table';
 import 'vxe-table/lib/style.css';
+import 'ant-design-vue/dist/reset.css';
 
 // ===== 样式：UnoCSS → 全局 =====
 import 'virtual:uno.css';

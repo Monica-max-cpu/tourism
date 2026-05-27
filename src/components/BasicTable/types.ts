@@ -2,6 +2,7 @@
  * BasicTable 类型定义
  */
 import type { VxeGridProps } from 'vxe-table';
+import type { VxeTablePropTypes } from 'vxe-table';
 
 export interface BasicColumn {
   field?: string;
@@ -47,6 +48,8 @@ export interface BasicTableProps {
   autoHeight?: boolean;
   /** 额外的 vxe-grid 配置覆盖 */
   gridProps?: Partial<VxeGridProps>;
+  /** 树表配置，传入后启用 vxe-grid 树形数据 */
+  treeConfig?: VxeTablePropTypes.TreeConfig;
   /** 行选中类型 */
   rowSelection?: 'checkbox' | 'radio';
 }
@@ -57,6 +60,8 @@ export interface TableActionType {
   getDataSource: () => any[];
   getSelected: () => any[];
   clearSelection: () => void;
+  expandAll: () => Promise<void>;
+  collapseAll: () => Promise<void>;
 }
 
 declare global {

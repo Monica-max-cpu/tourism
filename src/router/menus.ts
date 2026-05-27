@@ -53,6 +53,17 @@ export const adminMenus: MenuItem[] = [
       { name: 'AdminProfits', path: ROUTE_PATHS.ADMIN_PROFITS, title: '利润记录' },
     ],
   },
+  {
+    name: 'AdminSystem',
+    path: '/admin/system',
+    title: '系统管理',
+    icon: 'Settings',
+    children: [
+      { name: 'AdminSystemUsers', path: ROUTE_PATHS.ADMIN_SYSTEM_USERS, title: '用户管理', authCode: 'system:user:list' },
+      { name: 'AdminSystemRoles', path: ROUTE_PATHS.ADMIN_SYSTEM_ROLES, title: '角色管理', authCode: 'system:role:list' },
+      { name: 'AdminSystemMenus', path: ROUTE_PATHS.ADMIN_SYSTEM_MENUS, title: '菜单管理', authCode: 'system:menu:list' },
+    ],
+  },
 ];
 
 // update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商菜单 9 模块
