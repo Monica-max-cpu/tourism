@@ -1,16 +1,20 @@
 /**
  * 阶段 4 - 门店购物车 Store
- * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段4】购物车 Pinia 持久化
- * - 选项式 defineStore，双导出 useCartStore + useCartStoreWithOut
- * - localStorage 持久化（按 storeId 隔离）
- * - 仅保存抽象 SKU + salePrice，绝不出现 costPrice / supplierName / profit
- * update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】购物车 Pinia 持久化
+ * update-begin--author:claude---date:2026-05-26---for:【阶段7】支持阶梯价计算
+ * update-end--author:claude---date:2026-05-26---for:【阶段7】支持阶梯价计算
  */
 import { defineStore } from 'pinia';
 import { store } from '/@/stores';
-import type { CartItem, StoreCatalogItem } from '/#/b2b-store';
+import type { CartItem, StoreCatalogItem, CatalogTier } from '/#/b2b-store';
 
 const STORAGE_PREFIX = 'b2b:store:cart:';
+
+/** 按数量匹配阶梯单价，命中区间 [minQty, maxQty] 则返回对应 unitPrice，未命中返回 basePrice */
+function matchTierPrice(qty: number, basePrice: number, tiers?: CatalogTier[]): number {
+  if (!tiers || !tiers.length) return basePrice;
+  const match = tiers.find((t) => qty >= t.minQty && (t.maxQty == null || qty <= t.maxQty));
+  return match ? match.unitPrice : basePrice;
+}
 
 interface CartState {
   storeId: string;
@@ -54,10 +58,28 @@ export const useCartStore = defineStore({
     getSelectedItems(state): CartItem[] {
       return state.items.filter((x) => state.selectedIds.includes(x.catalogId));
     },
+    getItemLineTotal(state) {
+      return (catalogId: string): number => {
+        const item = state.items.find((x) => x.catalogId === catalogId);
+        if (!item) return 0;
+        const price = matchTierPrice(item.qty, item.basePrice, item.catalogTiers);
+        return +(price * item.qty).toFixed(2);
+      };
+    },
+    getItemUnitPrice(state) {
+      return (catalogId: string): number => {
+        const item = state.items.find((x) => x.catalogId === catalogId);
+        if (!item) return 0;
+        return matchTierPrice(item.qty, item.basePrice, item.catalogTiers);
+      };
+    },
     getSelectedAmount(state): number {
       const sum = state.items
         .filter((x) => state.selectedIds.includes(x.catalogId))
-        .reduce((s, x) => s + x.salePrice * x.qty, 0);
+        .reduce((s, x) => {
+          const price = matchTierPrice(x.qty, x.basePrice, x.catalogTiers);
+          return s + price * x.qty;
+        }, 0);
       return +sum.toFixed(2);
     },
     isAllSelected(state): boolean {
@@ -84,20 +106,16 @@ export const useCartStore = defineStore({
       const exist = this.items.find((x) => x.catalogId === catalog.id);
       if (exist) {
         exist.qty += qty;
-        if (catalog.availableQty != null && exist.qty > catalog.availableQty) {
-          exist.qty = catalog.availableQty;
-        }
       } else {
         this.items.unshift({
           catalogId: catalog.id,
-          productSku: catalog.productSku,
           productName: catalog.productName,
           unit: catalog.unit,
-          salePrice: catalog.salePrice,
+          basePrice: catalog.basePrice,
           qty,
-          cover: catalog.cover,
-          availableQty: catalog.availableQty,
-          minQty: catalog.minQty,
+          productImages: catalog.productImages,
+          minOrderQty: catalog.minOrderQty,
+          catalogTiers: catalog.catalogTiers,
           addedAt: new Date().toISOString(),
         });
         if (!this.selectedIds.includes(catalog.id)) this.selectedIds.push(catalog.id);
@@ -107,9 +125,8 @@ export const useCartStore = defineStore({
     updateQty(catalogId: string, qty: number) {
       const item = this.items.find((x) => x.catalogId === catalogId);
       if (!item) return;
-      const min = item.minQty || 1;
-      const max = item.availableQty ?? Number.MAX_SAFE_INTEGER;
-      item.qty = Math.max(min, Math.min(qty, max));
+      const min = item.minOrderQty || 1;
+      item.qty = Math.max(min, qty);
       this.persist();
     },
     removeItem(catalogId: string) {

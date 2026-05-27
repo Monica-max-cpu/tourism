@@ -9,21 +9,20 @@ import * as catalogMock from '/@/mocks/store/catalog.mock';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
-  ListCatalog = '/b2b/store/catalog/list',
-  GetCatalog = '/b2b/store/catalog/get',
-  ListHot = '/b2b/store/catalog/hot',
-  ReduceStock = '/b2b/store/catalog/reduce-stock',
+  ListCatalog = '/b2b/catalog/list',
 }
 
 export function listStoreCatalogApi(params: any) {
-  return USE_MOCK ? catalogMock.mockListStoreCatalog(params) : defHttp.post({ url: Api.ListCatalog, data: params });
+  return USE_MOCK ? catalogMock.mockListStoreCatalog(params) : defHttp.get({ url: Api.ListCatalog, params });
 }
 export function getStoreCatalogItemApi(id: string) {
-  return USE_MOCK ? catalogMock.mockGetCatalogItem(id) : defHttp.get({ url: Api.GetCatalog, params: { id } });
+  return USE_MOCK ? catalogMock.mockGetCatalogItem(id) : defHttp.get({ url: `/b2b/catalog/detail/${id}` });
 }
 export function listHotCatalogApi(limit = 8) {
-  return USE_MOCK ? catalogMock.mockListHotCatalog(limit) : defHttp.get({ url: Api.ListHot, params: { limit } });
+  // 后端无热门目录接口，使用 mock
+  return catalogMock.mockListHotCatalog(limit);
 }
 export function reduceCatalogStockApi(updates: { catalogId: string; qty: number }[]) {
-  return USE_MOCK ? catalogMock.mockReduceCatalogStock(updates) : defHttp.post({ url: Api.ReduceStock, data: { updates } });
+  // 后端无直接扣库存接口（库存由集采单触发），使用 mock
+  return catalogMock.mockReduceCatalogStock(updates);
 }

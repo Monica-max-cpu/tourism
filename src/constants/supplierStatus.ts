@@ -14,51 +14,42 @@ import type {
 
 // ===== 自营商品 =====
 export const SUPPLIER_PRODUCT_STATUS_LABEL: Record<SupplierProductStatus, string> = {
-  DRAFT: '草稿',
-  ON_SHELF: '已上架',
-  OFF_SHELF: '已下架',
+  0: '停用',
+  1: '启用',
 };
 
-export const SUPPLIER_PRODUCT_STATUS_VARIANT: Record<SupplierProductStatus, 'muted' | 'success' | 'warning'> = {
-  DRAFT: 'muted',
-  ON_SHELF: 'success',
-  OFF_SHELF: 'warning',
+export const SUPPLIER_PRODUCT_STATUS_VARIANT: Record<SupplierProductStatus, 'muted' | 'success'> = {
+  0: 'muted',
+  1: 'success',
 };
 
 export const SUPPLIER_PRODUCT_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'DRAFT', label: '草稿' },
-  { value: 'ON_SHELF', label: '已上架' },
-  { value: 'OFF_SHELF', label: '已下架' },
+  { value: '1', label: '启用' },
+  { value: '0', label: '停用' },
 ];
 
 // ===== 报价状态 =====
 export const SUPPLIER_QUOTE_STATUS_LABEL: Record<SupplierQuoteStatus, string> = {
-  DRAFT: '草稿',
-  PENDING: '待审核',
-  APPROVED: '已通过',
-  REJECTED: '已驳回',
-  EXPIRED: '已过期',
-  OFF: '已下架',
+  0: '待审核',
+  1: '已通过',
+  2: '已驳回',
+  3: '已下架',
 };
 
-export const SUPPLIER_QUOTE_STATUS_VARIANT: Record<SupplierQuoteStatus, 'muted' | 'warning' | 'success' | 'destructive' | 'info'> = {
-  DRAFT: 'muted',
-  PENDING: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'destructive',
-  EXPIRED: 'muted',
-  OFF: 'info',
+export const SUPPLIER_QUOTE_STATUS_VARIANT: Record<SupplierQuoteStatus, 'warning' | 'success' | 'destructive' | 'info'> = {
+  0: 'warning',
+  1: 'success',
+  2: 'destructive',
+  3: 'info',
 };
 
 export const SUPPLIER_QUOTE_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'DRAFT', label: '草稿' },
-  { value: 'PENDING', label: '待审核' },
-  { value: 'APPROVED', label: '已通过' },
-  { value: 'REJECTED', label: '已驳回' },
-  { value: 'EXPIRED', label: '已过期' },
-  { value: 'OFF', label: '已下架' },
+  { value: 0, label: '待审核' },
+  { value: 1, label: '已通过' },
+  { value: 2, label: '已驳回' },
+  { value: 3, label: '已下架' },
 ];
 
 // ===== 供应商集采单 =====

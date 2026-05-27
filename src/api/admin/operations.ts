@@ -12,44 +12,42 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
   // 库存
-  ListStocks = '/b2b/admin/stocks/list',
-  UpdateStockThreshold = '/b2b/admin/stocks/update-threshold',
+  ListStocks = '/b2b/stock/supplier/list',
+  UpdateStockAlertQty = '/b2b/stock/alert-qty',
   // 门店订单
-  ListStoreOrders = '/b2b/admin/store-orders/list',
-  GetStoreOrder = '/b2b/admin/store-orders/detail',
-  CancelStoreOrder = '/b2b/admin/store-orders/cancel',
+  ListStoreOrders = '/b2b/store/order/admin/list',
   // 支付
-  ListPayments = '/b2b/admin/payments/list',
-  ConfirmPayment = '/b2b/admin/payments/confirm',
-  RejectPayment = '/b2b/admin/payments/reject',
+  ListPayments = '/b2b/payment/pending/list',
+  ConfirmPayment = '/b2b/payment/manual/confirm',
 }
 
 // ===== 库存 =====
 export function listStocksApi(params: any) {
-  return USE_MOCK ? stockMock.mockListStocks(params) : defHttp.post({ url: Api.ListStocks, data: params });
+  return USE_MOCK ? stockMock.mockListStocks(params) : defHttp.get({ url: Api.ListStocks, params });
 }
 export function updateStockThresholdApi(id: string, threshold: number) {
-  return USE_MOCK ? stockMock.mockUpdateStockThreshold(id, threshold) : defHttp.post({ url: Api.UpdateStockThreshold, data: { id, threshold } });
+  return USE_MOCK ? stockMock.mockUpdateStockThreshold(id, threshold) : defHttp.put({ url: Api.UpdateStockAlertQty, data: { id, alertQty: threshold } });
 }
 
 // ===== 门店订单 =====
 export function listStoreOrdersApi(params: any) {
-  return USE_MOCK ? storeOrderMock.mockListStoreOrders(params) : defHttp.post({ url: Api.ListStoreOrders, data: params });
+  return USE_MOCK ? storeOrderMock.mockListStoreOrders(params) : defHttp.get({ url: Api.ListStoreOrders, params });
 }
 export function getStoreOrderApi(id: string) {
-  return USE_MOCK ? storeOrderMock.mockGetStoreOrder(id) : defHttp.get({ url: Api.GetStoreOrder, params: { id } });
+  return USE_MOCK ? storeOrderMock.mockGetStoreOrder(id) : defHttp.get({ url: `/b2b/store/order/detail/${id}` });
 }
 export function cancelStoreOrderApi(id: string, reason: string) {
-  return USE_MOCK ? storeOrderMock.mockCancelStoreOrder(id, reason) : defHttp.post({ url: Api.CancelStoreOrder, data: { id, reason } });
+  return USE_MOCK ? storeOrderMock.mockCancelStoreOrder(id, reason) : defHttp.put({ url: `/b2b/store/order/cancel/${id}`, data: { reason } });
 }
 
 // ===== 支付 =====
 export function listPaymentsApi(params: any) {
-  return USE_MOCK ? paymentMock.mockListPayments(params) : defHttp.post({ url: Api.ListPayments, data: params });
+  return USE_MOCK ? paymentMock.mockListPayments(params) : defHttp.get({ url: Api.ListPayments, params });
 }
 export function confirmPaymentApi(id: string) {
-  return USE_MOCK ? paymentMock.mockConfirmPayment(id) : defHttp.post({ url: Api.ConfirmPayment, data: { id } });
+  return USE_MOCK ? paymentMock.mockConfirmPayment(id) : defHttp.put({ url: Api.ConfirmPayment, data: { id } });
 }
 export function rejectPaymentApi(id: string, reason: string) {
-  return USE_MOCK ? paymentMock.mockRejectPayment(id, reason) : defHttp.post({ url: Api.RejectPayment, data: { id, reason } });
+  // 后端无拒付接口，使用 mock
+  return paymentMock.mockRejectPayment(id, reason);
 }

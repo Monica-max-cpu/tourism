@@ -9,113 +9,122 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】门店端类型
  */
 
-// ===== 平台采购目录（门店视角，抽象 SKU + salePrice） =====
+// ===== 平台采购目录（门店视角） =====
 export interface StoreCatalogItem {
-  /** 商品目录 ID */
   id: string;
-  productSku: string;
   productName: string;
-  category: string;
+  productImages?: string;
+  categoryId?: string;
   unit: string;
-  /** 销售价（门店唯一可见价格） */
-  salePrice: number;
-  /** 平台库存可售数量（不暴露具体仓） */
-  availableQty: number;
-  /** 起订量 */
-  minQty: number;
-  cover?: string;
+  basePrice: number;
+  minOrderQty?: number;
+  status: 0 | 1 | 2;
+  sortOrder?: number;
   description?: string;
-  /** 是否为热销 / 推荐 */
-  hot?: boolean;
-  createdAt: string;
+  catalogTiers?: CatalogTier[];
+}
+
+export interface CatalogTier {
+  minQty: number;
+  maxQty: number | null;
+  unitPrice: number;
 }
 
 // ===== 购物车 =====
 export interface CartItem {
   catalogId: string;
-  productSku: string;
   productName: string;
   unit: string;
-  salePrice: number;
+  basePrice: number;
   qty: number;
-  cover?: string;
-  /** 加入购物车时刻的可售数量（用于校验） */
-  availableQty?: number;
-  /** 起订量 */
-  minQty?: number;
-  /** 加入时间 */
+  productImages?: string;
+  minOrderQty?: number;
+  catalogTiers?: CatalogTier[];
   addedAt: string;
 }
 
 // ===== 门店采购订单（门店视角） =====
 /**
- * 门店视角订单状态
- *  - PENDING_PAYMENT  待支付
- *  - PENDING_CONFIRM  已支付，待平台确认收款
- *  - CONFIRMED        平台已确认，备货/集采中
- *  - SHIPPING         配送中
- *  - DELIVERED        已送达，待门店签收
- *  - COMPLETED        已完成
- *  - CANCELLED        已取消
+ * 门店订单状态（cm_b2b_store_order.order_status）
+ *  0 待支付, 1 已支付待集采, 2 集采中, 3 发货中, 4 部分收货, 5 已完成, 6 已取消, 7 退款中, 8 已退款
  */
-export type StoreViewOrderStatus =
-  | 'PENDING_PAYMENT'
-  | 'PENDING_CONFIRM'
-  | 'CONFIRMED'
-  | 'SHIPPING'
-  | 'DELIVERED'
-  | 'COMPLETED'
-  | 'CANCELLED';
+export type StoreOrderStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export interface StoreViewOrderItem {
-  productSku: string;
+  id?: string;
+  catalogId?: string;
   productName: string;
+  spec?: string;
   unit: string;
-  qty: number;
-  /** 销售价（门店看到的价格） */
-  unitPrice: number;
+  quantity: number;
+  /** 平台目录价 */
+  catalogPrice: number;
+  /** 实际成交价（阶梯价） */
+  actualPrice: number;
   subtotal: number;
-  cover?: string;
+  receivedQty?: number;
+  collectiveItemId?: string;
+}
+
+export interface DeliveryInfo {
+  deliveryNo: string;
+  status: number;
+  statusLabel: string;
+  deliveryQty: number;
+  logisticsCompany?: string;
+  trackingNo?: string;
+  shippedTime?: string;
 }
 
 export interface StoreViewOrder {
   id: string;
   orderNo: string;
   storeId: string;
-  status: StoreViewOrderStatus;
-  items: StoreViewOrderItem[];
-  /** 订单总金额（按销售价） */
+  storeName?: string;
+  /** 订单状态（0-8） */
+  orderStatus: StoreOrderStatus;
+  statusLabel?: string;
+  items?: StoreViewOrderItem[];
+  /** 订单总金额 */
   totalAmount: number;
+  paidAmount?: number;
+  paymentMethod?: string;
+  paymentTime?: string;
   itemCount: number;
-  /** 收货地址（默认从门店资料带出） */
-  receiveAddress?: string;
-  receiver?: string;
-  receiverPhone?: string;
-  /** 物流信息（CONFIRMED → SHIPPING 时由平台/供应商写入） */
-  carrier?: string;
-  trackingNo?: string;
+  /** 收货地址快照 */
+  deliveryAddress?: {
+    receiverName: string;
+    receiverPhone: string;
+    province?: string;
+    city?: string;
+    address: string;
+  };
+  /** 发货记录（详情接口返回） */
+  deliveries?: DeliveryInfo[];
   remark?: string;
-  createdAt: string;
-  paidAt?: string;
-  confirmedAt?: string;
-  shippedAt?: string;
-  deliveredAt?: string;
-  completedAt?: string;
+  createTime: string;
+  expiredTime?: string;
   /** 驳回原因（支付被拒） */
   rejectReason?: string;
 }
 
 export interface StoreOrderCreateParams {
-  items: { catalogId: string; productSku: string; productName: string; unit: string; unitPrice: number; qty: number; cover?: string }[];
-  receiveAddress?: string;
-  receiver?: string;
-  receiverPhone?: string;
+  storeId: string;
+  deliveryAddress: {
+    receiverName: string;
+    receiverPhone: string;
+    province?: string;
+    city?: string;
+    address: string;
+  };
   remark?: string;
+  items: { catalogId: string; quantity: number }[];
 }
 
 // ===== 门店付款记录（门店视角） =====
-export type StorePaymentMethod = 'OFFLINE_TRANSFER' | 'ONLINE_WECHAT' | 'ONLINE_ALIPAY';
-export type StoreViewPaymentStatus = 'PENDING_CONFIRM' | 'CONFIRMED' | 'REJECTED';
+export type StorePaymentMethod = 'OFFLINE' | 'ONLINE_WECHAT' | 'ONLINE_ALIPAY';
+/** 支付状态: 0=待支付, 1=支付成功, 2=支付失败, 3=已退款 */
+export type StoreViewPaymentStatus = 0 | 1 | 2 | 3;
 
 export interface StorePaymentRecord {
   id: string;
@@ -143,34 +152,6 @@ export interface SubmitPaymentParams {
   method: StorePaymentMethod;
   voucherUrl?: string;
   transactionNo?: string;
-  remark?: string;
-}
-
-// ===== 销售上报 =====
-export interface SalesReportRecord {
-  id: string;
-  reportNo: string;
-  storeId: string;
-  productSku: string;
-  productName: string;
-  unit: string;
-  /** 上报销量 */
-  qty: number;
-  /** 上报销售额（门店实际成交） */
-  amount: number;
-  /** 上报日期（YYYY-MM-DD） */
-  reportDate: string;
-  remark?: string;
-  createdAt: string;
-}
-
-export interface SalesReportCreateParams {
-  productSku: string;
-  productName: string;
-  unit: string;
-  qty: number;
-  amount: number;
-  reportDate: string;
   remark?: string;
 }
 

@@ -41,7 +41,7 @@ class VAxios {
 
   constructor() {
     this.instance = axios.create({
-      baseURL: import.meta.env.VITE_API_BASE || '/jeecgboot',
+      baseURL: import.meta.env.VITE_API_BASE ?? '/jeecgboot',
       timeout: 15000,
     });
     this.setupInterceptors();
@@ -53,6 +53,12 @@ class VAxios {
       if (token) {
         config.headers['X-Access-Token'] = token;
       }
+      // update-begin--author:phase7---date:2026-05-25---for:【阶段7】JeecgBoot 防重放 + 多租户头
+      config.headers['X-Timestamp'] = Date.now().toString();
+      config.headers['X-Nonce'] = Math.random().toString(36).slice(2, 10);
+      const tenantId = localStorage.getItem('b2b:tenantId') || '';
+      if (tenantId) config.headers['X-Tenant-Id'] = tenantId;
+      // update-end--author:phase7---date:2026-05-25---for:【阶段7】JeecgBoot 防重放 + 多租户头
       return config;
     });
 

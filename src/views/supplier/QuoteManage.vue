@@ -26,7 +26,7 @@ import {
 } from '/@/constants/supplierStatus';
 import { formatCurrency, formatDate } from '/@/utils/format';
 import { useUserStore } from '/@/stores/modules/user';
-import type { SupplierQuoteRecord, SupplierProduct } from '/#/b2b-supplier';
+import type { SupplierQuoteRecord, SupplierProduct, QuoteTier } from '/#/b2b-supplier';
 
 const userStore = useUserStore();
 const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
@@ -35,19 +35,40 @@ const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
-  return await listSupplierQuotesApi({ ...params, searchInfo: { ...search, supplierId: supplierId.value } });
+  const res: any = await listSupplierQuotesApi({ ...params, supplierId: supplierId.value, ...search });
+  const list = Array.isArray(res) ? res : (res.records || []);
+  const records = list.map((item: any) => {
+    const q = item.quote || item;
+    return {
+      ...q,
+      tiers: item.tiers,
+      status: q.status,
+      productName: q.productName || '',
+    };
+  });
+  return { records, total: records.length };
 }
 
 const columns: BasicColumn[] = [
-  { field: 'quoteNo', title: '报价编号', width: 150 },
   { field: 'productName', title: '商品名称', minWidth: 180 },
-  { field: 'productSku', title: 'SKU', width: 120 },
-  { field: 'unit', title: '单位', width: 70 },
-  { field: 'costPrice', title: '我的报价', width: 120, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'minQty', title: '起订量', width: 80, align: 'right' },
-  { field: 'validTo', title: '有效期至', width: 110, formatter: ({ cellValue }) => formatDate(cellValue) },
-  { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
-  { field: 'action', title: '操作', width: 200, fixed: 'right', slots: { default: 'action' } },
+  { field: 'basePrice', title: '报价', width: 90, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+   { field: 'minOrderQty', title: '起订量', width: 90, align: 'center' },
+  { field: 'minOrderQty', title: '档位', width: 90, align: 'center', formatter: ({ row }) => {
+    return row.tiers && row.tiers.length > 0 ? `${row.tiers.length} 档` : '-';
+  } },
+  { field: 'tiers', title: '档位详情', width: 300, formatter: ({ row }) => {
+    if (!row.tiers || row.tiers.length === 0) return `${row.minOrderQty}件起 ${formatCurrency(row.basePrice)}`;
+    return row.tiers.map((t: any) => {
+      const qty = t.maxQty != null ? `${t.minQty}~${t.maxQty}件` : `${t.minQty}件以上`;
+      return `${qty}：${formatCurrency(t.unitPrice)}`;
+    }).join('，');
+  } },
+ 
+  { field: 'leadTimeDays', title: '备货周期', width: 100, align: 'center' },
+  { field: 'validFrom', title: '生效日期', width: 180, align: 'center',formatter: ({ cellValue }) => formatDate(cellValue) },
+  { field: 'validTo', title: '截止日期', width: 180, align: 'center',formatter: ({ cellValue }) => formatDate(cellValue) },
+  { field: 'status', title: '状态', width: 180, align: 'center',slots: { default: 'status' } },
+  { field: 'action', title: '操作', width: 240, fixed: 'right', slots: { default: 'action' } },
 ];
 
 // ====== 新建/编辑 ======
@@ -58,31 +79,44 @@ const submitting = ref(false);
 const form = reactive({
   id: '',
   productId: '',
-  productSku: '',
   productName: '',
   unit: '',
-  costPrice: 0,
+  basePrice: 0,
   validFrom: '2026-05-24',
   validTo: '2026-12-31',
-  minQty: 10,
+  minOrderQty: 10,
+  leadTimeDays: 3,
+  currency: 'CNY',
   remark: '',
+  tiers: [] as QuoteTier[],
 });
 
 const isEdit = computed(() => !!form.id);
-const formValid = computed(() => !!form.productId && form.costPrice > 0 && !!form.validTo);
+const formValid = computed(() => !!form.productId && form.basePrice > 0 && !!form.validTo && form.minOrderQty > 0);
+
+function addTier() {
+  const last = form.tiers[form.tiers.length - 1];
+  const startQty = last ? (last.maxQty ?? last.minQty + 1) : form.minOrderQty;
+  form.tiers.push({ minQty: startQty, maxQty: startQty + 49, unitPrice: form.basePrice });
+}
+
+function removeTier(index: number) {
+  form.tiers.splice(index, 1);
+}
 
 async function loadProductOptions() {
   const { records } = await listSupplierProductsApi({
     pageNo: 1, pageSize: 100,
-    searchInfo: { supplierId: supplierId.value, status: 'ON_SHELF' },
+    supplierId: supplierId.value, status: '1',
   });
   productOptions.value = records;
 }
 
 function resetForm() {
   Object.assign(form, {
-    id: '', productId: '', productSku: '', productName: '', unit: '',
-    costPrice: 0, validFrom: '2026-05-24', validTo: '2026-12-31', minQty: 10, remark: '',
+    id: '', productId: '', productName: '', unit: '',
+    basePrice: 0, validFrom: '2026-05-24', validTo: '2026-12-31', minOrderQty: 10,
+    leadTimeDays: 3, currency: 'CNY', remark: '', tiers: [] as QuoteTier[],
   });
 }
 
@@ -96,9 +130,10 @@ async function openEdit(row: SupplierQuoteRecord) {
   resetForm();
   await loadProductOptions();
   Object.assign(form, {
-    id: row.id, productId: row.productId, productSku: row.productSku, productName: row.productName,
-    unit: row.unit, costPrice: row.costPrice, validFrom: row.validFrom, validTo: row.validTo,
-    minQty: row.minQty || 10, remark: row.remark || '',
+    id: row.id, productId: row.productId, productName: row.productName,
+    unit: row.unit, basePrice: row.costPrice, validFrom: row.validFrom, validTo: row.validTo,
+    minOrderQty: row.minQty || 10, remark: row.remark || '',
+    tiers: (row as any).tiers || [],
   });
   editModal.open(row);
 }
@@ -106,9 +141,8 @@ async function openEdit(row: SupplierQuoteRecord) {
 function onProductChange(v: string) {
   const p = productOptions.value.find((x) => x.id === v);
   if (p) {
-    form.productId = p.id; form.productSku = p.productSku;
+    form.productId = p.id;
     form.productName = p.productName; form.unit = p.unit;
-    if (!isEdit.value) form.costPrice = p.defaultCost;
   }
 }
 
@@ -118,15 +152,22 @@ async function confirmSave() {
   try {
     if (isEdit.value) {
       await updateSupplierQuoteApi(form.id, {
-        costPrice: form.costPrice, validFrom: form.validFrom, validTo: form.validTo,
-        minQty: form.minQty, remark: form.remark,
-      });
+        basePrice: form.basePrice, validFrom: form.validFrom + ' 00:00:00', validTo: form.validTo + ' 00:00:00',
+        minOrderQty: form.minOrderQty, leadTimeDays: form.leadTimeDays,
+        remark: form.remark, tiers: form.tiers.length ? form.tiers : undefined,
+      } as any);
     } else {
       await createSupplierQuoteApi({
-        productId: form.productId, productSku: form.productSku, productName: form.productName,
-        unit: form.unit, costPrice: form.costPrice,
-        validFrom: form.validFrom, validTo: form.validTo,
-        minQty: form.minQty, remark: form.remark,
+        supplierId: supplierId.value,
+        productId: form.productId,
+        minOrderQty: form.minOrderQty,
+        basePrice: form.basePrice,
+        validFrom: form.validFrom + ' 00:00:00',
+        validTo: form.validTo + ' 00:00:00',
+        currency: form.currency,
+        leadTimeDays: form.leadTimeDays,
+        remark: form.remark,
+        tiers: form.tiers.length ? form.tiers : undefined,
       });
     }
     editModal.close();
@@ -137,7 +178,8 @@ async function confirmSave() {
 }
 
 async function offShelf(row: SupplierQuoteRecord) {
-  await offSupplierQuoteApi(row.id);
+  const res: any = await offSupplierQuoteApi(row.id);
+  if (res?.success === false) return;
   reload();
 }
 async function resubmit(row: SupplierQuoteRecord) {
@@ -182,9 +224,9 @@ function onReset() { search.keyword = ''; search.status = ''; reload({ pageNo: 1
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '编辑', authCode: 'b2b:supplier:quote', hidden: row.status !== 'DRAFT' && row.status !== 'REJECTED' && row.status !== 'OFF', onClick: () => openEdit(row) },
-            { label: '下架', authCode: 'b2b:supplier:quote', hidden: row.status !== 'APPROVED', onClick: () => offShelf(row) },
-            { label: '重新提交', authCode: 'b2b:supplier:quote', hidden: row.status !== 'OFF' && row.status !== 'REJECTED' && row.status !== 'EXPIRED', onClick: () => resubmit(row) },
+            { label: '编辑', authCode: 'b2b:supplier:quote', hidden: row.status !== 2 && row.status !== 3, onClick: () => openEdit(row) },
+            { label: '撤回', authCode: 'b2b:supplier:quote', hidden: row.status !== 0, onClick: () => offShelf(row) },
+            { label: '重新提交', authCode: 'b2b:supplier:quote', hidden: row.status !== 3 && row.status !== 2, onClick: () => resubmit(row) },
           ]"
         />
       </template>
@@ -205,17 +247,31 @@ function onReset() { search.keyword = ''; search.status = ''; reload({ pageNo: 1
           <Select :model-value="form.productId" :disabled="isEdit" @update:model-value="onProductChange">
             <SelectTrigger><SelectValue placeholder="请选择商品" /></SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="p in productOptions" :key="p.id" :value="p.id">{{ p.productName }} ({{ p.productSku }})</SelectItem>
+              <SelectItem v-for="p in productOptions" :key="p.id" :value="p.id">{{ p.productName }} ({{ p.barcode }})</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div class="flex items-center gap-2">
-          <Label>我的报价（成本价/{{ form.unit || '单位' }}）<span class="text-destructive">*</span></Label>
-          <Input v-model.number="form.costPrice" type="number" min="0" step="0.01" placeholder="0.00" />
+          <Label>基础单价（{{ form.unit || '单位' }}）<span class="text-destructive">*</span></Label>
+          <Input v-model.number="form.basePrice" type="number" min="0" step="0.01" placeholder="0.00" />
         </div>
         <div class="flex items-center gap-2">
-          <Label>起订量</Label>
-          <Input v-model.number="form.minQty" type="number" min="1" placeholder="10" />
+          <Label>币种</Label>
+          <Select v-model="form.currency">
+            <SelectTrigger><SelectValue placeholder="CNY" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="CNY">CNY 人民币</SelectItem>
+              <SelectItem value="USD">USD 美元</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div class="flex items-center gap-2">
+          <Label>最低起订量 <span class="text-destructive">*</span></Label>
+          <Input v-model.number="form.minOrderQty" type="number" min="1" placeholder="10" />
+        </div>
+        <div class="flex items-center gap-2">
+          <Label>备货周期（天）</Label>
+          <Input v-model.number="form.leadTimeDays" type="number" min="0" placeholder="3" />
         </div>
         <div class="flex items-center gap-2">
           <Label>生效日期</Label>
@@ -225,6 +281,24 @@ function onReset() { search.keyword = ''; search.status = ''; reload({ pageNo: 1
           <Label>有效期至 <span class="text-destructive">*</span></Label>
           <Input v-model="form.validTo" type="date" />
         </div>
+
+        <!-- 阶梯价 -->
+        <div class="col-span-2 space-y-2">
+          <div class="flex items-center justify-between">
+            <Label>阶梯价（选填）</Label>
+            <Button type="button" variant="outline" size="sm" @click="addTier">+ 添加阶梯</Button>
+          </div>
+          <div v-if="form.tiers.length" class="space-y-2">
+            <div v-for="(t, i) in form.tiers" :key="i" class="flex items-center gap-2">
+              <Input v-model.number="t.minQty" type="number" min="1" placeholder="起" class="w-20" />
+              <span class="text-xs text-muted-foreground">~</span>
+              <Input v-model.number="t.maxQty" type="number" min="1" placeholder="止（留空不限）" class="w-24" />
+              <Input v-model.number="t.unitPrice" type="number" min="0" step="0.01" placeholder="单价" class="w-24" />
+              <Button type="button" variant="ghost" size="icon" class="text-destructive h-8 w-8" @click="removeTier(i)">×</Button>
+            </div>
+          </div>
+        </div>
+
         <div class="col-span-2 space-y-1.5">
           <Label>备注</Label>
           <Input v-model="form.remark" placeholder="量大可议、品质承诺等" />

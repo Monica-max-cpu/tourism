@@ -12,22 +12,19 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
   // 集采
-  ListPendingCollective = '/b2b/admin/collective/pending',
-  TriggerCollective = '/b2b/admin/collective/trigger',
-  ListCollectiveOrders = '/b2b/admin/collective/orders',
-  GetCollectiveOrder = '/b2b/admin/collective/orders/detail',
-  GetCollectiveConfig = '/b2b/admin/collective/config',
-  UpdateCollectiveConfig = '/b2b/admin/collective/config/update',
+  ListPendingCollective = '/b2b/collective/pending-orders',
+  TriggerCollective = '/b2b/collective/trigger',
+  ListCollectiveOrders = '/b2b/collective/list',
+  GetCollectiveConfig = '/b2b/collective/config',
+  UpdateCollectiveConfig = '/b2b/collective/config',
   // 履约
-  ListDeliveries = '/b2b/admin/deliveries/list',
-  HandleDeliveryException = '/b2b/admin/deliveries/handle-exception',
+  ListDeliveries = '/b2b/delivery/list',
   // 结算
-  ListStoreSettlements = '/b2b/admin/settlements/stores',
-  ListSupplierSettlements = '/b2b/admin/settlements/suppliers',
-  PaySettlement = '/b2b/admin/settlements/pay',
+  ListStoreSettlements = '/b2b/settlement/store/list',
+  ListSupplierSettlements = '/b2b/settlement/supplier/list',
   // 利润
-  ListProfits = '/b2b/admin/profits/list',
-  GetProfitSummary = '/b2b/admin/profits/summary',
+  ListProfits = '/b2b/profit/list',
+  GetProfitSummary = '/b2b/profit/summary',
 }
 
 // ===== 集采 =====
@@ -38,42 +35,42 @@ export function triggerCollectiveApi(ids: string[]) {
   return USE_MOCK ? collectiveMock.mockTriggerCollective(ids) : defHttp.post({ url: Api.TriggerCollective, data: { ids } });
 }
 export function listCollectiveOrdersApi(params: any) {
-  return USE_MOCK ? collectiveMock.mockListCollectiveOrders(params) : defHttp.post({ url: Api.ListCollectiveOrders, data: params });
+  return USE_MOCK ? collectiveMock.mockListCollectiveOrders(params) : defHttp.get({ url: Api.ListCollectiveOrders, params });
 }
 export function getCollectiveOrderApi(id: string) {
-  return USE_MOCK ? collectiveMock.mockGetCollectiveOrder(id) : defHttp.get({ url: Api.GetCollectiveOrder, params: { id } });
+  return USE_MOCK ? collectiveMock.mockGetCollectiveOrder(id) : defHttp.get({ url: `/b2b/collective/detail/${id}` });
 }
 export function getCollectiveConfigApi() {
   return USE_MOCK ? collectiveMock.mockGetCollectiveConfig() : defHttp.get({ url: Api.GetCollectiveConfig });
 }
 export function updateCollectiveConfigApi(patch: Partial<CollectiveConfig>) {
-  return USE_MOCK ? collectiveMock.mockUpdateCollectiveConfig(patch) : defHttp.post({ url: Api.UpdateCollectiveConfig, data: patch });
+  return USE_MOCK ? collectiveMock.mockUpdateCollectiveConfig(patch) : defHttp.put({ url: Api.UpdateCollectiveConfig, data: patch });
 }
 
 // ===== 履约 =====
 export function listDeliveriesApi(params: any) {
-  return USE_MOCK ? fulfillmentMock.mockListDeliveries(params) : defHttp.post({ url: Api.ListDeliveries, data: params });
+  return USE_MOCK ? fulfillmentMock.mockListDeliveries(params) : defHttp.get({ url: Api.ListDeliveries, params });
 }
 export function handleDeliveryExceptionApi(id: string, action: 'retry' | 'cancel', remark: string) {
   return USE_MOCK
     ? fulfillmentMock.mockHandleDeliveryException(id, action, remark)
-    : defHttp.post({ url: Api.HandleDeliveryException, data: { id, action, remark } });
+    : defHttp.put({ url: `/b2b/delivery/exception/${id}`, data: { action, remark } });
 }
 
 // ===== 结算 =====
 export function listStoreSettlementsApi(params: any) {
-  return USE_MOCK ? fulfillmentMock.mockListStoreSettlements(params) : defHttp.post({ url: Api.ListStoreSettlements, data: params });
+  return USE_MOCK ? fulfillmentMock.mockListStoreSettlements(params) : defHttp.get({ url: Api.ListStoreSettlements, params });
 }
 export function listSupplierSettlementsApi(params: any) {
-  return USE_MOCK ? fulfillmentMock.mockListSupplierSettlements(params) : defHttp.post({ url: Api.ListSupplierSettlements, data: params });
+  return USE_MOCK ? fulfillmentMock.mockListSupplierSettlements(params) : defHttp.get({ url: Api.ListSupplierSettlements, params });
 }
 export function paySettlementApi(id: string) {
-  return USE_MOCK ? fulfillmentMock.mockPaySettlement(id) : defHttp.post({ url: Api.PaySettlement, data: { id } });
+  return USE_MOCK ? fulfillmentMock.mockPaySettlement(id) : defHttp.put({ url: `/b2b/settlement/supplier/pay/${id}` });
 }
 
 // ===== 利润 =====
 export function listProfitsApi(params: any) {
-  return USE_MOCK ? fulfillmentMock.mockListProfits(params) : defHttp.post({ url: Api.ListProfits, data: params });
+  return USE_MOCK ? fulfillmentMock.mockListProfits(params) : defHttp.get({ url: Api.ListProfits, params });
 }
 export function getProfitSummaryApi() {
   return USE_MOCK ? fulfillmentMock.mockGetProfitSummary() : defHttp.get({ url: Api.GetProfitSummary });

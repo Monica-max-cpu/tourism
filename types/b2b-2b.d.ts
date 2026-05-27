@@ -11,36 +11,28 @@ export type StockHealthLevel = 'NORMAL' | 'LOW' | 'OUT';
 
 export interface StockRecord {
   id: string;
-  productSku: string;
+  supplierId: string;
+  supplierName?: string;
+  productId: string;
   productName: string;
-  category: string;
-  unit: string;
-  /** 库存归属 */
-  ownerType: StockOwnerType;
-  /** 归属方名称（供应商名/门店名/平台仓） */
-  ownerName: string;
-  ownerId?: string;
-  /** 仓库名称 */
-  warehouseName?: string;
+  /** 预警阈值 */
+  alertQty: number;
   /** 可用库存 */
   availableQty: number;
-  /** 锁定库存（已下单未发货） */
+  /** 锁定库存 */
   lockedQty: number;
-  /** 预警阈值 */
-  warnThreshold: number;
-  /** 健康状态 */
-  health: StockHealthLevel;
-  updatedAt: string;
+  /** 总库存 */
+  totalQty: number;
+  warehouseId?: string;
+  /** 健康状态（前端根据 availableQty/alertQty 计算） */
+  health?: StockHealthLevel;
+  lastReplenishTime?: string;
+  createTime?: string;
+  updateTime?: string;
 }
 
 // ===== 门店采购订单 =====
-export type OrderStatus =
-  | 'PENDING_PAY' // 待支付
-  | 'PAID' // 已支付，待平台确认收款
-  | 'CONFIRMED' // 已确认收款，待集采/发货
-  | 'SHIPPING' // 配送中
-  | 'COMPLETED' // 已完成
-  | 'CANCELLED'; // 已取消
+export type OrderStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export interface StoreOrderItem {
   productSku: string;
@@ -58,7 +50,8 @@ export interface StoreOrder {
   orderNo: string;
   storeId: string;
   storeName: string;
-  status: OrderStatus;
+  orderStatus: OrderStatus;
+  statusLabel?: string;
   items: StoreOrderItem[];
   /** 订单总金额（按销售价） */
   totalAmount: number;
@@ -68,8 +61,10 @@ export interface StoreOrder {
   confirmedAt?: string;
   shippedAt?: string;
   completedAt?: string;
-  /** 关联的集采单 ID（如已触发） */
+  /** 关联的集采单 ID */
   collectiveOrderId?: string;
+  collectiveNo?: string;
+  supplierName?: string;
   remark?: string;
 }
 

@@ -9,22 +9,23 @@
  */
 
 // ===== 供应商商品库（自营 SKU）=====
-export type SupplierProductStatus = 'DRAFT' | 'ON_SHELF' | 'OFF_SHELF';
+/** 0=停用 1=启用 */
+export type SupplierProductStatus = 0 | 1;
 
 export interface SupplierProduct {
   id: string;
   supplierId: string;
-  productSku: string;
+  supplierName: string;
   productName: string;
-  category: string;
+  brand: string;
+  spec: string;
   unit: string;
-  /** 默认成本价（用于一键创建报价） */
-  defaultCost: number;
-  cover?: string;
+  barcode: string;
+  categoryId: string;
+  images: string;
   description?: string;
   status: SupplierProductStatus;
-  createdAt: string;
-  updatedAt: string;
+  createTime: string;
 }
 
 // ===== 供应商报价 =====
@@ -37,7 +38,7 @@ export interface SupplierProduct {
  *  - EXPIRED   过期
  *  - OFF       已下架（供应商主动下架）
  */
-export type SupplierQuoteStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'OFF';
+export type SupplierQuoteStatus = 0 | 1 | 2 | 3;
 
 export interface SupplierQuoteRecord {
   id: string;
@@ -60,16 +61,23 @@ export interface SupplierQuoteRecord {
   reviewedAt?: string;
 }
 
+export interface QuoteTier {
+  minQty: number;
+  maxQty?: number | null;
+  unitPrice: number;
+}
+
 export interface SupplierQuoteCreateParams {
+  supplierId: string;
   productId: string;
-  productSku: string;
-  productName: string;
-  unit: string;
-  costPrice: number;
+  minOrderQty: number;
+  basePrice: number;
   validFrom: string;
   validTo: string;
-  minQty?: number;
+  currency?: string;
+  leadTimeDays?: number;
   remark?: string;
+  tiers?: QuoteTier[];
 }
 
 // ===== 供应商集采单 =====
@@ -141,15 +149,31 @@ export interface ShipParams {
   remark?: string;
 }
 
+// ===== 供应商仓库 =====
+export interface SupplierWarehouse {
+  id: string;
+  supplierId: string;
+  warehouseName: string;
+  province?: string;
+  city?: string;
+  address?: string;
+  contactPerson?: string;
+  contactPhone?: string;
+  isDefault: 0 | 1;
+  createTime?: string;
+}
+
 // ===== 供应商库存 =====
 export type SupplierStockHealth = 'NORMAL' | 'LOW' | 'OUT';
 
 export interface SupplierStock {
   id: string;
   supplierId: string;
+  productId?: string;
   productSku: string;
   productName: string;
   unit: string;
+  warehouseId?: string;
   warehouseName?: string;
   /** 可用库存 */
   availableQty: number;

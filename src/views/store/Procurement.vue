@@ -1,13 +1,12 @@
 <script setup lang="ts">
 /**
  * 门店 - 商品采购
- * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段4】门店采购目录
- * - 仅展示 salePrice + 抽象 SKU；无 supplierName / costPrice / profit
- * - 卡片式商品瀑布流 + 加入购物车
- * update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】门店采购目 */
+ * update-begin--author:claude---date:2026-05-26---for:【阶段7】对齐合约字段、去 searchInfo、加 minPrice/maxPrice、加阶梯价展示
+ * update-end--author:claude---date:2026-05-26---for:【阶段7】对齐合约字段、去 searchInfo、加 minPrice/maxPrice、加阶梯价展示
+ */
 import { reactive, ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { ShoppingCart, Flame, Plus, Minus } from 'lucide-vue-next';
+import { ShoppingCart, Plus, Minus, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import {
   Badge, Button, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -27,25 +26,35 @@ const userStore = useUserStore();
 const cartStore = useCartStore();
 cartStore.init(userStore.getUserInfo?.storeId || '');
 
-const search = reactive({ keyword: '', category: '', onlyHot: false });
+const search = reactive({ productName: '', categoryId: '', minPrice: '', maxPrice: '' });
 const list = ref<StoreCatalogItem[]>([]);
 const total = ref(0);
 const pageNo = ref(1);
 const pageSize = ref(12);
 const loading = ref(false);
 const qtyMap = reactive<Record<string, number>>({});
+const tierExpanded = reactive<Record<string, boolean>>({});
+
+function getCover(item: StoreCatalogItem): string {
+  if (!item.productImages) return '';
+  try {
+    const arr = JSON.parse(item.productImages);
+    return (Array.isArray(arr) && arr.length) ? arr[0] : '';
+  } catch {
+    return '';
+  }
+}
 
 async function loadData() {
   loading.value = true;
   try {
     const res = await listStoreCatalogApi({
-      pageNo: pageNo.value, pageSize: pageSize.value,
-      searchInfo: { ...search },
+      pageNo: pageNo.value, pageSize: pageSize.value, ...search,
     });
     list.value = res.records;
     total.value = res.total;
     res.records.forEach((it: StoreCatalogItem) => {
-      if (qtyMap[it.id] === undefined) qtyMap[it.id] = it.minQty || 1;
+      if (qtyMap[it.id] === undefined) qtyMap[it.id] = it.minOrderQty || 1;
     });
   } finally {
     loading.value = false;
@@ -54,23 +63,34 @@ async function loadData() {
 onMounted(loadData);
 
 function onSearch() { pageNo.value = 1; loadData(); }
-function onReset() { search.keyword = ''; search.category = ''; search.onlyHot = false; pageNo.value = 1; loadData(); }
+function onReset() {
+  search.productName = ''; search.categoryId = ''; search.minPrice = ''; search.maxPrice = '';
+  pageNo.value = 1; loadData();
+}
 
 function inc(it: StoreCatalogItem) {
-  const cur = qtyMap[it.id] ?? it.minQty;
-  qtyMap[it.id] = Math.min(cur + 1, it.availableQty);
+  const cur = qtyMap[it.id] ?? it.minOrderQty ?? 1;
+  qtyMap[it.id] = cur + 1;
 }
 function dec(it: StoreCatalogItem) {
-  const cur = qtyMap[it.id] ?? it.minQty;
-  qtyMap[it.id] = Math.max(cur - 1, it.minQty);
+  const cur = qtyMap[it.id] ?? it.minOrderQty ?? 1;
+  qtyMap[it.id] = Math.max(cur - 1, it.minOrderQty ?? 1);
 }
 function addToCart(it: StoreCatalogItem) {
-  const qty = qtyMap[it.id] ?? it.minQty;
+  const qty = qtyMap[it.id] ?? it.minOrderQty ?? 1;
   cartStore.addItem(it, qty);
   toast.value = `已加入：${it.productName} × ${qty}`;
   setTimeout(() => (toast.value = ''), 1500);
 }
 const toast = ref('');
+
+function goDetail(it: StoreCatalogItem) {
+  router.push(`/store/catalog/${it.id}`);
+}
+
+function toggleTier(id: string) {
+  tierExpanded[id] = !tierExpanded[id];
+}
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 function changePage(p: number) {
@@ -82,35 +102,34 @@ function goCart() { router.push(ROUTE_PATHS.STORE_CART); }
 </script>
 
 <template>
-  <PageWrapper title="商品采购" subtitle="按平台目录浏览并下单（价格为平台销售价）">
+  <PageWrapper title="商品采购" subtitle="按平台目录浏览并下单">
 
     <template #extra>
-      <Badge variant="secondary">门店仅可见销售价</Badge>
       <Button variant="outline" @click="goCart">
         <ShoppingCart class="w-4 h-4 mr-1.5" />
-        购物({{ cartStore.getCount }})
+        购物车 ({{ cartStore.getCount }})
       </Button>
     </template>
 
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">关键词</Label>
-        <Input v-model="search.keyword" placeholder="商品名/ SKU" class="w-60" @keyup.enter="onSearch" />
+        <Input v-model="search.productName" placeholder="商品名" class="w-48" @keyup.enter="onSearch" />
       </div>
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">分类</Label>
-        <Select v-model="search.category">
-          <SelectTrigger class="w-40"><SelectValue placeholder="全部分类" /></SelectTrigger>
+        <Select v-model="search.categoryId">
+          <SelectTrigger class="w-32"><SelectValue placeholder="全部分类" /></SelectTrigger>
           <SelectContent>
             <SelectItem v-for="o in STORE_CATEGORY_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div class="flex items-center gap-2">
-        <Label class="text-xs text-muted-foreground">推荐</Label>
-        <Button :variant="search.onlyHot ? 'default' : 'outline'" size="sm" @click="search.onlyHot = !search.onlyHot; onSearch();">
-          <Flame class="w-3.5 h-3.5 mr-1" />仅热销
-        </Button>
+        <Label class="text-xs text-muted-foreground">价格</Label>
+        <Input v-model="search.minPrice" type="number" min="0" placeholder="最低" class="w-20" />
+        <span class="text-xs text-muted-foreground">~</span>
+        <Input v-model="search.maxPrice" type="number" min="0" placeholder="最高" class="w-20" />
       </div>
     </SearchBar>
 
@@ -119,32 +138,45 @@ function goCart() { router.push(ROUTE_PATHS.STORE_CART); }
     <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <div
         v-for="it in list" :key="it.id"
-        class="bg-card border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+        class="bg-card border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow flex flex-col cursor-pointer"
+        @click="goDetail(it)"
       >
-        <div class="aspect-square bg-muted relative overflow-hidden">
-          <img :src="it.cover" :alt="it.productName" class="w-full h-full object-cover" loading="lazy" />
-          <Badge v-if="it.hot" variant="destructive" class="absolute top-2 left-2">
-            <Flame class="w-3 h-3 mr-1" />热销
-          </Badge>
-          <Badge v-if="it.availableQty < 50" variant="warning" class="absolute top-2 right-2">仅剩 {{ it.availableQty }}</Badge>
+        <div class="aspect-square bg-muted overflow-hidden">
+          <img :src="getCover(it)" :alt="it.productName" class="w-full h-full object-cover" loading="lazy" />
         </div>
         <div class="p-3 flex flex-col flex-1">
           <div class="text-sm font-medium line-clamp-2 min-h-10">{{ it.productName }}</div>
-          <div class="text-xs text-muted-foreground mt-1">{{ it.category }} · SKU {{ it.productSku }}</div>
+          <div class="text-xs text-muted-foreground mt-1">{{ it.categoryId }}</div>
           <div class="flex items-baseline gap-1 mt-2">
-            <span class="text-lg font-bold text-primary tracking-tight" style="font-variant-numeric: tabular-nums;">
-              {{ formatCurrency(it.salePrice) }}
+            <span class="text-lg font-bold text-primary tracking-tight">
+              {{ formatCurrency(it.basePrice) }}
             </span>
             <span class="text-xs text-muted-foreground">/{{ it.unit }}</span>
           </div>
-          <div class="text-xs text-muted-foreground mt-1">起订量 {{ it.minQty }} {{ it.unit }}</div>
-          <div class="flex items-center justify-between mt-3 gap-2">
+          <div class="text-xs text-muted-foreground mt-1">起订量 {{ it.minOrderQty }} {{ it.unit }}</div>
+
+          <!-- 阶梯价 -->
+          <div v-if="it.catalogTiers && it.catalogTiers.length" class="mt-2 border-t border-border pt-2" @click.stop>
+            <button class="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground w-full" @click.stop="toggleTier(it.id)">
+              <component :is="tierExpanded[it.id] ? ChevronUp : ChevronDown" class="w-3.5 h-3.5" />
+              阶梯价
+            </button>
+            <div v-if="tierExpanded[it.id]" class="mt-1.5 text-xs space-y-0.5">
+              <div v-for="(t, i) in it.catalogTiers" :key="i" class="flex justify-between">
+                <span class="text-muted-foreground">{{ t.minQty }}{{ t.maxQty ? `~${t.maxQty}` : '+' }}</span>
+                <span class="font-medium">{{ formatCurrency(t.unitPrice) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 操作 -->
+          <div class="flex items-center justify-between mt-3 gap-2" @click.stop>
             <div class="inline-flex items-center border border-border rounded">
-              <button class="w-7 h-7 flex items-center justify-center hover:bg-muted" @click="dec(it)" :disabled="qtyMap[it.id] <= it.minQty">
+              <button class="w-7 h-7 flex items-center justify-center hover:bg-muted" @click="dec(it)" :disabled="qtyMap[it.id] <= (it.minOrderQty ?? 1)">
                 <Minus class="w-3 h-3" />
               </button>
-              <span class="w-9 text-center text-sm tabular-nums">{{ qtyMap[it.id] ?? it.minQty }}</span>
-              <button class="w-7 h-7 flex items-center justify-center hover:bg-muted" @click="inc(it)" :disabled="qtyMap[it.id] >= it.availableQty">
+              <span class="w-9 text-center text-sm tabular-nums">{{ qtyMap[it.id] ?? it.minOrderQty }}</span>
+              <button class="w-7 h-7 flex items-center justify-center hover:bg-muted" @click="inc(it)">
                 <Plus class="w-3 h-3" />
               </button>
             </div>

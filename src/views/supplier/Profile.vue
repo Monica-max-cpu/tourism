@@ -61,17 +61,12 @@ async function save() {
   saving.value = true;
   try {
     await updateSupplierProfileApi({
-      supplierName: form.supplierName,
+      id: supplierId.value,
       contactPerson: form.contactPerson,
       contactPhone: form.contactPhone,
       contactEmail: form.contactEmail,
-      province: form.province,
-      city: form.city,
       address: form.address,
-      bankName: form.bankName,
-      bankAccount: form.bankAccount,
-      taxNo: form.taxNo,
-      description: form.description,
+      businessLicense: form.businessLicenseUrl,
     });
     editing.value = false;
     await loadProfile();

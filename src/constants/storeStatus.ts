@@ -4,76 +4,85 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】门店端状态映射
  */
 import type {
-  StoreViewOrderStatus,
+  StoreOrderStatus,
   StoreViewPaymentStatus,
   StorePaymentMethod,
 } from '/#/b2b-store';
 
 // ===== 门店订单状态 =====
-export const STORE_ORDER_STATUS_LABEL: Record<StoreViewOrderStatus, string> = {
-  PENDING_PAYMENT: '待支付',
-  PENDING_CONFIRM: '待确认收款',
-  CONFIRMED: '备货中',
-  SHIPPING: '配送中',
-  DELIVERED: '待签收',
-  COMPLETED: '已完成',
-  CANCELLED: '已取消',
+export const STORE_ORDER_STATUS_LABEL: Record<StoreOrderStatus, string> = {
+  0: '待支付',
+  1: '已支付，待集采',
+  2: '集采中',
+  3: '发货中',
+  4: '部分收货',
+  5: '已完成',
+  6: '已取消',
+  7: '退款中',
+  8: '已退款',
 };
 
 export const STORE_ORDER_STATUS_VARIANT: Record<
-  StoreViewOrderStatus,
+  StoreOrderStatus,
   'warning' | 'info' | 'success' | 'destructive' | 'muted'
 > = {
-  PENDING_PAYMENT: 'warning',
-  PENDING_CONFIRM: 'warning',
-  CONFIRMED: 'info',
-  SHIPPING: 'info',
-  DELIVERED: 'info',
-  COMPLETED: 'success',
-  CANCELLED: 'muted',
+  0: 'warning',
+  1: 'warning',
+  2: 'info',
+  3: 'info',
+  4: 'info',
+  5: 'success',
+  6: 'muted',
+  7: 'warning',
+  8: 'destructive',
 };
 
 export const STORE_ORDER_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'PENDING_PAYMENT', label: '待支付' },
-  { value: 'PENDING_CONFIRM', label: '待确认收款' },
-  { value: 'CONFIRMED', label: '备货中' },
-  { value: 'SHIPPING', label: '配送中' },
-  { value: 'DELIVERED', label: '待签收' },
-  { value: 'COMPLETED', label: '已完成' },
-  { value: 'CANCELLED', label: '已取消' },
+  { value: 0, label: '待支付' },
+  { value: 1, label: '已支付，待集采' },
+  { value: 2, label: '集采中' },
+  { value: 3, label: '发货中' },
+  { value: 4, label: '部分收货' },
+  { value: 5, label: '已完成' },
+  { value: 6, label: '已取消' },
+  { value: 7, label: '退款中' },
+  { value: 8, label: '已退款' },
 ];
 
 // ===== 门店付款状态 =====
 export const STORE_PAYMENT_STATUS_LABEL: Record<StoreViewPaymentStatus, string> = {
-  PENDING_CONFIRM: '待平台确认',
-  CONFIRMED: '已确认',
-  REJECTED: '已驳回',
+  0: '待支付',
+  1: '支付成功',
+  2: '支付失败',
+  3: '已退款',
 };
 
 export const STORE_PAYMENT_STATUS_VARIANT: Record<StoreViewPaymentStatus, 'warning' | 'success' | 'destructive'> = {
-  PENDING_CONFIRM: 'warning',
-  CONFIRMED: 'success',
-  REJECTED: 'destructive',
+  0: 'warning',
+  1: 'success',
+  2: 'destructive',
+  3: 'info',
 };
 
 export const STORE_PAYMENT_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'PENDING_CONFIRM', label: '待平台确认' },
-  { value: 'CONFIRMED', label: '已确认' },
-  { value: 'REJECTED', label: '已驳回' },
+  { value: 0, label: '待支付' },
+  { value: 1, label: '支付成功' },
+  { value: 2, label: '支付失败' },
+  { value: 3, label: '已退款' },
 ];
 
 // ===== 支付方式 =====
 export const STORE_PAYMENT_METHOD_LABEL: Record<StorePaymentMethod, string> = {
-  OFFLINE_TRANSFER: '线下转账',
+  OFFLINE: '线下转账',
   ONLINE_WECHAT: '微信支付',
   ONLINE_ALIPAY: '支付宝',
 };
 
 export const STORE_PAYMENT_METHOD_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'OFFLINE_TRANSFER', label: '线下转账' },
+  { value: 'OFFLINE', label: '线下转账' },
   { value: 'ONLINE_WECHAT', label: '微信支付' },
   { value: 'ONLINE_ALIPAY', label: '支付宝' },
 ];

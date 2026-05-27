@@ -79,6 +79,7 @@ export const supplierMenus: MenuItem[] = [
       { name: 'SupplierOrderActive', path: ROUTE_PATHS.SUPPLIER_ORDERS_ACTIVE, title: '进行中' },
     ],
   },
+  { name: 'SupplierWarehouses', path: ROUTE_PATHS.SUPPLIER_WAREHOUSES, title: '仓库管理', icon: 'Warehouse' },
   { name: 'SupplierInventory', path: ROUTE_PATHS.SUPPLIER_INVENTORY, title: '我的库存', icon: 'Boxes' },
   { name: 'SupplierShipments', path: ROUTE_PATHS.SUPPLIER_SHIPMENTS, title: '发货管理', icon: 'Truck' },
   { name: 'SupplierSettlements', path: ROUTE_PATHS.SUPPLIER_SETTLEMENTS, title: '我的结算', icon: 'Wallet' },
@@ -93,7 +94,6 @@ export const storeMenus: MenuItem[] = [
   { name: 'StoreCart', path: ROUTE_PATHS.STORE_CART, title: '购物车', icon: 'ShoppingCart' },
   { name: 'StoreOrders', path: ROUTE_PATHS.STORE_ORDERS, title: '我的采购订单', icon: 'ClipboardList' },
   { name: 'StorePayments', path: ROUTE_PATHS.STORE_PAYMENT, title: '我的付款记录', icon: 'CreditCard' },
-  { name: 'StoreSales', path: ROUTE_PATHS.STORE_SALES, title: '销售上报', icon: 'TrendingUp' },
   { name: 'StoreProfile', path: ROUTE_PATHS.STORE_PROFILE, title: '门店资料', icon: 'Building2' },
 ];
 // update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】门店菜单 7 模块

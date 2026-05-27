@@ -12,41 +12,47 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
   // 自营商品
-  ListProducts = '/b2b/supplier/products/list',
-  SaveProduct = '/b2b/supplier/products/save',
-  ToggleProductShelf = '/b2b/supplier/products/toggle-shelf',
+  ListProducts = '/b2b/supplier/product/list',
+  AddProduct = '/b2b/supplier/product/add',
+  EditProduct = '/b2b/supplier/product/edit',
   // 报价
-  ListQuotes = '/b2b/supplier/quotes/list',
-  CreateQuote = '/b2b/supplier/quotes/create',
-  UpdateQuote = '/b2b/supplier/quotes/update',
-  OffQuote = '/b2b/supplier/quotes/off',
-  ResubmitQuote = '/b2b/supplier/quotes/resubmit',
+  ListQuotes = '/b2b/supplier/quote/list',
+  SubmitQuote = '/b2b/supplier/quote/submit',
 }
 
 // ===== 自营商品 =====
 export function listSupplierProductsApi(params: any) {
-  return USE_MOCK ? quoteMock.mockListSupplierProducts(params) : defHttp.post({ url: Api.ListProducts, data: params });
+  return USE_MOCK ? quoteMock.mockListSupplierProducts(params) : defHttp.get({ url: Api.ListProducts, params });
 }
 export function saveSupplierProductApi(payload: Partial<SupplierProduct>) {
-  return USE_MOCK ? quoteMock.mockSaveSupplierProduct(payload) : defHttp.post({ url: Api.SaveProduct, data: payload });
+  if (USE_MOCK) return quoteMock.mockSaveSupplierProduct(payload);
+  return payload.id
+    ? defHttp.put({ url: Api.EditProduct, data: payload })
+    : defHttp.post({ url: Api.AddProduct, data: payload });
 }
 export function toggleSupplierProductShelfApi(id: string, status: SupplierProductStatus) {
-  return USE_MOCK ? quoteMock.mockToggleProductShelf(id, status) : defHttp.post({ url: Api.ToggleProductShelf, data: { id, status } });
+  // 后端无上下架独立接口，使用 mock
+  return quoteMock.mockToggleProductShelf(id, status);
+}
+export function deleteSupplierProductApi(id: string) {
+  return USE_MOCK ? quoteMock.mockDeleteSupplierProduct(id) : defHttp.delete({ url: `/b2b/supplier/product/${id}` });
 }
 
 // ===== 报价 =====
 export function listSupplierQuotesApi(params: any) {
-  return USE_MOCK ? quoteMock.mockListSupplierQuotes(params) : defHttp.post({ url: Api.ListQuotes, data: params });
+  return USE_MOCK ? quoteMock.mockListSupplierQuotes(params) : defHttp.get({ url: Api.ListQuotes, params });
 }
 export function createSupplierQuoteApi(params: SupplierQuoteCreateParams) {
-  return USE_MOCK ? quoteMock.mockCreateSupplierQuote(params) : defHttp.post({ url: Api.CreateQuote, data: params });
+  return USE_MOCK ? quoteMock.mockCreateSupplierQuote(params) : defHttp.post({ url: Api.SubmitQuote, data: params });
 }
 export function updateSupplierQuoteApi(id: string, patch: Partial<SupplierQuoteRecord>) {
-  return USE_MOCK ? quoteMock.mockUpdateSupplierQuote(id, patch) : defHttp.post({ url: Api.UpdateQuote, data: { id, ...patch } });
+  // 后端无更新报价接口（需撤回后重新提交），使用 mock
+  return quoteMock.mockUpdateSupplierQuote(id, patch);
 }
 export function offSupplierQuoteApi(id: string) {
-  return USE_MOCK ? quoteMock.mockOffSupplierQuote(id) : defHttp.post({ url: Api.OffQuote, data: { id } });
+  return USE_MOCK ? quoteMock.mockOffSupplierQuote(id) : defHttp.put({ url: `/b2b/supplier/quote/withdraw/${id}` });
 }
 export function resubmitSupplierQuoteApi(id: string) {
-  return USE_MOCK ? quoteMock.mockResubmitSupplierQuote(id) : defHttp.post({ url: Api.ResubmitQuote, data: { id } });
+  // 后端无独立重提接口（使用 submit 重新提交），使用 mock
+  return quoteMock.mockResubmitSupplierQuote(id);
 }

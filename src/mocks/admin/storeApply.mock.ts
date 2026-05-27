@@ -1,20 +1,22 @@
 /**
- * 门店入驻审核 Mock
+ * 门店入驻审核 Mock — 对齐 b2b-api-contract.md v1.0
  */
 import type { StoreApply, ApplyStatus, StoreType } from '/#/b2b';
 import { paginate, delay, pick, MOCK_DATA } from '../_helpers';
 
-const statuses: ApplyStatus[] = ['PENDING', 'PENDING', 'APPROVED', 'APPROVED', 'REJECTED'];
-const types: StoreType[] = ['SCENIC', 'CHAIN', 'INDEPENDENT'];
+const statuses: ApplyStatus[] = [0, 0, 1, 1, 2, 1, 3];
+const types: StoreType[] = [1, 1, 1, 2, 1, 2, 1];
 
 const storeApplies: StoreApply[] = Array.from({ length: 38 }, (_, i) => {
   const name = `${pick(MOCK_DATA.STORE_NAMES)} #${i + 1}`;
   const status = statuses[i % statuses.length];
+  const storeType = types[i % types.length];
+  const statusLabel = { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已停用' }[status];
   return {
     id: `str-apply-${2000 + i}`,
-    applyNo: `STR${String(20260500 + i).padStart(8, '0')}`,
     storeName: name,
-    storeType: types[i % types.length],
+    storeType,
+    storeTypeLabel: { 1: '普通门店', 2: '连锁门店' }[storeType],
     contactPerson: pick(['赵敏', '孙磊', '周悦', '吴婷', '郑海']),
     contactPhone: `139${String(20000000 + i * 211).slice(0, 8)}`,
     contactEmail: `store${i}@example.com`,
@@ -22,25 +24,32 @@ const storeApplies: StoreApply[] = Array.from({ length: 38 }, (_, i) => {
     city: '主城区',
     address: '景区大道 ' + (200 + i) + ' 号',
     status,
-    rejectReason: status === 'REJECTED' ? '门店类型不符合要求' : '',
-    createdAt: `2026-05-${String((i % 24) + 1).padStart(2, '0')} ${String(9 + (i % 10)).padStart(2, '0')}:15:00`,
-    reviewedAt: status !== 'PENDING' ? `2026-05-${String((i % 24) + 3).padStart(2, '0')} 16:00:00` : undefined,
+    statusLabel,
+    reviewRemark: status === 2 ? '门店类型不符合要求' : undefined,
+    loginAccount: status >= 1 ? `store_202605${String(i).padStart(3, '0')}` : undefined,
+    creditLimit: status >= 1 ? 5000 : 0,
+    reviewer: status >= 1 ? 'admin' : undefined,
+    createTime: `2026-05-${String((i % 24) + 1).padStart(2, '0')} ${String(9 + (i % 10)).padStart(2, '0')}:15:00`,
+    reviewTime: status >= 1 ? `2026-05-${String((i % 24) + 3).padStart(2, '0')} 16:00:00` : undefined,
   };
 });
 
 interface QueryParams {
   pageNo: number;
   pageSize: number;
-  searchInfo?: { keyword?: string; status?: string; storeType?: string };
+  keyword?: string;
+  status?: string;
+  storeType?: string;
+  [key: string]: any;
 }
 
-export function mockListStoreApply({ pageNo, pageSize, searchInfo }: QueryParams) {
+export function mockListStoreApply({ pageNo, pageSize, keyword, status, storeType }: QueryParams) {
   let list = storeApplies;
-  if (searchInfo?.status) list = list.filter((x) => x.status === searchInfo.status);
-  if (searchInfo?.storeType) list = list.filter((x) => x.storeType === searchInfo.storeType);
-  if (searchInfo?.keyword) {
-    const k = searchInfo.keyword.toLowerCase();
-    list = list.filter((x) => x.storeName.toLowerCase().includes(k) || x.applyNo.includes(k) || x.contactPhone.includes(k));
+  if (status) list = list.filter((x) => String(x.status) === status);
+  if (storeType) list = list.filter((x) => String(x.storeType) === storeType);
+  if (keyword) {
+    const k = keyword.toLowerCase();
+    list = list.filter((x) => x.storeName.toLowerCase().includes(k) || x.contactPhone.includes(k));
   }
   return delay(paginate(list, pageNo, pageSize));
 }
@@ -52,8 +61,10 @@ export function mockGetStoreApply(id: string): Promise<StoreApply | null> {
 export function mockApproveStoreApply(id: string) {
   const item = storeApplies.find((x) => x.id === id);
   if (item) {
-    item.status = 'APPROVED';
-    item.reviewedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    item.status = 1;
+    item.statusLabel = '已通过';
+    item.reviewTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    item.reviewer = 'admin';
   }
   return delay({ success: true });
 }
@@ -61,9 +72,20 @@ export function mockApproveStoreApply(id: string) {
 export function mockRejectStoreApply(id: string, reason: string) {
   const item = storeApplies.find((x) => x.id === id);
   if (item) {
-    item.status = 'REJECTED';
-    item.rejectReason = reason;
-    item.reviewedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    item.status = 2;
+    item.statusLabel = '已拒绝';
+    item.reviewRemark = reason;
+    item.reviewTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    item.reviewer = 'admin';
+  }
+  return delay({ success: true });
+}
+
+export function mockToggleStoreStatus(id: string, targetStatus: ApplyStatus) {
+  const item = storeApplies.find((x) => x.id === id);
+  if (item && (item.status === 1 || item.status === 3)) {
+    item.status = targetStatus;
+    item.statusLabel = targetStatus === 1 ? '已通过' : '已停用';
   }
   return delay({ success: true });
 }

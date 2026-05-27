@@ -13,32 +13,56 @@ import { BasicModal, useModal } from '/@/components/BasicModal';
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import {
-  listQuotesApi, approveQuoteApi, batchApproveQuotesApi, rejectQuoteApi,
+  listQuotesApi, approveQuoteApi, batchApproveQuotesApi, rejectQuoteApi, withdrawApprovedQuoteApi,
 } from '/@/api/admin';
 import { QUOTE_STATUS_LABEL, QUOTE_STATUS_VARIANT, QUOTE_STATUS_OPTIONS } from '/@/constants/b2bStatus';
 import { formatCurrency, formatDate } from '/@/utils/format';
-import type { SupplierQuote } from '/#/b2b';
+import type { SupplierQuote, QuoteStatus } from '/#/b2b';
 
-const search = reactive({ keyword: '', status: 'PENDING' });
+const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload, getSelected, clearSelection }] = useTable();
 const selectedCount = ref(0);
 
 async function loadData(params: any) {
-  return await listQuotesApi({ ...params, searchInfo: { ...search } });
+  const res: any = await listQuotesApi({ ...params, ...search });
+
+  // 真实后端返回扁平数组 [{ tiers, quote }]，需要拆平为 { records, total }
+  if (Array.isArray(res)) {
+    const records = res.map((item: any) => ({
+      ...(item.quote || item),
+      tiers: item.tiers,
+      supplierName: item.quote?.supplierName || '',
+      productName: item.quote?.productName || '',
+    }));
+    return { records, total: records.length };
+  }
+
+  // Mock 返回 { records, total }
+  return res;
 }
 
 const columns: BasicColumn[] = [
   { type: 'checkbox', width: 50, fixed: 'left' },
-  { field: 'quoteNo', title: '报价编号', width: 150 },
-  { field: 'supplierName', title: '供应商', minWidth: 200 },
-  { field: 'productName', title: '商品名称', minWidth: 200 },
-  { field: 'productSku', title: 'SKU', width: 120 },
-  { field: 'unit', title: '单位', width: 70 },
-  { field: 'costPrice', title: '报价（成本价）', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'suggestedPrice', title: '建议销售价', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'validTo', title: '有效期至', width: 110, formatter: ({ cellValue }) => formatDate(cellValue) },
-  { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
-  { field: 'action', title: '操作', width: 180, fixed: 'right', slots: { default: 'action' } },
+  // { field: 'id', title: '报价ID', width: 200 },
+  { field: 'supplierName', title: '供应商', width: 160 },
+  { field: 'productName', title: '商品名称', width: 200 },
+   { field: 'minOrderQty', title: '起订量', width: 100, align: 'center' },
+  { field: 'basePrice', title: '报价', width: 90, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'minOrderQty', title: '档位', width: 100, align: 'center', formatter: ({ row }) => {
+    return row.tiers && row.tiers.length > 0 ? `${row.tiers.length} 档` : '-';
+  } },
+  { field: 'tiers', title: '档位详情', width: 280, formatter: ({ row }) => {
+    if (!row.tiers || row.tiers.length === 0) return `${row.minOrderQty}件起 ${formatCurrency(row.basePrice)}`;
+    return row.tiers.map((t: any) => {
+      const qty = t.maxQty != null ? `${t.minQty}~${t.maxQty}件` : `${t.minQty}件以上`;
+      return `${qty}：${formatCurrency(t.unitPrice)}`;
+    }).join('，');
+  } },
+  { field: 'validFrom', title: '生效日期', width: 120, formatter: ({ cellValue }) => formatDate(cellValue) },
+  { field: 'validTo', title: '截止日期', width: 120, formatter: ({ cellValue }) => formatDate(cellValue) },
+  { field: 'leadTimeDays', title: '备货天数', width: 100, align: 'center' },
+  { field: 'status', title: '状态', width: 180, slots: { default: 'status' } },
+  { field: 'action', title: '操作', width: 220, fixed: 'right', slots: { default: 'action' } },
 ];
 
 const rejectModal = useModal<SupplierQuote>();
@@ -73,13 +97,24 @@ async function confirmReject() {
   }
 }
 
+async function withdrawApproved(row: SupplierQuote) {
+  submitting.value = true;
+  try {
+    const res: any = await withdrawApprovedQuoteApi(row.id);
+    if (res?.success === false) return;
+    reload();
+  } finally {
+    submitting.value = false;
+  }
+}
+
 function onSelectionChange(rows: SupplierQuote[]) {
   selectedCount.value = rows.length;
 }
 
 function openBatchApprove() {
   const rows = getSelected() as SupplierQuote[];
-  const pendings = rows.filter((r) => r.status === 'PENDING');
+  const pendings = rows.filter((r) => r.status === 0);
   if (pendings.length === 0) return;
   batchModal.open({ ids: pendings.map((r) => r.id), count: pendings.length });
 }
@@ -138,13 +173,14 @@ function onReset() {
       @selection-change="onSelectionChange"
     >
       <template #status="{ row }">
-        <Badge :variant="QUOTE_STATUS_VARIANT[row.status]">{{ QUOTE_STATUS_LABEL[row.status] }}</Badge>
+        <Badge :variant="QUOTE_STATUS_VARIANT[row.status as QuoteStatus]">{{ QUOTE_STATUS_LABEL[row.status as QuoteStatus] }}</Badge>
       </template>
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '通过', authCode: 'b2b:quote:review', hidden: row.status !== 'PENDING', onClick: () => approve(row) },
-            { label: '驳回', authCode: 'b2b:quote:review', hidden: row.status !== 'PENDING', onClick: () => openReject(row) },
+            { label: '通过', authCode: 'b2b:quote:review', hidden: row.status !== 0, onClick: () => approve(row) },
+            { label: '驳回', authCode: 'b2b:quote:review', hidden: row.status !== 0, onClick: () => openReject(row) },
+            { label: '撤回', authCode: 'b2b:quote:review', hidden: row.status !== 1, onClick: () => withdrawApproved(row) },
           ]"
         />
       </template>

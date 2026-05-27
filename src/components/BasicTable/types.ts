@@ -5,7 +5,7 @@ import type { VxeGridProps } from 'vxe-table';
 
 export interface BasicColumn {
   field?: string;
-  title: string;
+  title?: string;
   width?: number | string;
   minWidth?: number | string;
   fixed?: 'left' | 'right';

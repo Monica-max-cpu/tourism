@@ -1,14 +1,17 @@
 /**
- * B2B 业务类型
+ * B2B 业务类型 — 对齐 b2b-api-contract.md v1.0
+ * 状态码：0=待审 1=已通过 2=已拒绝 3=已停用
  */
-export type ApplyStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
-export type QuoteStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
-export type CatalogStatus = 'ON_SHELF' | 'OFF_SHELF';
-export type StoreType = 'SCENIC' | 'CHAIN' | 'INDEPENDENT';
+export type ApplyStatus = 0 | 1 | 2 | 3;
+export type QuoteStatus = 0 | 1 | 2 | 3;
+export type CatalogStatus = 0 | 1 | 2;
+/** 1=普通门店 2=连锁门店 */
+export type StoreType = 1 | 2;
+/** 仓库启用状态 */
+export type WarehouseStatus = 0 | 1;
 
 export interface SupplierApply {
   id: string;
-  applyNo: string;
   supplierName: string;
   contactPerson: string;
   contactPhone: string;
@@ -16,63 +19,91 @@ export interface SupplierApply {
   province?: string;
   city?: string;
   address?: string;
+  businessLicense?: string;
+  categoryIds?: string;
+  supplySourceId?: string;
   status: ApplyStatus;
+  statusLabel?: string;
+  loginAccount?: string;
+  reviewRemark?: string;
+  reviewer?: string;
+  reviewTime?: string;
+  createTime: string;
   remark?: string;
-  rejectReason?: string;
-  createdAt: string;
-  reviewedAt?: string;
 }
 
 export interface StoreApply {
   id: string;
-  applyNo: string;
   storeName: string;
   storeType: StoreType;
+  storeTypeLabel?: string;
   contactPerson: string;
   contactPhone: string;
   contactEmail?: string;
   province?: string;
   city?: string;
   address?: string;
+  businessLicense?: string;
   status: ApplyStatus;
+  statusLabel?: string;
+  loginAccount?: string;
+  creditLimit?: number;
+  reviewRemark?: string;
+  reviewer?: string;
+  reviewTime?: string;
+  createTime: string;
   remark?: string;
-  rejectReason?: string;
-  createdAt: string;
-  reviewedAt?: string;
 }
 
 export interface SupplierQuote {
   id: string;
-  quoteNo: string;
   supplierId: string;
   supplierName: string;
+  productId: string;
   productName: string;
-  productSku: string;
-  unit: string;
-  /** 供应商报价（成本价） */
-  costPrice: number;
-  /** 平台建议销售价 */
-  suggestedPrice?: number;
+  minOrderQty: number;
+  basePrice: number;
   validFrom: string;
   validTo: string;
+  leadTimeDays?: number;
   status: QuoteStatus;
-  remark?: string;
-  createdAt: string;
+  statusLabel?: string;
+  tiers?: QuoteTier[];
+}
+
+export interface QuoteTier {
+  id?: string;
+  minQty: number;
+  maxQty: number | null;
+  unitPrice: number;
 }
 
 export interface PlatformCatalog {
   id: string;
-  productSku: string;
   productName: string;
-  category: string;
+  productImages?: string;
+  categoryId?: string;
   unit: string;
-  /** 平台对外销售价（门店看到的价格） */
-  salePrice: number;
-  /** 当前最优成本价（来自审核通过的报价，仅管理员可见） */
-  bestCostPrice?: number;
+  basePrice: number;
+  minOrderQty?: number;
+  commissionRate?: number;
   status: CatalogStatus;
-  cover?: string;
+  statusLabel?: string;
+  sortOrder?: number;
   description?: string;
-  createdAt: string;
-  updatedAt: string;
+  /** 管理端额外字段 */
+  preferredQuoteId?: string;
+  preferredSupplierName?: string;
+  supplierBasePrice?: number;
+  margin?: number;
+  marginRate?: number;
+  catalogTiers?: CatalogTier[];
+  createTime?: string;
+  updateTime?: string;
+}
+
+export interface CatalogTier {
+  minQty: number;
+  maxQty: number | null;
+  unitPrice: number;
 }

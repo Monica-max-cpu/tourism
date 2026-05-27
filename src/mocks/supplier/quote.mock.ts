@@ -36,7 +36,7 @@ const products: SupplierProduct[] = Array.from({ length: 24 }, (_, i) => ({
 }));
 
 // ===== 报价 =====
-const quoteStatuses: SupplierQuoteStatus[] = ['PENDING', 'APPROVED', 'APPROVED', 'APPROVED', 'REJECTED', 'EXPIRED', 'OFF', 'DRAFT'];
+const quoteStatuses: SupplierQuoteStatus[] = [0, 1, 1, 1, 2, 1, 3, 0];
 
 const quotes: SupplierQuoteRecord[] = Array.from({ length: 42 }, (_, i) => {
   const prod = products[i % products.length];
@@ -46,35 +46,38 @@ const quotes: SupplierQuoteRecord[] = Array.from({ length: 42 }, (_, i) => {
     quoteNo: `Q${String(20260600 + i).padStart(8, '0')}`,
     supplierId: CURRENT_SUPPLIER_ID,
     productId: prod.id,
-    productSku: prod.productSku,
+    productSku: '',
     productName: prod.productName,
     unit: prod.unit,
-    costPrice: +(prod.defaultCost * (0.92 + Math.random() * 0.16)).toFixed(2),
+    costPrice: +(20 + Math.random() * 180).toFixed(2),
     validFrom: '2026-05-01',
     validTo: '2026-08-01',
     minQty: [10, 20, 50, 100][i % 4],
     status,
     remark: i % 5 === 0 ? '量大可议' : '',
-    rejectReason: status === 'REJECTED' ? '资质材料不全，请补充质检报告' : undefined,
+    rejectReason: status === 2 ? '资质材料不全，请补充质检报告' : undefined,
     createdAt: `2026-05-${String((i % 24) + 1).padStart(2, '0')} ${String(10 + (i % 8)).padStart(2, '0')}:00:00`,
-    reviewedAt: status === 'APPROVED' || status === 'REJECTED' ? `2026-05-${String((i % 24) + 2).padStart(2, '0')} 16:00:00` : undefined,
+    reviewedAt: status === 1 || status === 2 ? `2026-05-${String((i % 24) + 2).padStart(2, '0')} 16:00:00` : undefined,
   };
 });
 
 interface QueryParams {
   pageNo: number;
   pageSize: number;
-  searchInfo?: { keyword?: string; status?: string; supplierId?: string };
+  keyword?: string;
+  status?: string;
+  supplierId?: string;
+  [key: string]: any;
 }
 
 // ---------- 商品库 ----------
-export function mockListSupplierProducts({ pageNo, pageSize, searchInfo }: QueryParams) {
-  const sid = searchInfo?.supplierId;
+export function mockListSupplierProducts({ pageNo, pageSize, keyword, status, supplierId }: QueryParams) {
+  const sid = supplierId;
   if (!sid) return delay({ records: [], total: 0 });
   let list = products.filter((x) => x.supplierId === sid);
-  if (searchInfo?.status) list = list.filter((x) => x.status === searchInfo.status);
-  if (searchInfo?.keyword) {
-    const k = searchInfo.keyword.toLowerCase();
+  if (status) list = list.filter((x) => x.status === status);
+  if (keyword) {
+    const k = keyword.toLowerCase();
     list = list.filter((x) => x.productName.toLowerCase().includes(k) || x.productSku.includes(k));
   }
   return delay(paginate(list, pageNo, pageSize));
@@ -114,13 +117,13 @@ export function mockToggleProductShelf(id: string, status: SupplierProductStatus
 }
 
 // ---------- 报价 ----------
-export function mockListSupplierQuotes({ pageNo, pageSize, searchInfo }: QueryParams) {
-  const sid = searchInfo?.supplierId;
+export function mockListSupplierQuotes({ pageNo, pageSize, keyword, status, supplierId }: QueryParams) {
+  const sid = supplierId;
   if (!sid) return delay({ records: [], total: 0 });
   let list = quotes.filter((x) => x.supplierId === sid);
-  if (searchInfo?.status) list = list.filter((x) => x.status === searchInfo.status);
-  if (searchInfo?.keyword) {
-    const k = searchInfo.keyword.toLowerCase();
+  if (status) list = list.filter((x) => x.status === status);
+  if (keyword) {
+    const k = keyword.toLowerCase();
     list = list.filter((x) => x.productName.toLowerCase().includes(k) || x.quoteNo.includes(k));
   }
   return delay(paginate(list, pageNo, pageSize));
@@ -144,7 +147,7 @@ export function mockCreateSupplierQuote(params: SupplierQuoteCreateParams) {
     validFrom: params.validFrom,
     validTo: params.validTo,
     minQty: params.minQty,
-    status: 'PENDING',
+    status: 0,
     remark: params.remark,
     createdAt: new Date().toISOString(),
   };
@@ -158,7 +161,7 @@ export function mockUpdateSupplierQuote(id: string, patch: Partial<SupplierQuote
     Object.assign(item, patch);
     // 编辑后重新提交审核
     if (patch.costPrice !== undefined || patch.validTo !== undefined) {
-      item.status = 'PENDING';
+      item.status = 0;
       item.reviewedAt = undefined;
     }
   }
@@ -167,14 +170,28 @@ export function mockUpdateSupplierQuote(id: string, patch: Partial<SupplierQuote
 
 export function mockOffSupplierQuote(id: string) {
   const item = quotes.find((x) => x.id === id);
-  if (item) item.status = 'OFF';
+  if (!item) return delay({ success: false, message: '报价不存在' });
+  if (item.status !== 0) {
+    return delay({ success: false, code: 400, message: '仅待审核状态的报价可撤回' });
+  }
+  item.status = 3;
+  return delay({ success: true });
+}
+
+export function mockDeleteSupplierProduct(id: string) {
+  const activeQuote = quotes.find((x) => x.productId === id && x.status === 1);
+  if (activeQuote) {
+    return delay({ success: false, code: 400, message: '该商品存在有效报价单，请先下架报价后再删除' });
+  }
+  const idx = products.findIndex((x) => x.id === id);
+  if (idx !== -1) products.splice(idx, 1);
   return delay({ success: true });
 }
 
 export function mockResubmitSupplierQuote(id: string) {
   const item = quotes.find((x) => x.id === id);
-  if (item && (item.status === 'OFF' || item.status === 'REJECTED' || item.status === 'EXPIRED')) {
-    item.status = 'PENDING';
+  if (item && (item.status === 3 || item.status === 2)) {
+    item.status = 0;
     item.reviewedAt = undefined;
     item.rejectReason = undefined;
   }

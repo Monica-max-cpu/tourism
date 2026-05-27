@@ -54,7 +54,7 @@ async function onSubmit(e: Event) {
     const res = await supplierApplyApi({ ...form, ...qualifications });
     router.push({
       path: ROUTE_PATHS.APPLY_RESULT,
-      query: { type: 'supplier', applyNo: res.applyNo, name: res.name },
+      query: { type: 'supplier', id: res.id, name: form.supplierName },
     });
   } catch (err) {
     errorMsg.value = (err as Error).message || '提交失败';

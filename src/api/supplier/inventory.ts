@@ -11,48 +11,49 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
   // 库存
-  ListStocks = '/b2b/supplier/stocks/list',
-  UpdateStockQty = '/b2b/supplier/stocks/update-qty',
-  UpdateStockThreshold = '/b2b/supplier/stocks/update-threshold',
-  StockSummary = '/b2b/supplier/stocks/summary',
+  ListStocks = '/b2b/stock/supplier/list',
+  ReplenishStock = '/b2b/stock/replenish',
+  UpdateAlertQty = '/b2b/stock/alert-qty',
   // 结算
-  ListSettlements = '/b2b/supplier/settlements/list',
-  ConfirmSettlement = '/b2b/supplier/settlements/confirm',
-  SettlementSummary = '/b2b/supplier/settlements/summary',
-  // 资料
-  GetProfile = '/b2b/supplier/profile/get',
-  UpdateProfile = '/b2b/supplier/profile/update',
+  ListSettlements = '/b2b/settlement/supplier/list',
+  // 供应商资料
+  SupplierUpdate = '/b2b/supplier/update',
 }
 
 // ===== 库存 =====
 export function listSupplierStocksApi(params: any) {
-  return USE_MOCK ? invMock.mockListSupplierStocks(params) : defHttp.post({ url: Api.ListStocks, data: params });
+  return USE_MOCK ? invMock.mockListSupplierStocks(params) : defHttp.get({ url: Api.ListStocks, params });
 }
-export function updateSupplierStockQtyApi(id: string, availableQty: number) {
-  return USE_MOCK ? invMock.mockUpdateStockQty(id, availableQty) : defHttp.post({ url: Api.UpdateStockQty, data: { id, availableQty } });
+export function replenishStockApi(data: { supplierId: string; productId: string; warehouseId?: string; qty: number; remark?: string }) {
+  return USE_MOCK ? invMock.mockReplenishStock(data) : defHttp.post({ url: Api.ReplenishStock, data });
 }
 export function updateSupplierStockThresholdApi(id: string, warnThreshold: number) {
-  return USE_MOCK ? invMock.mockUpdateStockThreshold(id, warnThreshold) : defHttp.post({ url: Api.UpdateStockThreshold, data: { id, warnThreshold } });
+  return USE_MOCK ? invMock.mockUpdateStockThreshold(id, warnThreshold) : defHttp.put({ url: Api.UpdateAlertQty, data: { id, alertQty: warnThreshold } });
 }
 export function getSupplierStockSummaryApi(supplierId: string) {
-  return USE_MOCK ? invMock.mockSupplierStockSummary(supplierId) : defHttp.get({ url: Api.StockSummary, params: { supplierId } });
+  // 后端无库存汇总接口，使用 mock
+  return invMock.mockSupplierStockSummary(supplierId);
 }
 
 // ===== 结算 =====
 export function listSupplierSettlementsApi(params: any) {
-  return USE_MOCK ? invMock.mockListSupplierSettlements(params) : defHttp.post({ url: Api.ListSettlements, data: params });
+  return USE_MOCK ? invMock.mockListSupplierSettlements(params) : defHttp.get({ url: Api.ListSettlements, params });
 }
 export function confirmSupplierSettlementApi(id: string) {
-  return USE_MOCK ? invMock.mockConfirmSettlement(id) : defHttp.post({ url: Api.ConfirmSettlement, data: { id } });
+  // 结算确认为管理员操作，供应商侧无此接口，使用 mock
+  return invMock.mockConfirmSettlement(id);
 }
 export function getSupplierSettlementSummaryApi(supplierId: string) {
-  return USE_MOCK ? invMock.mockSupplierSettlementSummary(supplierId) : defHttp.get({ url: Api.SettlementSummary, params: { supplierId } });
+  // 后端无结算汇总接口，使用 mock
+  return invMock.mockSupplierSettlementSummary(supplierId);
 }
 
 // ===== 资料 =====
 export function getSupplierProfileApi(supplierId: string) {
-  return USE_MOCK ? invMock.mockGetSupplierProfile(supplierId) : defHttp.get({ url: Api.GetProfile, params: { supplierId } });
+  // 后端无企业资料独立接口，使用 mock
+  return invMock.mockGetSupplierProfile(supplierId);
 }
 export function updateSupplierProfileApi(patch: Partial<SupplierProfile>) {
-  return USE_MOCK ? invMock.mockUpdateSupplierProfile(patch) : defHttp.post({ url: Api.UpdateProfile, data: patch });
+  if (USE_MOCK) return invMock.mockUpdateSupplierProfile(patch);
+  return defHttp.put({ url: Api.SupplierUpdate, data: patch });
 }

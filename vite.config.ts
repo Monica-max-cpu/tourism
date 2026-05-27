@@ -50,10 +50,13 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 5173,
       proxy: {
-        '/jeecgboot': {
-          target: env.VITE_API_BASE || 'http://localhost:8080',
+        '/sys': {
+          target: 'http://localhost:8001',
           changeOrigin: true,
-          rewrite: (p) => p.replace(/^\/jeecgboot/, ''),
+        },
+        '/b2b': {
+          target: 'http://192.168.10.60:7015',
+          changeOrigin: true,
         },
       },
     },

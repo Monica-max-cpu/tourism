@@ -18,11 +18,14 @@ import { ORDER_STATUS_LABEL, ORDER_STATUS_VARIANT, ORDER_STATUS_OPTIONS } from '
 import { formatCurrency, formatDateTime } from '/@/utils/format';
 import type { StoreOrder } from '/#/b2b-2b';
 
-const search = reactive({ keyword: '', status: '' });
+const search = reactive({ keyword: '', orderStatus: '' });
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
-  return await listStoreOrdersApi({ ...params, searchInfo: { ...search } });
+  const si: any = {};
+  if (search.keyword) si.keyword = search.keyword;
+  if (search.orderStatus !== '') si.orderStatus = Number(search.orderStatus);
+  return await listStoreOrdersApi({ ...params, searchInfo: si });
 }
 
 const columns: BasicColumn[] = [
@@ -30,7 +33,7 @@ const columns: BasicColumn[] = [
   { field: 'storeName', title: '下单门店', minWidth: 180 },
   { field: 'itemCount', title: '商品种类', width: 90, align: 'right' },
   { field: 'totalAmount', title: '订单金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
+  { field: 'orderStatus', title: '状态', width: 120, slots: { default: 'status' } },
   { field: 'createdAt', title: '下单时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'paidAt', title: '支付时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'collectiveOrderId', title: '集采单号', width: 130 },
@@ -68,7 +71,7 @@ async function confirmCancel() {
 
 function onSearch() { reload({ pageNo: 1 }); }
 function onReset() {
-  search.keyword = ''; search.status = '';
+  search.keyword = ''; search.orderStatus = '';
   reload({ pageNo: 1 });
 }
 </script>
@@ -82,7 +85,7 @@ function onReset() {
       </div>
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">状态</Label>
-        <Select v-model="search.status">
+        <Select v-model="search.orderStatus">
           <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
           <SelectContent>
             <SelectItem v-for="o in ORDER_STATUS_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</SelectItem>
@@ -93,13 +96,13 @@ function onReset() {
 
     <BasicTable :columns="columns" :api="loadData" row-key="id" @register="registerTable">
       <template #status="{ row }">
-        <Badge :variant="ORDER_STATUS_VARIANT[row.status]">{{ ORDER_STATUS_LABEL[row.status] }}</Badge>
+        <Badge :variant="ORDER_STATUS_VARIANT[row.orderStatus]">{{ row.statusLabel || ORDER_STATUS_LABEL[row.orderStatus] }}</Badge>
       </template>
       <template #action="{ row }">
         <TableAction
           :actions="[
             { label: '详情', onClick: () => openDetail(row) },
-            { label: '取消', variant: 'link', hidden: row.status !== 'PENDING_PAY', onClick: () => openCancel(row) },
+            { label: '取消', variant: 'link', hidden: row.orderStatus !== 0, onClick: () => openCancel(row) },
           ]"
         />
       </template>
@@ -116,7 +119,7 @@ function onReset() {
           <div><span class="text-muted-foreground">订单号：</span><span class="font-mono">{{ detailModal.data.value.orderNo }}</span></div>
           <div>
             <span class="text-muted-foreground">状态：</span>
-            <Badge :variant="ORDER_STATUS_VARIANT[detailModal.data.value.status]">{{ ORDER_STATUS_LABEL[detailModal.data.value.status] }}</Badge>
+            <Badge :variant="ORDER_STATUS_VARIANT[detailModal.data.value.orderStatus]">{{ detailModal.data.value.statusLabel || ORDER_STATUS_LABEL[detailModal.data.value.orderStatus] }}</Badge>
           </div>
           <div><span class="text-muted-foreground">门店：</span>{{ detailModal.data.value.storeName }}</div>
           <div><span class="text-muted-foreground">下单人：</span>{{ formatDateTime(detailModal.data.value.createdAt) }}</div>
@@ -158,7 +161,7 @@ function onReset() {
 
         <div v-if="detailModal.data.value.remark" class="text-xs text-muted-foreground">备注：{{ detailModal.data.value.remark }}</div>
 
-        <div v-if="detailModal.data.value.status === 'PENDING_PAY'" class="flex justify-end pt-3 border-t border-border">
+        <div v-if="detailModal.data.value.orderStatus === 0" class="flex justify-end pt-3 border-t border-border">
           <Button variant="destructive" :disabled="submitting" @click="openCancel(detailModal.data.value)">取消订单</Button>
         </div>
       </div>

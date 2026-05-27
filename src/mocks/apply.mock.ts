@@ -1,5 +1,5 @@
 /**
- * 入驻申请 Mock
+ * 入驻申请 Mock — 对齐 b2b-api-contract.md v1.0
  */
 export interface SupplierApplyParams {
   supplierName: string;
@@ -14,7 +14,7 @@ export interface SupplierApplyParams {
 
 export interface StoreApplyParams {
   storeName: string;
-  storeType: string;
+  storeType: number;
   contactPerson: string;
   contactPhone: string;
   contactEmail?: string;
@@ -25,24 +25,20 @@ export interface StoreApplyParams {
 }
 
 export interface ApplyResult {
-  applyNo: string;
+  id: string;
   name: string;
-  status: 'PENDING';
-  createdAt: number;
-}
-
-function genApplyNo(prefix: string) {
-  return `${prefix}${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  status: 0;
+  statusLabel: string;
 }
 
 export function mockSupplierApply(params: SupplierApplyParams): Promise<ApplyResult> {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        applyNo: genApplyNo('SUP'),
+        id: `sup-${Date.now()}`,
         name: params.supplierName,
-        status: 'PENDING',
-        createdAt: Date.now(),
+        status: 0,
+        statusLabel: '待审核',
       });
     }, 600);
   });
@@ -52,10 +48,10 @@ export function mockStoreApply(params: StoreApplyParams): Promise<ApplyResult> {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        applyNo: genApplyNo('STR'),
+        id: `str-${Date.now()}`,
         name: params.storeName,
-        status: 'PENDING',
-        createdAt: Date.now(),
+        status: 0,
+        statusLabel: '待审核',
       });
     }, 600);
   });

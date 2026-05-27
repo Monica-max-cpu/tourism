@@ -11,29 +11,27 @@ import type { StoreOrderCreateParams } from '/#/b2b-store';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
-  ListOrders = '/b2b/store/orders/list',
-  GetOrder = '/b2b/store/orders/get',
-  CreateOrder = '/b2b/store/orders/create',
-  CancelOrder = '/b2b/store/orders/cancel',
-  ConfirmReceive = '/b2b/store/orders/confirm-receive',
-  WorkbenchSummary = '/b2b/store/workbench/summary',
+  ListOrders = '/b2b/store/order/list',
+  CreateOrder = '/b2b/store/order/create',
+  ConfirmReceive = '/b2b/store/order/confirm-receive',
 }
 
 export function listStoreOrdersApi(params: any) {
-  return USE_MOCK ? orderMock.mockListStoreOrders(params) : defHttp.post({ url: Api.ListOrders, data: params });
+  return USE_MOCK ? orderMock.mockListStoreOrders(params) : defHttp.get({ url: Api.ListOrders, params });
 }
 export function getStoreOrderApi(id: string) {
-  return USE_MOCK ? orderMock.mockGetStoreOrder(id) : defHttp.get({ url: Api.GetOrder, params: { id } });
+  return USE_MOCK ? orderMock.mockGetStoreOrder(id) : defHttp.get({ url: `/b2b/store/order/detail/${id}` });
 }
 export function createStoreOrderApi(params: StoreOrderCreateParams) {
   return USE_MOCK ? orderMock.mockCreateStoreOrder(params) : defHttp.post({ url: Api.CreateOrder, data: params });
 }
-export function cancelStoreOrderApi(id: string, reason: string) {
-  return USE_MOCK ? orderMock.mockCancelStoreOrder(id, reason) : defHttp.post({ url: Api.CancelOrder, data: { id, reason } });
+export function cancelStoreOrderApi(id: string, cancelReason: string) {
+  return USE_MOCK ? orderMock.mockCancelStoreOrder(id, cancelReason) : defHttp.put({ url: `/b2b/store/order/cancel/${id}`, data: { cancelReason } });
 }
 export function confirmReceiveApi(id: string) {
-  return USE_MOCK ? orderMock.mockConfirmReceive(id) : defHttp.post({ url: Api.ConfirmReceive, data: { id } });
+  return USE_MOCK ? orderMock.mockConfirmReceive(id) : defHttp.put({ url: Api.ConfirmReceive, data: { id } });
 }
 export function getStoreWorkbenchSummaryApi(storeId: string) {
-  return USE_MOCK ? orderMock.mockGetStoreWorkbenchSummary(storeId) : defHttp.get({ url: Api.WorkbenchSummary, params: { storeId } });
+  // 后端无工作台汇总接口，使用 mock
+  return orderMock.mockGetStoreWorkbenchSummary(storeId);
 }

@@ -10,16 +10,15 @@ import type { SubmitPaymentParams } from '/#/b2b-store';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
-  ListPayments = '/b2b/store/payments/list',
-  GetByOrder = '/b2b/store/payments/get-by-order',
-  Submit = '/b2b/store/payments/submit',
+  Submit = '/b2b/payment/create',
 }
 
 export function listStorePaymentsApi(params: any) {
-  return USE_MOCK ? paymentMock.mockListStorePayments(params) : defHttp.post({ url: Api.ListPayments, data: params });
+  // 后端无门店维度支付列表接口，使用 mock
+  return paymentMock.mockListStorePayments(params);
 }
-export function getPaymentByOrderApi(orderId: string) {
-  return USE_MOCK ? paymentMock.mockGetPaymentByOrder(orderId) : defHttp.get({ url: Api.GetByOrder, params: { orderId } });
+export function getPaymentByOrderApi(orderNo: string) {
+  return USE_MOCK ? paymentMock.mockGetPaymentByOrder(orderNo) : defHttp.get({ url: `/b2b/payment/query/${orderNo}` });
 }
 export function submitPaymentApi(params: SubmitPaymentParams) {
   return USE_MOCK ? paymentMock.mockSubmitPayment(params) : defHttp.post({ url: Api.Submit, data: params });

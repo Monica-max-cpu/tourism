@@ -42,7 +42,7 @@ const form = reactive({
 const stats = [
   { label: '合作景区', value: '120+', icon: 'icon-building' },
   { label: '入驻门店', value: '2,800+', icon: 'icon-store' },
-  { label: '供应商', value: '450+', icon: 'icon-truck' },
+  { label: '供应商', value: '450+', icon: 'icon-qiyeruzhu' },
   { label: '月交易额', value: '¥8.5M', icon: 'icon-chart' },
 ];
 

@@ -26,20 +26,30 @@ const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
-  return await listSupplierQuotesApi({ ...params, searchInfo: { ...search, supplierId: supplierId.value } });
+  const res: any = await listSupplierQuotesApi({ ...params, supplierId: supplierId.value, ...search });
+  const list = Array.isArray(res) ? res : (res.records || []);
+  const records = list.map((item: any) => {
+    const q = item.quote || item;
+    return {
+      ...q,
+      tiers: item.tiers,
+      status: q.status,
+      productName: q.productName || '',
+    };
+  });
+  return { records, total: records.length };
 }
 
 const columns: BasicColumn[] = [
-  { field: 'quoteNo', title: '报价编号', width: 150 },
-  { field: 'productName', title: '商品名称', minWidth: 180 },
-  { field: 'productSku', title: 'SKU', width: 120 },
-  { field: 'costPrice', title: '报价', width: 120, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'validFrom', title: '生效日期', width: 110, formatter: ({ cellValue }) => formatDate(cellValue) },
-  { field: 'validTo', title: '有效期至', width: 110, formatter: ({ cellValue }) => formatDate(cellValue) },
-  { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
-  { field: 'rejectReason', title: '驳回原因', minWidth: 180, showOverflow: 'tooltip' },
-  { field: 'createdAt', title: '提交时间', width: 160, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'reviewedAt', title: '审核时间', width: 160, formatter: ({ cellValue }) => (cellValue ? formatDateTime(cellValue) : '-') },
+  { field: 'productName', title: '商品名称', minWidth: 150 },
+  { field: 'basePrice', title: '报价', width: 150, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'validFrom', title: '生效日期', width: 180, formatter: ({ cellValue }) => formatDate(cellValue) },
+  { field: 'validTo', title: '有效期至', width: 180, formatter: ({ cellValue }) => formatDate(cellValue) },
+ 
+  { field: 'createTime', title: '提交时间', width: 200, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+   { field: 'status', title: '状态', width: 150, slots: { default: 'status' } },
+    { field: 'reviewRemark', title: '驳回原因', minWidth: 130, showOverflow: 'tooltip' },
+  { field: 'reviewTime', title: '审核时间', width: 200, formatter: ({ cellValue }) => (cellValue ? formatDateTime(cellValue) : '-') },
 ];
 
 function onSearch() { reload({ pageNo: 1 }); }

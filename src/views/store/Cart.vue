@@ -26,8 +26,21 @@ const storeId = computed(() => userStore.getUserInfo?.storeId || '');
 
 cartStore.init(storeId.value);
 
-// 收货信息（从门店资料带出）
-const receive = ref({ receiver: '', receiverPhone: '', receiveAddress: '' });
+function getCover(item: any): string {
+  if (!item.productImages) return '';
+  try {
+    const arr = JSON.parse(item.productImages);
+    return (Array.isArray(arr) && arr.length) ? arr[0] : '';
+  } catch {
+    return '';
+  }
+}
+
+const deliveryAddress = reactive({
+  receiverName: '',
+  receiverPhone: '',
+  address: '',
+});
 const submitting = ref(false);
 const remark = ref('');
 const checkout = useModal();
@@ -36,9 +49,9 @@ onMounted(async () => {
   if (!storeId.value) return;
   const profile = await getStoreProfileApi(storeId.value);
   if (profile) {
-    receive.value.receiver = profile.receiver || profile.contactPerson || '';
-    receive.value.receiverPhone = profile.receiverPhone || profile.contactPhone || '';
-    receive.value.receiveAddress = profile.receiveAddress || profile.address || '';
+    deliveryAddress.receiverName = profile.receiver || profile.contactPerson || '';
+    deliveryAddress.receiverPhone = profile.receiverPhone || profile.contactPhone || '';
+    deliveryAddress.address = profile.receiveAddress || profile.address || '';
   }
 });
 
@@ -51,7 +64,7 @@ function dec(catalogId: string) {
   if (it) cartStore.updateQty(catalogId, it.qty - 1);
 }
 
-const canCheckout = computed(() => cartStore.getSelectedItems.length > 0 && !!receive.value.receiveAddress);
+const canCheckout = computed(() => cartStore.getSelectedItems.length > 0 && !!deliveryAddress.address);
 
 async function confirmCheckout() {
   if (!canCheckout.value) return;
@@ -59,19 +72,13 @@ async function confirmCheckout() {
   try {
     const items = cartStore.getSelectedItems.map((x) => ({
       catalogId: x.catalogId,
-      productSku: x.productSku,
-      productName: x.productName,
-      unit: x.unit,
-      unitPrice: x.salePrice,
-      qty: x.qty,
-      cover: x.cover,
+      quantity: x.qty,
     }));
     const res: any = await createStoreOrderApi({
-      items,
-      receiveAddress: receive.value.receiveAddress,
-      receiver: receive.value.receiver,
-      receiverPhone: receive.value.receiverPhone,
+      storeId: storeId.value,
+      deliveryAddress: { ...deliveryAddress },
       remark: remark.value,
+      items,
     });
     // 移除已下单商品
     cartStore.removeBatch(items.map((x) => x.catalogId));
@@ -112,19 +119,19 @@ async function confirmCheckout() {
         <div v-for="it in cartStore.getItems" :key="it.catalogId" class="px-4 py-3 border-b border-border last:border-0 flex items-center gap-3">
           <input type="checkbox" :checked="cartStore.selectedIds.includes(it.catalogId)"
             @change="cartStore.toggleSelect(it.catalogId)" class="w-4 h-4" />
-          <img :src="it.cover" :alt="it.productName" class="w-14 h-14 object-cover rounded bg-muted" loading="lazy" />
+          <img :src="getCover(it)" :alt="it.productName" class="w-14 h-14 object-cover rounded bg-muted" loading="lazy" />
           <div class="flex-1 min-w-0">
             <div class="text-sm font-medium truncate">{{ it.productName }}</div>
-            <div class="text-xs text-muted-foreground mt-0.5">SKU {{ it.productSku }} · {{ it.unit }}</div>
+            <div class="text-xs text-muted-foreground mt-0.5">{{ it.unit }}</div>
           </div>
-          <div class="text-sm tabular-nums w-24 text-right">{{ formatCurrency(it.salePrice) }}</div>
+          <div class="text-sm tabular-nums w-24 text-right">{{ formatCurrency(cartStore.getItemUnitPrice(it.catalogId)) }}</div>
           <div class="inline-flex items-center border border-border rounded">
             <button class="w-7 h-7 flex items-center justify-center hover:bg-muted" @click="dec(it.catalogId)"><Minus class="w-3 h-3" /></button>
             <span class="w-9 text-center text-sm tabular-nums">{{ it.qty }}</span>
             <button class="w-7 h-7 flex items-center justify-center hover:bg-muted" @click="inc(it.catalogId)"><Plus class="w-3 h-3" /></button>
           </div>
           <div class="text-base font-semibold text-primary tabular-nums w-28 text-right">
-            {{ formatCurrency(it.salePrice * it.qty) }}
+            {{ formatCurrency(cartStore.getItemLineTotal(it.catalogId)) }}
           </div>
           <Button variant="ghost" size="icon" class="h-7 w-7" @click="cartStore.removeItem(it.catalogId)">
             <Trash2 class="w-4 h-4 text-destructive" />
@@ -145,15 +152,15 @@ async function confirmCheckout() {
         <div class="space-y-3">
           <div class="flex items-center gap-2">
             <Label>收货人</Label>
-            <Input v-model="receive.receiver" placeholder="请输入收货人姓名" />
+            <Input v-model="deliveryAddress.receiverName" placeholder="请输入收货人姓名" />
           </div>
           <div class="flex items-center gap-2">
             <Label>联系电话</Label>
-            <Input v-model="receive.receiverPhone" placeholder="请输入手机号" />
+            <Input v-model="deliveryAddress.receiverPhone" placeholder="请输入手机号" />
           </div>
           <div class="flex items-center gap-2">
             <Label>收货地址 <span class="text-destructive">*</span></Label>
-            <Input v-model="receive.receiveAddress" placeholder="请输入收货地址" />
+            <Input v-model="deliveryAddress.address" placeholder="请输入收货地址" />
           </div>
         </div>
 
@@ -183,9 +190,9 @@ async function confirmCheckout() {
         </div>
         <div class="flex justify-between">
           <span class="text-muted-foreground">收货</span>
-          <span>{{ receive.receiver }} {{ receive.receiverPhone }}</span>
+          <span>{{ deliveryAddress.receiverName }} {{ deliveryAddress.receiverPhone }}</span>
         </div>
-        <div class="text-muted-foreground">{{ receive.receiveAddress }}</div>
+        <div class="text-muted-foreground">{{ deliveryAddress.address }}</div>
         <div class="space-y-1.5 pt-2">
           <Label>备注（选填）</Label>
           <Input v-model="remark" placeholder="特殊需求 / 配送时间..." />

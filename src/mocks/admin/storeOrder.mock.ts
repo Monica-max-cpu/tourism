@@ -5,7 +5,7 @@
 import type { StoreOrder, OrderStatus, StoreOrderItem } from '/#/b2b-2b';
 import { paginate, delay, pick, MOCK_DATA } from '../_helpers';
 
-const statuses: OrderStatus[] = ['PENDING_PAY', 'PAID', 'CONFIRMED', 'SHIPPING', 'COMPLETED', 'CANCELLED'];
+const statuses: OrderStatus[] = [0, 1, 2, 3, 5, 6];
 
 function genItems(seed: number): StoreOrderItem[] {
   const count = 1 + (seed % 4);
@@ -35,16 +35,16 @@ const orders: StoreOrder[] = Array.from({ length: 78 }, (_, i) => {
     orderNo: `OD${String(20260500 + i).padStart(8, '0')}`,
     storeId: `str-${100 + (i % 8)}`,
     storeName: pick(MOCK_DATA.STORE_NAMES),
-    status,
+    orderStatus: status,
     items,
     totalAmount: total,
     itemCount: items.length,
     createdAt: created,
-    paidAt: status !== 'PENDING_PAY' && status !== 'CANCELLED' ? `2026-05-${String((i % 24) + 1).padStart(2, '0')} 10:00:00` : undefined,
-    confirmedAt: ['CONFIRMED', 'SHIPPING', 'COMPLETED'].includes(status) ? `2026-05-${String((i % 24) + 2).padStart(2, '0')} 11:00:00` : undefined,
-    shippedAt: ['SHIPPING', 'COMPLETED'].includes(status) ? `2026-05-${String((i % 24) + 3).padStart(2, '0')} 14:00:00` : undefined,
-    completedAt: status === 'COMPLETED' ? `2026-05-${String((i % 24) + 5).padStart(2, '0')} 16:00:00` : undefined,
-    collectiveOrderId: ['CONFIRMED', 'SHIPPING', 'COMPLETED'].includes(status) ? `co-${7000 + (i % 12)}` : undefined,
+    paidAt: status > 0 && status !== 6 ? `2026-05-${String((i % 24) + 1).padStart(2, '0')} 10:00:00` : undefined,
+    confirmedAt: [2, 3, 4, 5].includes(status) ? `2026-05-${String((i % 24) + 2).padStart(2, '0')} 11:00:00` : undefined,
+    shippedAt: [3, 4, 5].includes(status) ? `2026-05-${String((i % 24) + 3).padStart(2, '0')} 14:00:00` : undefined,
+    completedAt: status === 5 ? `2026-05-${String((i % 24) + 5).padStart(2, '0')} 16:00:00` : undefined,
+    collectiveOrderId: [2, 3, 4, 5].includes(status) ? `co-${7000 + (i % 12)}` : undefined,
     remark: i % 5 === 0 ? '加急' : '',
   };
 });
@@ -57,7 +57,7 @@ interface QueryParams {
 
 export function mockListStoreOrders({ pageNo, pageSize, searchInfo }: QueryParams) {
   let list = orders;
-  if (searchInfo?.status) list = list.filter((x) => x.status === searchInfo.status);
+  if (searchInfo?.status != null && searchInfo?.status !== '') list = list.filter((x) => x.orderStatus === Number(searchInfo.status));
   if (searchInfo?.keyword) {
     const k = searchInfo.keyword.toLowerCase();
     list = list.filter((x) => x.orderNo.includes(k) || x.storeName.includes(k));
@@ -71,8 +71,8 @@ export function mockGetStoreOrder(id: string) {
 
 export function mockCancelStoreOrder(id: string, reason: string) {
   const item = orders.find((x) => x.id === id);
-  if (item && item.status === 'PENDING_PAY') {
-    item.status = 'CANCELLED';
+  if (item && item.orderStatus === 0) {
+    item.orderStatus = 6;
     item.remark = `[管理员取消] ${reason}`;
   }
   return delay({ success: true });

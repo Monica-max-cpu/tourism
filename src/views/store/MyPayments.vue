@@ -34,7 +34,7 @@ const [registerTable, { reload }] = useTable();
 const detailModal = useModal<StorePaymentRecord | null>();
 
 async function loadData(params: any) {
-  return await listStorePaymentsApi({ ...params, searchInfo: { ...search, storeId: storeId.value } });
+  return await listStorePaymentsApi({ ...params, storeId: storeId.value, ...search });
 }
 
 const columns: BasicColumn[] = [

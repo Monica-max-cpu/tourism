@@ -17,7 +17,6 @@ import { useAuth } from '/@/composables/useAuth';
 import { useUserStore } from '/@/stores/modules/user';
 import { useCartStore } from '/@/stores/modules/cart';
 import { getStoreWorkbenchSummaryApi } from '/@/api/store/order';
-import { getSalesSummaryApi } from '/@/api/store/sales';
 import { getStoreDashboardApi, type StoreDashboardData } from '/@/api/store/dashboard';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { formatCurrency, formatNumber } from '/@/utils/format';
@@ -35,20 +34,17 @@ const dash = ref<StoreDashboardData | null>(null);
 
 const sum = reactive({
   pendingPayment: 0, pendingConfirm: 0, shipping: 0, delivered: 0,
-  completed30d: 0, purchaseAmount30d: 0, salesAmount30d: 0,
+  completed30d: 0, purchaseAmount30d: 0,
 });
-const sales = reactive({ totalQty: 0, totalAmount: 0, days: 0 });
 
 async function loadAll() {
   if (!storeId.value) { loading.value = false; return; }
   try {
-    const [s, sa, d] = await Promise.all([
+    const [s, d] = await Promise.all([
       getStoreWorkbenchSummaryApi(storeId.value),
-      getSalesSummaryApi(storeId.value),
       getStoreDashboardApi(storeId.value),
     ]);
     Object.assign(sum, s);
-    Object.assign(sales, { totalQty: sa.totalQty, totalAmount: sa.totalAmount, days: sa.days });
     dash.value = d;
   } finally {
     loading.value = false;
@@ -257,27 +253,11 @@ function go(to: string) { router.push(to); }
       </Card>
     </section>
 
-    <!-- 销售统计 3 卡 -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up">
-      <Card class="hover:shadow-md transition-shadow cursor-pointer" @click="go(ROUTE_PATHS.STORE_ORDERS)">
+    <section class="animate-fade-in-up">
+      <Card class="hover:shadow-md transition-shadow cursor-pointer max-w-sm" @click="go(ROUTE_PATHS.STORE_ORDERS)">
         <CardContent class="p-5">
           <div class="text-xs text-muted-foreground mb-2">30 天采购金额</div>
           <div class="text-2xl font-semibold tabular-nums">{{ formatCurrency(sum.purchaseAmount30d) }}</div>
-        </CardContent>
-      </Card>
-      <Card class="hover:shadow-md transition-shadow cursor-pointer" @click="go(ROUTE_PATHS.STORE_SALES)">
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-2">累计销售额</div>
-          <div class="text-2xl font-semibold tabular-nums">{{ formatCurrency(sales.totalAmount) }}</div>
-        </CardContent>
-      </Card>
-      <Card class="hover:shadow-md transition-shadow cursor-pointer" @click="go(ROUTE_PATHS.STORE_SALES)">
-        <CardContent class="p-5">
-          <div class="text-xs text-muted-foreground mb-2">已上报销量 / 上报天数</div>
-          <div class="text-2xl font-semibold tabular-nums">
-            {{ formatNumber(sales.totalQty) }}
-            <span class="text-sm text-muted-foreground font-normal">/ {{ sales.days }} 天</span>
-          </div>
         </CardContent>
       </Card>
     </section>

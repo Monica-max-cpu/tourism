@@ -5,31 +5,40 @@ import type { OrderStatus, PaymentStatus, PaymentMethod, StockHealthLevel, Stock
 
 // ===== 订单状态 =====
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  PENDING_PAY: '待支付',
-  PAID: '已支付',
-  CONFIRMED: '已确认',
-  SHIPPING: '配送中',
-  COMPLETED: '已完成',
-  CANCELLED: '已取消',
+  0: '待支付',
+  1: '已支付，待集采',
+  2: '集采中',
+  3: '发货中',
+  4: '部分收货',
+  5: '已完成',
+  6: '已取消',
+  7: '退款中',
+  8: '已退款',
 };
 
 export const ORDER_STATUS_VARIANT: Record<OrderStatus, 'warning' | 'info' | 'success' | 'destructive' | 'muted'> = {
-  PENDING_PAY: 'warning',
-  PAID: 'info',
-  CONFIRMED: 'info',
-  SHIPPING: 'info',
-  COMPLETED: 'success',
-  CANCELLED: 'muted',
+  0: 'warning',
+  1: 'warning',
+  2: 'info',
+  3: 'info',
+  4: 'info',
+  5: 'success',
+  6: 'muted',
+  7: 'warning',
+  8: 'destructive',
 };
 
 export const ORDER_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'PENDING_PAY', label: '待支付' },
-  { value: 'PAID', label: '已支付' },
-  { value: 'CONFIRMED', label: '已确认' },
-  { value: 'SHIPPING', label: '配送中' },
-  { value: 'COMPLETED', label: '已完成' },
-  { value: 'CANCELLED', label: '已取消' },
+  { value: 0, label: '待支付' },
+  { value: 1, label: '已支付，待集采' },
+  { value: 2, label: '集采中' },
+  { value: 3, label: '发货中' },
+  { value: 4, label: '部分收货' },
+  { value: 5, label: '已完成' },
+  { value: 6, label: '已取消' },
+  { value: 7, label: '退款中' },
+  { value: 8, label: '已退款' },
 ];
 
 // ===== 支付状态 =====

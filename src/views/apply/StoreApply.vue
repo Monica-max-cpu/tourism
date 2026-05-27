@@ -27,14 +27,13 @@ const submitting = ref(false);
 const errorMsg = ref('');
 
 const STORE_TYPES = [
-  { value: 'SCENIC', label: '景区门店' },
-  { value: 'CHAIN', label: '连锁门店' },
-  { value: 'INDEPENDENT', label: '独立门店' },
+  { value: 1, label: '普通门店' },
+  { value: 2, label: '连锁门店' },
 ];
 
 const form = reactive({
   storeName: '',
-  storeType: '',
+  storeType: 1 as number,
   contactPerson: '',
   contactPhone: '',
   contactEmail: '',
@@ -61,7 +60,7 @@ function removeUpload(field: string) {
 
 async function onSubmit(e: Event) {
   e.preventDefault();
-  if (!form.storeName || !form.storeType || !form.contactPerson || !form.contactPhone) {
+  if (!form.storeName || !form.contactPerson || !form.contactPhone) {
     errorMsg.value = '请填写必填项';
     return;
   }
@@ -75,7 +74,7 @@ async function onSubmit(e: Event) {
     const res = await storeApplyApi({ ...form, ...qualifications });
     router.push({
       path: ROUTE_PATHS.APPLY_RESULT,
-      query: { type: 'store', applyNo: res.applyNo, name: res.name },
+      query: { type: 'store', id: res.id, name: form.storeName },
     });
   } catch (err) {
     errorMsg.value = (err as Error).message || '提交失败';
@@ -121,7 +120,7 @@ async function onSubmit(e: Event) {
                       <SelectValue placeholder="请选择门店类型" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem v-for="t in STORE_TYPES" :key="t.value" :value="t.value">{{ t.label }}</SelectItem>
+                      <SelectItem v-for="t in STORE_TYPES" :key="t.value" :value="String(t.value)">{{ t.label }}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

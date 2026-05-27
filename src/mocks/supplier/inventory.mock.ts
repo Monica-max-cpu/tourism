@@ -28,54 +28,76 @@ const stocks: SupplierStock[] = Array.from({ length: 28 }, (_, i) => {
   const threshold = 50 + (i % 4) * 30;
   const available = i % 7 === 0 ? 0 : i % 5 === 0 ? Math.floor(threshold * 0.6) : threshold + 80 + (i % 6) * 40;
   const locked = (i % 4) * 8;
+  const wh = pick(warehouses);
   return {
     id: `sup-stock-${7000 + i}`,
     supplierId: CURRENT_SUPPLIER_ID,
-    productSku: `SKU${String(60000 + (i % 24)).padStart(6, '0')}`,
+    productId: `prod-${String(8000 + i).padStart(4, '0')}`,
     productName: pick(MOCK_DATA.PRODUCT_NAMES),
+    warehouseId: `wh-${String((i % 3) + 1).padStart(4, '0')}`,
+    warehouseName: wh,
     unit: pick(MOCK_DATA.UNITS),
-    warehouseName: pick(warehouses),
+    productSku: `SKU${String(60000 + (i % 24)).padStart(6, '0')}`,
     availableQty: available,
     lockedQty: locked,
     warnThreshold: threshold,
-    health: calcHealth(available, threshold),
     updatedAt: `2026-05-${String((i % 24) + 1).padStart(2, '0')} ${String(9 + (i % 9)).padStart(2, '0')}:30:00`,
+    health: calcHealth(available, threshold),
   };
 });
 
 interface QueryParams {
   pageNo: number;
   pageSize: number;
-  searchInfo?: { keyword?: string; health?: string; supplierId?: string };
+  keyword?: string;
+  health?: string;
+  supplierId?: string;
 }
 
-export function mockListSupplierStocks({ pageNo, pageSize, searchInfo }: QueryParams) {
-  const sid = searchInfo?.supplierId;
-  if (!sid) return delay({ records: [], total: 0 });
-  let list = stocks.filter((x) => x.supplierId === sid);
-  if (searchInfo?.health) list = list.filter((x) => x.health === searchInfo.health);
-  if (searchInfo?.keyword) {
-    const k = searchInfo.keyword.toLowerCase();
+export function mockListSupplierStocks({ pageNo, pageSize, keyword, health, supplierId }: QueryParams) {
+  if (!supplierId) return delay({ records: [], total: 0 });
+  let list = stocks.filter((x) => x.supplierId === supplierId);
+  if (health) list = list.filter((x) => x.health === health);
+  if (keyword) {
+    const k = keyword.toLowerCase();
     list = list.filter((x) => x.productName.toLowerCase().includes(k) || x.productSku.includes(k));
   }
   return delay(paginate(list, pageNo, pageSize));
 }
 
-export function mockUpdateStockQty(id: string, availableQty: number) {
-  const item = stocks.find((x) => x.id === id);
-  if (item) {
-    item.availableQty = availableQty;
-    item.health = calcHealth(availableQty, item.warnThreshold);
-    item.updatedAt = new Date().toISOString();
+export function mockReplenishStock(data: { supplierId: string; productId: string; warehouseId?: string; qty: number; remark?: string }) {
+  const existing = stocks.find((x) => x.supplierId === data.supplierId && x.productId === data.productId);
+  if (existing) {
+    existing.availableQty = data.qty;
+    existing.health = calcHealth(data.qty, existing.warnThreshold);
+    existing.updatedAt = new Date().toISOString();
+    return delay({ success: true, stockId: existing.id, availableQty: existing.availableQty });
   }
-  return delay({ success: true });
+  const id = `sup-stock-${Date.now()}`;
+  const item: SupplierStock = {
+    id,
+    supplierId: data.supplierId,
+    productId: data.productId,
+    productName: '',
+    productSku: '',
+    unit: '',
+    warehouseId: data.warehouseId || '',
+    warehouseName: '',
+    availableQty: data.qty,
+    lockedQty: 0,
+    warnThreshold: 50,
+    health: calcHealth(data.qty, 50),
+    updatedAt: new Date().toISOString(),
+  };
+  stocks.unshift(item);
+  return delay({ success: true, stockId: id, availableQty: data.qty });
 }
 
-export function mockUpdateStockThreshold(id: string, warnThreshold: number) {
+export function mockUpdateStockThreshold(id: string, alertQty: number) {
   const item = stocks.find((x) => x.id === id);
   if (item) {
-    item.warnThreshold = warnThreshold;
-    item.health = calcHealth(item.availableQty, warnThreshold);
+    item.warnThreshold = alertQty;
+    item.health = calcHealth(item.availableQty, alertQty);
     item.updatedAt = new Date().toISOString();
   }
   return delay({ success: true });

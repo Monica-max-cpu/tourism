@@ -31,8 +31,11 @@ export const ROUTE_PATHS = {
   SUPPLIER_QUOTES_MANAGE: '/supplier/quotes/manage',
   SUPPLIER_QUOTES_HISTORY: '/supplier/quotes/history',
   SUPPLIER_PRODUCTS: '/supplier/products',
+  SUPPLIER_PRODUCT_CREATE: '/supplier/product/create',
+  SUPPLIER_PRODUCT_EDIT: '/supplier/product/:id/edit',
   SUPPLIER_ORDERS_PENDING: '/supplier/orders/pending',
   SUPPLIER_ORDERS_ACTIVE: '/supplier/orders/active',
+  SUPPLIER_WAREHOUSES: '/supplier/warehouses',
   SUPPLIER_INVENTORY: '/supplier/inventory',
   SUPPLIER_SHIPMENTS: '/supplier/shipments',
   SUPPLIER_SETTLEMENTS: '/supplier/settlements',
@@ -47,11 +50,7 @@ export const ROUTE_PATHS = {
   STORE_ORDERS: '/store/orders',
   STORE_ORDER_DETAIL: '/store/orders/:id',
   STORE_PAYMENT: '/store/payments',
-  STORE_SALES: '/store/sales',
   STORE_PROFILE: '/store/profile',
-  // 兼容字段（阶段 4 暂不实现，留作占位 → SalesReport 兜底）
-  STORE_INVENTORY: '/store/sales',
-  STORE_SETTLEMENTS: '/store/payments',
   // update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】门店端路由路径
 
   // 异常

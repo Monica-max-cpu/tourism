@@ -10,30 +10,28 @@ import type { ShipParams } from '/#/b2b-supplier';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
-  ListOrders = '/b2b/supplier/orders/list',
-  GetOrder = '/b2b/supplier/orders/detail',
-  ConfirmOrder = '/b2b/supplier/orders/confirm',
-  RejectOrder = '/b2b/supplier/orders/reject',
-  ShipOrder = '/b2b/supplier/orders/ship',
-  OrderSummary = '/b2b/supplier/orders/summary',
+  ListOrders = '/b2b/collective/list',
+  ShipOrder = '/b2b/collective/delivery/ship',
 }
 
 export function listSupplierOrdersApi(params: any) {
-  return USE_MOCK ? orderMock.mockListSupplierOrders(params) : defHttp.post({ url: Api.ListOrders, data: params });
+  return USE_MOCK ? orderMock.mockListSupplierOrders(params) : defHttp.get({ url: Api.ListOrders, params });
 }
 export function getSupplierOrderApi(id: string) {
-  return USE_MOCK ? orderMock.mockGetSupplierOrder(id) : defHttp.get({ url: Api.GetOrder, params: { id } });
+  return USE_MOCK ? orderMock.mockGetSupplierOrder(id) : defHttp.get({ url: `/b2b/collective/detail/${id}` });
 }
 export function confirmSupplierOrderApi(id: string) {
-  return USE_MOCK ? orderMock.mockConfirmSupplierOrder(id) : defHttp.post({ url: Api.ConfirmOrder, data: { id } });
+  return USE_MOCK ? orderMock.mockConfirmSupplierOrder(id) : defHttp.put({ url: `/b2b/collective/supplier/confirm/${id}` });
 }
 export function rejectSupplierOrderApi(id: string, reason: string) {
-  return USE_MOCK ? orderMock.mockRejectSupplierOrder(id, reason) : defHttp.post({ url: Api.RejectOrder, data: { id, reason } });
+  // 后端无拒绝集采单接口，使用 mock
+  return orderMock.mockRejectSupplierOrder(id, reason);
 }
 /** 发货：CONFIRMED → SHIPPING，写入 carrier/trackingNo */
 export function shipSupplierOrderApi(params: ShipParams) {
   return USE_MOCK ? orderMock.mockShipSupplierOrder(params) : defHttp.post({ url: Api.ShipOrder, data: params });
 }
 export function getSupplierOrderSummaryApi(supplierId: string) {
-  return USE_MOCK ? orderMock.mockSupplierOrderSummary(supplierId) : defHttp.get({ url: Api.OrderSummary, params: { supplierId } });
+  // 后端无汇总接口，使用 mock
+  return orderMock.mockSupplierOrderSummary(supplierId);
 }
