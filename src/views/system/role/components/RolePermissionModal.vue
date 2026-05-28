@@ -8,6 +8,7 @@ import {
   saveRolePermissionApi,
 } from '/@/api/system/role';
 import type { PermissionTreeNode } from '/#/system';
+import { mergeCheckedTreeKeys, normalizeCheckedTreeKeys } from '/@/views/system/role/components/permissionTree';
 
 const visible = ref(false);
 const loading = ref(false);
@@ -44,12 +45,17 @@ async function open(id: string) {
 async function save() {
   loading.value = true;
   try {
-    await saveRolePermissionApi(roleId.value, checkedKeys.value, lastCheckedKeys.value);
+    const permissionIds = normalizeCheckedTreeKeys(treeData.value, checkedKeys.value);
+    await saveRolePermissionApi(roleId.value, permissionIds, lastCheckedKeys.value);
     message.success('角色权限已保存');
     visible.value = false;
   } finally {
     loading.value = false;
   }
+}
+
+function onCheck(_checked: unknown, info: { checked: boolean; node: PermissionTreeNode }) {
+  checkedKeys.value = mergeCheckedTreeKeys(checkedKeys.value, info.node, info.checked);
 }
 
 defineExpose({ open });
@@ -66,11 +72,13 @@ defineExpose({ open });
   >
     <div class="max-h-[60vh] overflow-auto rounded-md border border-border p-3">
       <ATree
-        v-model:checkedKeys="checkedKeys"
         checkable
+        check-strictly
         :tree-data="treeData"
         :field-names="{ title: 'title', key: 'key', children: 'children' }"
+        :checked-keys="checkedKeys"
         default-expand-all
+        @check="onCheck"
       />
     </div>
   </BasicModal>
