@@ -9,7 +9,7 @@
  */
 import { ref, computed, onMounted, watch } from 'vue';
 import type { BasicTableProps, TableActionType, FetchParams } from './types';
-import { useUserStore } from '/@/stores/modules/user';
+import { usePermissionStore } from '/@/stores/modules/permission';
 
 const props = withDefaults(defineProps<BasicTableProps>(), {
   pageSize: 10,
@@ -26,7 +26,7 @@ const emit = defineEmits<{
   'row-click': [row: any];
 }>();
 
-const userStore = useUserStore();
+const permissionStore = usePermissionStore();
 
 const loading = ref(false);
 const gridRef = ref<any>();
@@ -37,7 +37,7 @@ const pageSize = ref(props.pageSize);
 const selectedRows = ref<any[]>([]);
 
 const visibleColumns = computed(() =>
-  props.columns.filter((c) => !c.authCode || userStore.getPermissions.includes(c.authCode)),
+  props.columns.filter((c) => !c.authCode || permissionStore.getPermCodeList.includes(c.authCode)),
 );
 
 async function fetchData(extraParams: Partial<FetchParams> = {}) {

@@ -20,13 +20,11 @@ import {
   DialogDescription,
 } from '/@/components/ui';
 import { useUserStore } from '/@/stores/modules/user';
-import { usePermissionStore } from '/@/stores/modules/permission';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import type { UserRole } from '/#/user';
 
 const router = useRouter();
 const userStore = useUserStore();
-const permissionStore = usePermissionStore();
 
 const showPassword = ref(false);
 const isLoading = ref(false);
@@ -130,7 +128,6 @@ async function handleLogin(e: Event) {
   try {
     // Mock 阶段：用户名 = 角色键（admin / supplier / store），后端按 username 解析角色
     const user = await userStore.login({ username: form.username.trim(), password: form.password });
-    permissionStore.setMenusByRole(user.role);
     router.push(ROLE_HOME[user.role]);
   } catch (err) {
     errorMsg.value = (err as Error).message || '登录失败';

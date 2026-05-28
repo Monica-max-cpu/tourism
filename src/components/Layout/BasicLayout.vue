@@ -1,18 +1,6 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useUserStore } from '/@/stores/modules/user';
-import { usePermissionStore } from '/@/stores/modules/permission';
 import Sider from './Sider.vue';
 import Header from './Header.vue';
-
-const userStore = useUserStore();
-const permissionStore = usePermissionStore();
-
-onMounted(() => {
-  if (permissionStore.getMenus.length === 0 && userStore.getRole) {
-    permissionStore.setMenusByRole(userStore.getRole as any);
-  }
-});
 </script>
 
 <template>

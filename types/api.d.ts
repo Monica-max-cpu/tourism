@@ -23,4 +23,8 @@ export interface PageResult<T> {
   current: number;
 }
 
+declare interface Fn<T = any, R = T> {
+  (...arg: T[]): R;
+}
+
 export type Recordable<T = any> = Record<string, T>;

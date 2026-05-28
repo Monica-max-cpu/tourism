@@ -86,7 +86,7 @@ class VAxios {
         const res = await this.instance.request<Result<T>>(config);
         const body = res.data;
         if (!body) throw new BizError(-1, '响应体为空');
-        if (body.success === false || (body.code !== undefined && body.code !== 200)) {
+        if (body.success === false || (body.code !== undefined && body.code !== 200 && body.code !== 0)) {
           throw new BizError(body.code, body.message || '请求失败');
         }
         return opts.unwrap ? (body.result as T) : (body as unknown as T);

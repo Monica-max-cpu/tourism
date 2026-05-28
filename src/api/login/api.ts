@@ -18,23 +18,20 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 export async function loginApi(params: LoginParams): Promise<LoginResult> {
   if (USE_MOCK) return mockLogin(params);
-  // update-begin--author:phase7---date:2026-05-26---for:【阶段7】supplier/store 后端未实现，用户名含关键字的走 mock
-  const userLower = params.username.toLowerCase();
-  if (userLower.includes('supplier') || userLower.includes('store')) {
-    return mockLogin(params);
-  }
-  // update-end--author:phase7---date:2026-05-26---for:【阶段7】supplier/store 后端未实现，用户名含关键字的走 mock
   // update-begin--author:phase7---date:2026-05-25---for:【阶段7】适配 JeecgBoot 返回结构
   const res = await defHttp.post<any>({ url: Api.Login, data: params });
   const raw = res.userInfo ?? res.user ?? {};
   // JeecgBoot 角色在 roleList[0]，可能为空（用户未分配角色）
   const resolveRole = (): UserInfo['role'] => {
-    const code = (res.roleList?.[0] || raw.role || raw.username || '').toUpperCase();
-    if (code === 'STOREUSER') return 'STORE';
-    if (code === 'ADMIN' || code === 'SUPPLIER' || code === 'STORE') return code;
-    // 兜底：用户名匹配
-    if (code === 'SUPPLIER') return 'SUPPLIER';
-    return 'ADMIN'; // 默认 ADMIN，后端修好 roleList 后此逻辑自动跳过
+    const codes = (res.roleList?.length ? res.roleList : [raw.role || raw.username || '']).map((s: string) => s.toUpperCase());
+    for (const code of codes) {
+      if (code === 'STOREUSER') return 'STORE';
+      if (code === 'ADMIN' || code === 'SUPPLIER' || code === 'STORE') return code;
+      if (code.includes('ADMIN')) return 'ADMIN';
+      if (code.includes('SUPPLIER')) return 'SUPPLIER';
+      if (code.includes('STORE')) return 'STORE';
+    }
+    return 'ADMIN';
   };
   // 权限提取：JeecgBoot 可能在 userInfo.permissionList / res.permissions / raw.perms 等字段
   const resolvePermissions = (): string[] => {
@@ -77,11 +74,6 @@ export async function getUserInfoApi(): Promise<UserInfo> {
     if (m) return Promise.resolve(mockUsers[m[1] as keyof typeof mockUsers]);
     return Promise.reject(new Error('未登录'));
   }
-  // supplier/store mock 登录的 token，直接从 mock 取用户信息（绕过真实接口）
-  const tokenVal = localStorage.getItem('b2b:token') || '';
-  const mockMatch = tokenVal.match(/mock-token-(ADMIN|SUPPLIER|STORE)/);
-  if (mockMatch) return Promise.resolve(mockUsers[mockMatch[1] as keyof typeof mockUsers]);
-
   const raw = await defHttp.get<any>({ url: Api.GetUserInfo });
   // 提取权限，兜底同 loginApi
   const resolvePerms = (): string[] => {

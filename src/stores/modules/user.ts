@@ -68,6 +68,16 @@ export const useUserStore = defineStore({
       const { token, user } = await loginApi(params);
       this.setToken(token);
       this.setUserInfo(user);
+      // 登录接口不返回权限，补调 getUserInfo 拿权限
+      try {
+        const info = await getUserInfoApi();
+        if (info.permissions && info.permissions.length > 0) {
+          user.permissions = info.permissions;
+          this.setUserInfo(user);
+        }
+      } catch {
+        // 拿不到权限不阻塞登录
+      }
       return user;
     },
     /** 占位：CAS 单点登录入口（后续阶段对接） */
