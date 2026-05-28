@@ -29,6 +29,7 @@ const emit = defineEmits<{
 const userStore = useUserStore();
 
 const loading = ref(false);
+const gridRef = ref<any>();
 const dataRef = ref<any[]>([]);
 const total = ref(0);
 const pageNo = ref(1);
@@ -72,6 +73,12 @@ const tableAction: TableActionType = {
   clearSelection: () => {
     selectedRows.value = [];
   },
+  expandAll: async () => {
+    await gridRef.value?.setAllTreeExpand?.(true);
+  },
+  collapseAll: async () => {
+    await gridRef.value?.setAllTreeExpand?.(false);
+  },
 };
 
 function onPageChange({ currentPage, pageSize: ps }: { currentPage: number; pageSize: number }) {
@@ -108,10 +115,12 @@ defineExpose(tableAction);
 <template>
   <div class="basic-table backdrop-blur-sm rounded-lg border border-border">
     <vxe-grid
+      ref="gridRef"
       :loading="loading"
       :data="dataRef"
       :columns="visibleColumns"
       :row-config="{ keyField: props.rowKey, isHover: true }"
+      :tree-config="props.treeConfig"
       :stripe="props.stripe"
       :border="props.border"
       :checkbox-config="props.rowSelection === 'checkbox' ? { highlight: true } : undefined"

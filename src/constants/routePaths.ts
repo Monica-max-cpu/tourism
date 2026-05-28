@@ -26,6 +26,9 @@ export const ROUTE_PATHS = {
   ADMIN_SETTLEMENTS_STORES: '/admin/settlements/stores',
   ADMIN_SETTLEMENTS_SUPPLIERS: '/admin/settlements/suppliers',
   ADMIN_PROFITS: '/admin/profits',
+  ADMIN_SYSTEM_USERS: '/admin/system/users',
+  ADMIN_SYSTEM_ROLES: '/admin/system/roles',
+  ADMIN_SYSTEM_MENUS: '/admin/system/menus',
 
   // 供应商（阶段 3 替换）
   // update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商路由路径

@@ -2,7 +2,6 @@ import type { RouteRecordRaw } from 'vue-router';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 
 const Layout = () => import('/@/components/Layout/BasicLayout.vue');
-const Placeholder = () => import('/@/views/_placeholder/Placeholder.vue');
 
 export const adminRoutes: RouteRecordRaw = {
   path: '/admin',
@@ -34,6 +33,9 @@ export const adminRoutes: RouteRecordRaw = {
     { path: 'settlements/stores', name: 'AdminSettlementsStores', component: () => import('/@/views/admin/SettlementStores.vue'), meta: { title: '门店结算' } },
     { path: 'settlements/suppliers', name: 'AdminSettlementsSuppliers', component: () => import('/@/views/admin/SettlementSuppliers.vue'), meta: { title: '供应商结算' } },
     { path: 'profits', name: 'AdminProfits', component: () => import('/@/views/admin/ProfitRecords.vue'), meta: { title: '利润记录', authCode: 'b2b:profit:view' } },
+    { path: 'system/users', name: 'AdminSystemUsers', component: () => import('/@/views/system/user/UserManage.vue'), meta: { title: '用户管理', authCode: 'system:user:list' } },
+    { path: 'system/roles', name: 'AdminSystemRoles', component: () => import('/@/views/system/role/RoleManage.vue'), meta: { title: '角色管理', authCode: 'system:role:list' } },
+    { path: 'system/menus', name: 'AdminSystemMenus', component: () => import('/@/views/system/menu/MenuManage.vue'), meta: { title: '菜单管理', authCode: 'system:menu:list' } },
   ],
 };
 

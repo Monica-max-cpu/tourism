@@ -26,6 +26,12 @@ export function useTable(props?: Partial<BasicTableProps>): [
     getDataSource: () => tableRef.value?.getDataSource() || [],
     getSelected: () => tableRef.value?.getSelected() || [],
     clearSelection: () => tableRef.value?.clearSelection(),
+    expandAll: async () => {
+      await tableRef.value?.expandAll();
+    },
+    collapseAll: async () => {
+      await tableRef.value?.collapseAll();
+    },
     getProps: () => unref(propsRef),
   };
 

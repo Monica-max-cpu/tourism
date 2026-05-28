@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         '/sys': {
-          target: 'http://localhost:8001',
+          target: 'http://192.168.10.60:8001',
           changeOrigin: true,
         },
         '/b2b': {
