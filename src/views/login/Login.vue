@@ -196,7 +196,10 @@ async function handleLogin(e: Event) {
                   </div>
 
                   <div class="space-y-2">
-                    <Label for="password">密码</Label>
+                    <div class="flex items-center justify-between">
+                      <Label for="password">密码</Label>
+                      <RouterLink :to="ROUTE_PATHS.FORGET_PASSWORD" class="text-xs text-primary hover:underline">忘记密码?</RouterLink>
+                    </div>
                     <div class="relative">
                       <Input
                         id="password"
@@ -231,7 +234,7 @@ async function handleLogin(e: Event) {
 
                   <p class="text-center text-sm text-muted-foreground">
                     还没有账号？
-                    <RouterLink :to="ROUTE_PATHS.APPLY_SUPPLIER" class="text-primary font-medium hover:underline">注册账号</RouterLink>
+                    <RouterLink :to="ROUTE_PATHS.REGISTER" class="text-primary font-medium hover:underline">注册账号</RouterLink>
                   </p>
 
                   <p class="text-center text-sm text-muted-foreground">

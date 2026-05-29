@@ -4,6 +4,8 @@
 export const ROUTE_PATHS = {
   // 公开
   LOGIN: '/login',
+  REGISTER: '/register',
+  FORGET_PASSWORD: '/forget-password',
   APPLY_SUPPLIER: '/apply/supplier',
   APPLY_STORE: '/apply/store',
   APPLY_RESULT: '/apply/result',

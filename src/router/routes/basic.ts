@@ -16,6 +16,18 @@ export const basicRoutes: RouteRecordRaw[] = [
     meta: { title: '登录', hidden: true },
   },
   {
+    path: ROUTE_PATHS.REGISTER,
+    name: 'Register',
+    component: () => import('/@/views/register/Register.vue'),
+    meta: { title: '注册', hidden: true },
+  },
+  {
+    path: ROUTE_PATHS.FORGET_PASSWORD,
+    name: 'ForgetPassword',
+    component: () => import('/@/views/forget-password/ForgetPassword.vue'),
+    meta: { title: '忘记密码', hidden: true },
+  },
+  {
     path: ROUTE_PATHS.APPLY_SUPPLIER,
     name: 'SupplierApply',
     component: () => import('/@/views/apply/SupplierApply.vue'),

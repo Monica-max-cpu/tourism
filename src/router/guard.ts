@@ -18,8 +18,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   BASIC_USER: ROUTE_PATHS.ENTRY_B2B,
 };
 
-const WHITE_LIST = new Set(['Login', 'SupplierApply', 'StoreApply', 'ApplyResult', 'NotFound', 'Forbidden']);
-
+const WHITE_LIST = new Set(['Login', 'Register', 'ForgetPassword', 'SupplierApply', 'StoreApply', 'ApplyResult', 'NotFound', 'Forbidden']);
 /** 404 兜底路由，动态路由构建后追加 */
 const PAGE_NOT_FOUND_ROUTE: RouteRecordRaw = {
   path: '/:pathMatch(.*)*',

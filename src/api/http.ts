@@ -28,12 +28,24 @@ interface RequestOptions {
   useMock?: boolean;
   /** 失败重试次数（仅 GET），默认 0 */
   retry?: number;
+  /** 是否跳过响应转换（返回原始 body，不抛业务错误），默认 false */
+  isTransformResponse?: boolean;
+  /** 是否返回原生 axios 响应，默认 false */
+  isReturnNativeResponse?: boolean;
 }
 
-const DEFAULT_OPTIONS: Required<RequestOptions> = {
+const DEFAULT_OPTIONS: {
+  unwrap: boolean;
+  useMock: boolean;
+  retry: number;
+  isTransformResponse: boolean;
+  isReturnNativeResponse: boolean;
+} = {
   unwrap: true,
   useMock: import.meta.env.VITE_USE_MOCK === 'true',
   retry: 0,
+  isTransformResponse: true,
+  isReturnNativeResponse: false,
 };
 
 class VAxios {
@@ -84,8 +96,16 @@ class VAxios {
     for (let i = 0; i < total; i++) {
       try {
         const res = await this.instance.request<Result<T>>(config);
+
+        // isReturnNativeResponse：返回原生 axios 响应
+        if (opts.isReturnNativeResponse) return res as unknown as T;
+
         const body = res.data;
         if (!body) throw new BizError(-1, '响应体为空');
+
+        // isTransformResponse 为 false 时，返回原始 body 不抛业务错误
+        if (!opts.isTransformResponse) return body as unknown as T;
+
         if (body.success === false || (body.code !== undefined && body.code !== 200 && body.code !== 0)) {
           throw new BizError(body.code, body.message || '请求失败');
         }

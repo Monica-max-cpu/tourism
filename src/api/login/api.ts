@@ -5,13 +5,18 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段1】登录接口（Mock+真接口双轨）
  */
 import { defHttp } from '/@/api/http';
-import { mockLogin, mockUsers } from '/@/mocks/login.mock';
+import { mockLogin, mockUsers, mockRegister, mockCheckOnlyUser, mockPhoneVerify, mockPasswordChange, mockGetCaptcha } from '/@/mocks/login.mock';
 import type { LoginParams, LoginResult, UserInfo } from './model';
 
 enum Api {
   Login = '/sys/login',
   Logout = '/sys/logout',
   GetUserInfo = '/sys/user/getUserInfo',
+  Register = '/sys/user/register',
+  CheckOnlyUser = '/sys/user/checkOnlyUser',
+  PhoneVerify = '/sys/user/phoneVerification',
+  PasswordChange = '/sys/user/passwordChange',
+  GetCaptcha = '/sys/sms',
 }
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -65,6 +70,43 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
 export function logoutApi(): Promise<void> {
   if (USE_MOCK) return Promise.resolve();
   return defHttp.post<void>({ url: Api.Logout });
+}
+
+export interface RegisterParams {
+  username: string;
+  password: string;
+  phone: string;
+  smscode: string;
+}
+
+/** 注册 */
+export function registerApi(params: RegisterParams): Promise<{ success: boolean; message?: string }> {
+  if (USE_MOCK) return mockRegister(params);
+  return defHttp.post({ url: Api.Register, data: params }, { isTransformResponse: false });
+}
+
+/** 校验用户名/手机号是否已存在 */
+export function checkOnlyUserApi(params: { username?: string; phone?: string }): Promise<{ success: boolean; message?: string }> {
+  if (USE_MOCK) return mockCheckOnlyUser(params);
+  return defHttp.get({ url: Api.CheckOnlyUser, params }, { isTransformResponse: false });
+}
+
+/** 手机号验证（忘记密码第一步） */
+export function phoneVerifyApi(params: { phone: string; smscode: string }): Promise<{ success: boolean; message?: string }> {
+  if (USE_MOCK) return mockPhoneVerify(params);
+  return defHttp.post({ url: Api.PhoneVerify, data: params }, { isTransformResponse: false });
+}
+
+/** 修改密码（忘记密码第二步） */
+export function passwordChangeApi(params: { username: string; password: string; phone: string; smscode: string }): Promise<{ success: boolean; message?: string }> {
+  if (USE_MOCK) return mockPasswordChange(params);
+  return defHttp.get({ url: Api.PasswordChange, params }, { isTransformResponse: false });
+}
+
+/** 发送短信验证码 */
+export function getCaptchaApi(params: { mobile: string; smsmode: string }): Promise<{ success: boolean; message?: string; code?: number }> {
+  if (USE_MOCK) return mockGetCaptcha(params);
+  return defHttp.post({ url: Api.GetCaptcha, data: params }, { isTransformResponse: false });
 }
 
 export async function getUserInfoApi(): Promise<UserInfo> {
