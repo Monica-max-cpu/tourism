@@ -9,16 +9,19 @@ export const ROLE = {
   ADMIN: 'ADMIN',
   SUPPLIER: 'SUPPLIER',
   STORE: 'STORE',
+  BASIC_USER: 'BASIC_USER',
 } as const;
 
 export const ROLE_LABEL: Record<UserRole, string> = {
   ADMIN: '平台管理员',
   SUPPLIER: '供应商',
   STORE: '门店',
+  BASIC_USER: '普通用户',
 };
 
 export const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: 'ADMIN', label: '平台管理员' },
   { value: 'SUPPLIER', label: '供应商' },
   { value: 'STORE', label: '门店' },
+  { value: 'BASIC_USER', label: '普通用户' },
 ];

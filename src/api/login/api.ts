@@ -31,7 +31,7 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
       if (code.includes('SUPPLIER')) return 'SUPPLIER';
       if (code.includes('STORE')) return 'STORE';
     }
-    return 'ADMIN';
+    return 'BASIC_USER';
   };
   // 权限提取：JeecgBoot 可能在 userInfo.permissionList / res.permissions / raw.perms 等字段
   const resolvePermissions = (): string[] => {
@@ -70,7 +70,7 @@ export function logoutApi(): Promise<void> {
 export async function getUserInfoApi(): Promise<UserInfo> {
   if (USE_MOCK) {
     const token = localStorage.getItem('b2b:token') || '';
-    const m = token.match(/mock-token-(ADMIN|SUPPLIER|STORE)/);
+    const m = token.match(/mock-token-(ADMIN|SUPPLIER|STORE|BASIC_USER)/);
     if (m) return Promise.resolve(mockUsers[m[1] as keyof typeof mockUsers]);
     return Promise.reject(new Error('未登录'));
   }
@@ -93,7 +93,7 @@ export async function getUserInfoApi(): Promise<UserInfo> {
     realName: raw.realname || raw.realName || '',
     email: raw.email || '',
     avatar: raw.avatar || '',
-    role: raw.role || '',
+    role: raw.role || 'BASIC_USER',
     permissions: resolvePerms(),
   };
 }

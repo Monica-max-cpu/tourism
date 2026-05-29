@@ -60,16 +60,26 @@ export const mockUsers: Record<UserRole, UserInfo> = {
       // update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】门店端销售上报权限
     ],
   },
+  BASIC_USER: {
+    id: 'u-basic-001',
+    username: 'basic',
+    realName: '普通用户',
+    email: 'basic@b2b.example.com',
+    avatar: '',
+    role: 'BASIC_USER',
+    permissions: [],
+  },
 };
 
 export function mockLogin(params: LoginParams): Promise<LoginResult> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       // 演示逻辑：用户名等于角色 key（小写）即匹配；不区分密码
-      const key = params.username.toUpperCase() as UserRole;
+      const rawKey = params.username.toUpperCase();
+      const key = (rawKey === 'BASIC' ? 'BASIC_USER' : rawKey) as UserRole;
       const user = mockUsers[key];
       if (!user) {
-        reject(new Error('用户名不存在，请使用 admin / supplier / store'));
+        reject(new Error('用户名不存在，请使用 admin / supplier / store / basic'));
         return;
       }
       resolve({

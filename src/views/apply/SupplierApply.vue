@@ -2,23 +2,40 @@
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Building2, User, Phone, Mail, MapPin, FileText, BarChart3, HeadphonesIcon, Upload, CheckCircle, AlertCircle } from 'lucide-vue-next';
-import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Input, Label, Badge } from '/@/components/ui';
+import {
+  Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Input, Label, Badge,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '/@/components/ui';
 import { supplierApplyApi } from '/@/api/b2b/apply';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
+import { SUPPLIER_STORE_TYPE_OPTIONS } from '/@/constants/b2bStatus';
+import { useUserStore } from '/@/stores/modules/user';
 import ApplyShell from './ApplyShell.vue';
 
 const router = useRouter();
+const userStore = useUserStore();
 const submitting = ref(false);
 const errorMsg = ref('');
 
 const form = reactive({
   supplierName: '',
+  authType: 'SUPPLIER',
+  logoId: '',
+  storeType: '1',
+  mainCategory: '',
   contactPerson: '',
   contactPhone: '',
   contactEmail: '',
   province: '',
   city: '',
   address: '',
+  bankAccount: '',
+  bankName: '',
+  bankNo: '',
+  description: '',
+  storePhotos: '',
+  mapAddress: '',
+  coordinate: '',
   remark: '',
 });
 
@@ -51,7 +68,11 @@ async function onSubmit(e: Event) {
   errorMsg.value = '';
   submitting.value = true;
   try {
-    const res = await supplierApplyApi({ ...form, ...qualifications });
+    const res = await supplierApplyApi({ ...form, storeType: Number(form.storeType), ...qualifications });
+    if (userStore.isLoggedIn) {
+      router.push(ROUTE_PATHS.ENTRY_B2B);
+      return;
+    }
     router.push({
       path: ROUTE_PATHS.APPLY_RESULT,
       query: { type: 'supplier', id: res.id, name: form.supplierName },
@@ -95,6 +116,33 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2">
+                  <Label class="text-foreground/80">认证类型 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
+                  <Select v-model="form.authType">
+                    <SelectTrigger><SelectValue placeholder="请选择认证类型" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PERSONAL">个人</SelectItem>
+                      <SelectItem value="MERCHANT">商户</SelectItem>
+                      <SelectItem value="SUPPLIER">供应商</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">店铺类别 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
+                  <Select v-model="form.storeType">
+                    <SelectTrigger><SelectValue placeholder="请选择店铺类别" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="t in SUPPLIER_STORE_TYPE_OPTIONS" :key="t.value" :value="t.value">{{ t.label }}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">主营类别 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.mainCategory" placeholder="如：生鲜类、粮油类、快消类" />
+                </div>
+
+                <div class="space-y-2">
                   <Label class="text-foreground/80">业务联系人 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
                   <div class="relative">
                     <User class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -134,6 +182,36 @@ async function onSubmit(e: Event) {
                     <MapPin class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input v-model="form.address" placeholder="选填" class="pl-10" />
                   </div>
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">开户行 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.bankName" placeholder="如：中国银行太原分行" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">银行账号 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.bankAccount" placeholder="结算收款账号" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">开户行号 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.bankNo" placeholder="联行号 / 开户行号" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">地图坐标 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.coordinate" placeholder="lng,lat" />
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                  <Label class="text-foreground/80">地图地址 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.mapAddress" placeholder="地图选点展示地址" />
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                  <Label class="text-foreground/80">企业简介 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.description" placeholder="主体介绍、主营产品、服务能力等" />
                 </div>
 
                 <div class="space-y-2 md:col-span-2">

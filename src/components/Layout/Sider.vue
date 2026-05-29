@@ -18,7 +18,15 @@ const { collapsed } = storeToRefs(appStore);
 const route = useRoute();
 const router = useRouter();
 
-const flatMenus = computed<MenuItem[]>(() => menus.value);
+const entryMenus: MenuItem[] = [
+  { name: 'EntryB2B', path: ROUTE_PATHS.ENTRY_B2B, title: 'B2B 入驻', icon: 'BadgeCheck' },
+  { name: 'EntryB2C', path: ROUTE_PATHS.ENTRY_B2C, title: 'B2C 入驻', icon: 'Store' },
+];
+
+const flatMenus = computed<MenuItem[]>(() => {
+  if (menus.value.length > 0) return menus.value;
+  return userStore.getRole === 'BASIC_USER' ? entryMenus : [];
+});
 
 // 分组折叠状态
 const expandedGroups = reactive<Record<string, boolean>>({});

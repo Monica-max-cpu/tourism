@@ -118,6 +118,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   ADMIN: ROUTE_PATHS.ADMIN_WORKBENCH,
   SUPPLIER: ROUTE_PATHS.SUPPLIER_WORKBENCH,
   STORE: ROUTE_PATHS.STORE_WORKBENCH,
+  BASIC_USER: ROUTE_PATHS.ENTRY_B2B,
 };
 
 async function handleLogin(e: Event) {
@@ -229,7 +230,12 @@ async function handleLogin(e: Event) {
                   </Button>
 
                   <p class="text-center text-sm text-muted-foreground">
-                    演示账号：admin（管理员） / supplier（供应商） / store（门店），密码任意
+                    还没有账号？
+                    <RouterLink :to="ROUTE_PATHS.APPLY_SUPPLIER" class="text-primary font-medium hover:underline">注册账号</RouterLink>
+                  </p>
+
+                  <p class="text-center text-sm text-muted-foreground">
+                    演示账号：admin（管理员） / supplier（供应商） / store（门店） / basic（普通用户），密码任意
                   </p>
                   <!-- update-end--author:claude---date:2026-05-24---for:【修复】移除角色下拉，按用户名自动派发角色 -->
 

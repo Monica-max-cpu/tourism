@@ -1,7 +1,7 @@
 /**
  * 门店入驻审核 Mock — 对齐 b2b-api-contract.md v1.0
  */
-import type { StoreApply, ApplyStatus, StoreType } from '/#/b2b';
+import type { StoreApply, ApplyStatus, StoreType, OperationStatus } from '/#/b2b';
 import { paginate, delay, pick, MOCK_DATA } from '../_helpers';
 
 const statuses: ApplyStatus[] = [0, 0, 1, 1, 2, 1, 3];
@@ -25,6 +25,17 @@ const storeApplies: StoreApply[] = Array.from({ length: 38 }, (_, i) => {
     address: '景区大道 ' + (200 + i) + ' 号',
     status,
     statusLabel,
+    reviewStatus: status === 2 ? 2 : status === 1 || status === 3 ? 1 : 0,
+    operationStatus: status === 3 ? 2 : status === 1 ? 1 : 0,
+    authType: 'MERCHANT',
+    mainCategory: pick(['文创零售', '餐饮', '特产', '便利服务']),
+    bankAccount: `622700${String(2000000000 + i)}`,
+    bankName: pick(['中国银行太原分行', '工商银行晋中支行', '建设银行大同支行']),
+    bankNo: `CNAPS${String(200000 + i)}`,
+    description: '景区门店经营稳定，具备线下履约和销售能力。',
+    storePhotos: '/mock/upload/store-front.jpg',
+    mapAddress: '山西省太原市迎泽区景区大道',
+    coordinate: '112.549248,37.857014',
     reviewRemark: status === 2 ? '门店类型不符合要求' : undefined,
     loginAccount: status >= 1 ? `store_202605${String(i).padStart(3, '0')}` : undefined,
     creditLimit: status >= 1 ? 5000 : 0,
@@ -63,6 +74,8 @@ export function mockApproveStoreApply(id: string) {
   if (item) {
     item.status = 1;
     item.statusLabel = '已通过';
+    item.reviewStatus = 1;
+    item.operationStatus = 1;
     item.reviewTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
     item.reviewer = 'admin';
   }
@@ -74,6 +87,8 @@ export function mockRejectStoreApply(id: string, reason: string) {
   if (item) {
     item.status = 2;
     item.statusLabel = '已拒绝';
+    item.reviewStatus = 2;
+    item.operationStatus = 0;
     item.reviewRemark = reason;
     item.reviewTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
     item.reviewer = 'admin';
@@ -81,11 +96,12 @@ export function mockRejectStoreApply(id: string, reason: string) {
   return delay({ success: true });
 }
 
-export function mockToggleStoreStatus(id: string, targetStatus: ApplyStatus) {
+export function mockToggleStoreStatus(id: string, operationStatus: OperationStatus) {
   const item = storeApplies.find((x) => x.id === id);
-  if (item && (item.status === 1 || item.status === 3)) {
-    item.status = targetStatus;
-    item.statusLabel = targetStatus === 1 ? '已通过' : '已停用';
+  if (item && item.reviewStatus === 1) {
+    item.operationStatus = operationStatus;
+    item.status = operationStatus === 1 ? 1 : 3;
+    item.statusLabel = operationStatus === 1 ? '已通过' : '已停用';
   }
   return delay({ success: true });
 }

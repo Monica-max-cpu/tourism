@@ -2,7 +2,89 @@
  * B2B 状态字典 + Badge variant 映射 — 对齐 b2b-api-contract.md v1.0
  * status: 0=待审核 1=已通过 2=已拒绝 3=已停用
  */
-import type { ApplyStatus, QuoteStatus, CatalogStatus, StoreType } from '/#/b2b';
+import type { ApplyStatus, QuoteStatus, CatalogStatus, StoreType, ReviewStatus, OperationStatus, SupplierStoreType, BindStatus } from '/#/b2b';
+
+export const REVIEW_STATUS_LABEL: Record<ReviewStatus, string> = {
+  0: '待审核',
+  1: '审核通过',
+  2: '审核拒绝',
+};
+
+export const REVIEW_STATUS_VARIANT: Record<ReviewStatus, 'warning' | 'success' | 'destructive'> = {
+  0: 'warning',
+  1: 'success',
+  2: 'destructive',
+};
+
+export const REVIEW_STATUS_OPTIONS = [
+  { value: '', label: '全部' },
+  { value: '0', label: '待审核' },
+  { value: '1', label: '审核通过' },
+  { value: '2', label: '审核拒绝' },
+];
+
+export const OPERATION_STATUS_LABEL: Record<OperationStatus, string> = {
+  0: '待启用',
+  1: '启用',
+  2: '停用',
+};
+
+export const OPERATION_STATUS_VARIANT: Record<OperationStatus, 'warning' | 'success' | 'muted'> = {
+  0: 'warning',
+  1: 'success',
+  2: 'muted',
+};
+
+export const OPERATION_STATUS_OPTIONS = [
+  { value: '', label: '全部' },
+  { value: '0', label: '待启用' },
+  { value: '1', label: '启用' },
+  { value: '2', label: '停用' },
+];
+
+export const BIND_STATUS_LABEL: Record<BindStatus, string> = {
+  0: '待绑定',
+  1: '已绑定',
+  2: '已解绑',
+};
+
+export const SUPPLIER_STORE_TYPE_LABEL: Record<SupplierStoreType, string> = {
+  1: '普通',
+  2: '自营',
+  3: '文旅优选',
+};
+
+export const SUPPLIER_STORE_TYPE_OPTIONS = [
+  { value: '1', label: '普通' },
+  { value: '2', label: '自营' },
+  { value: '3', label: '文旅优选' },
+];
+
+export function normalizeReviewStatus(row: { reviewStatus?: ReviewStatus; status?: ApplyStatus | number }): ReviewStatus {
+  if (row.reviewStatus !== undefined) return row.reviewStatus;
+  return row.status === 2 ? 2 : row.status === 1 || row.status === 3 ? 1 : 0;
+}
+
+export function normalizeOperationStatus(row: { operationStatus?: OperationStatus; status?: ApplyStatus | number }): OperationStatus {
+  if (row.operationStatus !== undefined) return row.operationStatus;
+  return row.status === 3 ? 2 : row.status === 1 ? 1 : 0;
+}
+
+export function isPendingReview(status: ReviewStatus | number): boolean {
+  return status === 0;
+}
+
+export function isReviewApproved(status: ReviewStatus | number): boolean {
+  return status === 1;
+}
+
+export function isOperationEnabled(status: OperationStatus | number): boolean {
+  return status === 1;
+}
+
+export function isOperationDisabled(status: OperationStatus | number): boolean {
+  return status === 2;
+}
 
 // ===== 入驻审核状态 =====
 export const APPLY_STATUS_LABEL: Record<ApplyStatus, string> = {

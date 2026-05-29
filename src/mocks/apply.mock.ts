@@ -3,24 +3,45 @@
  */
 export interface SupplierApplyParams {
   supplierName: string;
+  authType?: string;
+  logoId?: string;
+  storeType?: number;
+  mainCategory?: string;
   contactPerson: string;
   contactPhone: string;
   contactEmail?: string;
   province?: string;
   city?: string;
   address?: string;
+  bankAccount?: string;
+  bankName?: string;
+  bankNo?: string;
+  description?: string;
+  storePhotos?: string;
+  mapAddress?: string;
+  coordinate?: string;
   remark?: string;
 }
 
 export interface StoreApplyParams {
   storeName: string;
   storeType: number;
+  authType?: string;
+  logoId?: string;
+  mainCategory?: string;
   contactPerson: string;
   contactPhone: string;
   contactEmail?: string;
   province?: string;
   city?: string;
   address?: string;
+  bankAccount?: string;
+  bankName?: string;
+  bankNo?: string;
+  description?: string;
+  storePhotos?: string;
+  mapAddress?: string;
+  coordinate?: string;
   remark?: string;
 }
 

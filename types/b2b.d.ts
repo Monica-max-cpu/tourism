@@ -3,10 +3,16 @@
  * 状态码：0=待审 1=已通过 2=已拒绝 3=已停用
  */
 export type ApplyStatus = 0 | 1 | 2 | 3;
+export type ReviewStatus = 0 | 1 | 2;
+export type OperationStatus = 0 | 1 | 2;
 export type QuoteStatus = 0 | 1 | 2 | 3;
 export type CatalogStatus = 0 | 1 | 2;
 /** 1=普通门店 2=连锁门店 */
 export type StoreType = 1 | 2;
+/** 供应商店铺类别：1=普通 2=自营 3=文旅优选 */
+export type SupplierStoreType = 1 | 2 | 3;
+export type MerchantType = 'SUPPLIER' | 'STORE';
+export type BindStatus = 0 | 1 | 2;
 /** 仓库启用状态 */
 export type WarehouseStatus = 0 | 1;
 
@@ -20,10 +26,26 @@ export interface SupplierApply {
   city?: string;
   address?: string;
   businessLicense?: string;
+  authType?: 'PERSONAL' | 'MERCHANT' | 'SUPPLIER' | string;
+  logoId?: string;
+  storeType?: SupplierStoreType;
+  storeTypeLabel?: string;
+  mainCategory?: string;
+  bankAccount?: string;
+  bankName?: string;
+  bankNo?: string;
+  description?: string;
+  storePhotos?: string;
+  mapAddress?: string;
+  coordinate?: string;
   categoryIds?: string;
   supplySourceId?: string;
   status: ApplyStatus;
   statusLabel?: string;
+  reviewStatus?: ReviewStatus;
+  reviewStatusLabel?: string;
+  operationStatus?: OperationStatus;
+  operationStatusLabel?: string;
   loginAccount?: string;
   reviewRemark?: string;
   reviewer?: string;
@@ -44,8 +66,22 @@ export interface StoreApply {
   city?: string;
   address?: string;
   businessLicense?: string;
+  authType?: 'PERSONAL' | 'MERCHANT' | 'SUPPLIER' | string;
+  logoId?: string;
+  mainCategory?: string;
+  bankAccount?: string;
+  bankName?: string;
+  bankNo?: string;
+  description?: string;
+  storePhotos?: string;
+  mapAddress?: string;
+  coordinate?: string;
   status: ApplyStatus;
   statusLabel?: string;
+  reviewStatus?: ReviewStatus;
+  reviewStatusLabel?: string;
+  operationStatus?: OperationStatus;
+  operationStatusLabel?: string;
   loginAccount?: string;
   creditLimit?: number;
   reviewRemark?: string;
@@ -106,4 +142,21 @@ export interface CatalogTier {
   minQty: number;
   maxQty: number | null;
   unitPrice: number;
+}
+
+export interface MerchantApplicationStatus {
+  merchantType: MerchantType;
+  merchantId?: string;
+  name?: string;
+  reviewStatus?: ReviewStatus;
+  operationStatus?: OperationStatus;
+  bindStatus?: BindStatus;
+  reviewRemark?: string;
+  createTime?: string;
+  reviewTime?: string;
+}
+
+export interface UserApplicationStatus {
+  supplier?: MerchantApplicationStatus;
+  store?: MerchantApplicationStatus;
 }

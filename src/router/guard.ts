@@ -15,6 +15,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   ADMIN: ROUTE_PATHS.ADMIN_WORKBENCH,
   SUPPLIER: ROUTE_PATHS.SUPPLIER_WORKBENCH,
   STORE: ROUTE_PATHS.STORE_WORKBENCH,
+  BASIC_USER: ROUTE_PATHS.ENTRY_B2B,
 };
 
 const WHITE_LIST = new Set(['Login', 'SupplierApply', 'StoreApply', 'ApplyResult', 'NotFound', 'Forbidden']);

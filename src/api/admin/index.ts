@@ -10,7 +10,7 @@ import * as supplierApplyMock from '/@/mocks/admin/supplierApply.mock';
 import * as storeApplyMock from '/@/mocks/admin/storeApply.mock';
 import * as quoteMock from '/@/mocks/admin/quote.mock';
 import * as catalogMock from '/@/mocks/admin/catalog.mock';
-import type { SupplierApply, StoreApply, SupplierQuote, PlatformCatalog, CatalogStatus, ApplyStatus } from '/#/b2b';
+import type { SupplierApply, StoreApply, PlatformCatalog, CatalogStatus, OperationStatus } from '/#/b2b';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
@@ -42,13 +42,13 @@ export function getSupplierApplyApi(id: string): Promise<SupplierApply | null> {
   return USE_MOCK ? supplierApplyMock.mockGetSupplierApply(id) : defHttp.get({ url: `${Api.GetSupplierApply}/${id}` });
 }
 export function approveSupplierApplyApi(id: string) {
-  return USE_MOCK ? supplierApplyMock.mockApproveSupplierApply(id) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, status: 1 } });
+  return USE_MOCK ? supplierApplyMock.mockApproveSupplierApply(id) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, reviewStatus: 1 } });
 }
 export function rejectSupplierApplyApi(id: string, reviewRemark: string) {
-  return USE_MOCK ? supplierApplyMock.mockRejectSupplierApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, status: 2, reviewRemark } });
+  return USE_MOCK ? supplierApplyMock.mockRejectSupplierApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, reviewStatus: 2, reviewRemark } });
 }
-export function toggleSupplierStatusApi(id: string, targetStatus: ApplyStatus) {
-  return USE_MOCK ? supplierApplyMock.mockToggleSupplierStatus(id, targetStatus) : defHttp.put({ url: Api.ToggleSupplierStatus, data: { id, status: targetStatus } });
+export function toggleSupplierStatusApi(id: string, operationStatus: OperationStatus) {
+  return USE_MOCK ? supplierApplyMock.mockToggleSupplierStatus(id, operationStatus) : defHttp.put({ url: Api.ToggleSupplierStatus, data: { id, operationStatus } });
 }
 
 // ===== 门店审核 =====
@@ -59,13 +59,13 @@ export function getStoreApplyApi(id: string): Promise<StoreApply | null> {
   return USE_MOCK ? storeApplyMock.mockGetStoreApply(id) : defHttp.get({ url: `${Api.GetStoreApply}/${id}` });
 }
 export function approveStoreApplyApi(id: string) {
-  return USE_MOCK ? storeApplyMock.mockApproveStoreApply(id) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, status: 1 } });
+  return USE_MOCK ? storeApplyMock.mockApproveStoreApply(id) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, reviewStatus: 1 } });
 }
 export function rejectStoreApplyApi(id: string, reviewRemark: string) {
-  return USE_MOCK ? storeApplyMock.mockRejectStoreApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, status: 2, reviewRemark } });
+  return USE_MOCK ? storeApplyMock.mockRejectStoreApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, reviewStatus: 2, reviewRemark } });
 }
-export function toggleStoreStatusApi(id: string, targetStatus: ApplyStatus) {
-  return USE_MOCK ? storeApplyMock.mockToggleStoreStatus(id, targetStatus) : defHttp.put({ url: Api.ToggleStoreStatus, data: { id, status: targetStatus } });
+export function toggleStoreStatusApi(id: string, operationStatus: OperationStatus) {
+  return USE_MOCK ? storeApplyMock.mockToggleStoreStatus(id, operationStatus) : defHttp.put({ url: Api.ToggleStoreStatus, data: { id, operationStatus } });
 }
 
 // ===== 报价审核 =====

@@ -1,7 +1,7 @@
 /**
  * 供应商入驻审核 Mock — 对齐 b2b-api-contract.md v1.0
  */
-import type { SupplierApply, ApplyStatus } from '/#/b2b';
+import type { SupplierApply, ApplyStatus, OperationStatus } from '/#/b2b';
 import { paginate, delay, pick, MOCK_DATA } from '../_helpers';
 
 const statuses: ApplyStatus[] = [0, 0, 1, 1, 2, 1, 3];
@@ -21,6 +21,19 @@ const supplierApplies: SupplierApply[] = Array.from({ length: 47 }, (_, i) => {
     address: '示例路 ' + (100 + i) + ' 号',
     status,
     statusLabel,
+    reviewStatus: status === 2 ? 2 : status === 1 || status === 3 ? 1 : 0,
+    operationStatus: status === 3 ? 2 : status === 1 ? 1 : 0,
+    authType: 'SUPPLIER',
+    storeType: ((i % 3) + 1) as SupplierApply['storeType'],
+    storeTypeLabel: ['普通', '自营', '文旅优选'][i % 3],
+    mainCategory: pick(['生鲜类', '粮油类', '快消类', '文创类']),
+    bankAccount: `622200${String(1000000000 + i)}`,
+    bankName: pick(['中国银行太原分行', '工商银行晋中支行', '建设银行大同支行']),
+    bankNo: `CNAPS${String(100000 + i)}`,
+    description: '具备稳定供货能力，覆盖省内核心文旅消费场景。',
+    storePhotos: '/mock/upload/supplier-store.jpg',
+    mapAddress: '山西省太原市迎泽区示例路',
+    coordinate: '112.549248,37.857014',
     remark: i % 3 === 0 ? '主营高端食材，已合作 3 家头部连锁' : '',
     reviewRemark: status === 2 ? '资质材料不全' : undefined,
     loginAccount: status >= 1 ? `supplier_202605${String(i).padStart(3, '0')}` : undefined,
@@ -57,6 +70,8 @@ export function mockApproveSupplierApply(id: string) {
   if (item) {
     item.status = 1;
     item.statusLabel = '已通过';
+    item.reviewStatus = 1;
+    item.operationStatus = 1;
     item.reviewTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
     item.reviewer = 'admin';
   }
@@ -68,6 +83,8 @@ export function mockRejectSupplierApply(id: string, reason: string) {
   if (item) {
     item.status = 2;
     item.statusLabel = '已拒绝';
+    item.reviewStatus = 2;
+    item.operationStatus = 0;
     item.reviewRemark = reason;
     item.reviewTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
     item.reviewer = 'admin';
@@ -75,11 +92,12 @@ export function mockRejectSupplierApply(id: string, reason: string) {
   return delay({ success: true });
 }
 
-export function mockToggleSupplierStatus(id: string, targetStatus: ApplyStatus) {
+export function mockToggleSupplierStatus(id: string, operationStatus: OperationStatus) {
   const item = supplierApplies.find((x) => x.id === id);
-  if (item && (item.status === 1 || item.status === 3)) {
-    item.status = targetStatus;
-    item.statusLabel = targetStatus === 1 ? '已通过' : '已停用';
+  if (item && item.reviewStatus === 1) {
+    item.operationStatus = operationStatus;
+    item.status = operationStatus === 1 ? 1 : 3;
+    item.statusLabel = operationStatus === 1 ? '已通过' : '已停用';
   }
   return delay({ success: true });
 }

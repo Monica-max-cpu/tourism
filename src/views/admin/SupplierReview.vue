@@ -22,10 +22,23 @@ import {
   rejectSupplierApplyApi,
   toggleSupplierStatusApi,
 } from '/@/api/admin';
-import { APPLY_STATUS_LABEL, APPLY_STATUS_VARIANT, APPLY_STATUS_OPTIONS, isPendingStatus, isApprovedStatus, isDisabledStatus } from '/@/constants/b2bStatus';
+import {
+  OPERATION_STATUS_LABEL,
+  OPERATION_STATUS_VARIANT,
+  REVIEW_STATUS_LABEL,
+  REVIEW_STATUS_OPTIONS,
+  REVIEW_STATUS_VARIANT,
+  SUPPLIER_STORE_TYPE_LABEL,
+  isOperationDisabled,
+  isOperationEnabled,
+  isPendingReview,
+  isReviewApproved,
+  normalizeOperationStatus,
+  normalizeReviewStatus,
+} from '/@/constants/b2bStatus';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { formatDateTime } from '/@/utils/format';
-import type { SupplierApply, ApplyStatus } from '/#/b2b';
+import type { SupplierApply, OperationStatus } from '/#/b2b';
 
 const search = reactive({ keyword: '', status: '' });
 const router = useRouter();
@@ -41,7 +54,7 @@ const columns: BasicColumn[] = [
   { field: 'contactPerson', title: '联系人', width: 150 },
   { field: 'contactPhone', title: '联系电话', width: 200 },
   { field: 'province', title: '省份', width: 150 },
-  { field: 'status', title: '状态', width: 180, slots: { default: 'status' } },
+  { field: 'status', title: '审核 / 运营', width: 220, slots: { default: 'status' } },
   { field: 'createTime', title: '提交时间', width: 200, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'action', title: '操作', width: 280, fixed: 'right', slots: { default: 'action' } },
 ];
@@ -97,7 +110,7 @@ async function confirmToggle() {
   submitting.value = true;
   try {
     const cur = toggleModal.data.value;
-    const target: ApplyStatus = cur.status === 1 ? 3 : 1;
+    const target: OperationStatus = normalizeOperationStatus(cur) === 1 ? 2 : 1;
     await toggleSupplierStatusApi(cur.id, target);
     toggleModal.close();
     detailModal.close();
@@ -136,7 +149,7 @@ function onReset() {
         <Select v-model="search.status">
           <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="o in APPLY_STATUS_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</SelectItem>
+            <SelectItem v-for="o in REVIEW_STATUS_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -144,16 +157,19 @@ function onReset() {
 
     <BasicTable :columns="columns" :api="loadData" row-key="id" @register="registerTable">
       <template #status="{ row }">
-        <Badge :variant="APPLY_STATUS_VARIANT[row.status]">{{ APPLY_STATUS_LABEL[row.status] ?? row.statusLabel }}</Badge>
+        <div class="flex items-center justify-center gap-2">
+          <Badge :variant="REVIEW_STATUS_VARIANT[normalizeReviewStatus(row)]">{{ REVIEW_STATUS_LABEL[normalizeReviewStatus(row)] }}</Badge>
+          <Badge :variant="OPERATION_STATUS_VARIANT[normalizeOperationStatus(row)]">{{ OPERATION_STATUS_LABEL[normalizeOperationStatus(row)] }}</Badge>
+        </div>
       </template>
       <template #action="{ row }">
         <TableAction
           :actions="[
             { label: '查看', onClick: () => openDetail(row) },
-            { label: '通过', authCode: 'b2b:supplier:review', hidden: !isPendingStatus(row.status), onClick: () => approve(row) },
-            { label: '驳回', authCode: 'b2b:supplier:review', hidden: !isPendingStatus(row.status), onClick: () => openReject(row) },
-            { label: '停用', authCode: 'b2b:supplier:review', hidden: !isApprovedStatus(row.status), onClick: () => openToggle(row) },
-            { label: '启用', authCode: 'b2b:supplier:review', hidden: !isDisabledStatus(row.status), onClick: () => openToggle(row) },
+            { label: '通过', authCode: 'b2b:supplier:review', hidden: !isPendingReview(normalizeReviewStatus(row)), onClick: () => approve(row) },
+            { label: '驳回', authCode: 'b2b:supplier:review', hidden: !isPendingReview(normalizeReviewStatus(row)), onClick: () => openReject(row) },
+            { label: '停用', authCode: 'b2b:supplier:review', hidden: !isReviewApproved(normalizeReviewStatus(row)) || !isOperationEnabled(normalizeOperationStatus(row)), onClick: () => openToggle(row) },
+            { label: '启用', authCode: 'b2b:supplier:review', hidden: !isReviewApproved(normalizeReviewStatus(row)) || !isOperationDisabled(normalizeOperationStatus(row)), onClick: () => openToggle(row) },
           ]"
         />
       </template>
@@ -170,12 +186,21 @@ function onReset() {
         <div class="grid grid-cols-2 gap-x-6 gap-y-3">
           <div><span class="text-muted-foreground">供应商ID：</span>{{ detailModal.data.value.id }}</div>
           <div>
-            <span class="text-muted-foreground">状态：</span>
-            <Badge :variant="APPLY_STATUS_VARIANT[detailModal.data.value.status]">
-              {{ APPLY_STATUS_LABEL[detailModal.data.value.status] ?? detailModal.data.value.statusLabel }}
+            <span class="text-muted-foreground">审核状态：</span>
+            <Badge :variant="REVIEW_STATUS_VARIANT[normalizeReviewStatus(detailModal.data.value)]">
+              {{ REVIEW_STATUS_LABEL[normalizeReviewStatus(detailModal.data.value)] }}
+            </Badge>
+          </div>
+          <div>
+            <span class="text-muted-foreground">运营状态：</span>
+            <Badge :variant="OPERATION_STATUS_VARIANT[normalizeOperationStatus(detailModal.data.value)]">
+              {{ OPERATION_STATUS_LABEL[normalizeOperationStatus(detailModal.data.value)] }}
             </Badge>
           </div>
           <div class="col-span-2"><span class="text-muted-foreground">供应商名称：</span>{{ detailModal.data.value.supplierName }}</div>
+          <div><span class="text-muted-foreground">认证类型：</span>{{ detailModal.data.value.authType || '-' }}</div>
+          <div><span class="text-muted-foreground">店铺类别：</span>{{ detailModal.data.value.storeType ? SUPPLIER_STORE_TYPE_LABEL[detailModal.data.value.storeType] : '-' }}</div>
+          <div class="col-span-2"><span class="text-muted-foreground">主营类别：</span>{{ detailModal.data.value.mainCategory || detailModal.data.value.categoryIds || '-' }}</div>
           <div><span class="text-muted-foreground">联系人：</span>{{ detailModal.data.value.contactPerson }}</div>
           <div><span class="text-muted-foreground">联系电话：</span>{{ detailModal.data.value.contactPhone }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">联系邮箱：</span>{{ detailModal.data.value.contactEmail || '-' }}</div>
@@ -184,18 +209,25 @@ function onReset() {
           <div v-if="detailModal.data.value.reviewTime"><span class="text-muted-foreground">审核时间：</span>{{ formatDateTime(detailModal.data.value.reviewTime) }}</div>
           <div v-if="detailModal.data.value.loginAccount"><span class="text-muted-foreground">登录账号：</span>{{ detailModal.data.value.loginAccount }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">详细地址：</span>{{ detailModal.data.value.address || '-' }}</div>
+          <div><span class="text-muted-foreground">开户行：</span>{{ detailModal.data.value.bankName || '-' }}</div>
+          <div><span class="text-muted-foreground">银行账号：</span>{{ detailModal.data.value.bankAccount || '-' }}</div>
+          <div><span class="text-muted-foreground">开户行号：</span>{{ detailModal.data.value.bankNo || '-' }}</div>
+          <div><span class="text-muted-foreground">地图坐标：</span>{{ detailModal.data.value.coordinate || '-' }}</div>
+          <div class="col-span-2"><span class="text-muted-foreground">地图地址：</span>{{ detailModal.data.value.mapAddress || '-' }}</div>
+          <div class="col-span-2"><span class="text-muted-foreground">经营简介：</span>{{ detailModal.data.value.description || '-' }}</div>
+          <div class="col-span-2"><span class="text-muted-foreground">店铺照片：</span>{{ detailModal.data.value.storePhotos || '-' }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">备注：</span>{{ detailModal.data.value.remark || '-' }}</div>
           <div v-if="detailModal.data.value.reviewRemark" class="col-span-2 text-destructive">
             <span class="text-muted-foreground">审核备注：</span>{{ detailModal.data.value.reviewRemark }}
           </div>
         </div>
-        <div v-if="isPendingStatus(detailModal.data.value.status)" v-auth="'b2b:supplier:review'" class="flex justify-end gap-2 pt-4 border-t border-border">
+        <div v-if="isPendingReview(normalizeReviewStatus(detailModal.data.value))" v-auth="'b2b:supplier:review'" class="flex justify-end gap-2 pt-4 border-t border-border">
           <Button variant="outline" :disabled="submitting" @click="openReject(detailModal.data.value)">驳回</Button>
           <Button :disabled="submitting" @click="approve(detailModal.data.value)">通过审核</Button>
         </div>
-        <div v-if="isApprovedStatus(detailModal.data.value.status) || isDisabledStatus(detailModal.data.value.status)" v-auth="'b2b:supplier:review'" class="flex justify-end gap-2 pt-4 border-t border-border">
-          <Button v-if="isApprovedStatus(detailModal.data.value.status)" variant="outline" :disabled="submitting" @click="openToggle(detailModal.data.value)">停用</Button>
-          <Button v-if="isDisabledStatus(detailModal.data.value.status)" :disabled="submitting" @click="openToggle(detailModal.data.value)">启用</Button>
+        <div v-if="isReviewApproved(normalizeReviewStatus(detailModal.data.value))" v-auth="'b2b:supplier:review'" class="flex justify-end gap-2 pt-4 border-t border-border">
+          <Button v-if="isOperationEnabled(normalizeOperationStatus(detailModal.data.value))" variant="outline" :disabled="submitting" @click="openToggle(detailModal.data.value)">停用</Button>
+          <Button v-if="isOperationDisabled(normalizeOperationStatus(detailModal.data.value))" :disabled="submitting" @click="openToggle(detailModal.data.value)">启用</Button>
         </div>
       </div>
     </BasicModal>
@@ -220,10 +252,10 @@ function onReset() {
     <!-- 启用/停用确认弹窗 -->
     <BasicModal
       v-model:open="toggleModal.visible.value"
-      :title="toggleModal.data.value?.status === 1 ? '停用供应商' : '启用供应商'"
-      :description="`确认${toggleModal.data.value?.status === 1 ? '停用' : '启用'} ${toggleModal.data.value?.supplierName || ''}？`"
-      :confirm-text="toggleModal.data.value?.status === 1 ? '确认停用' : '确认启用'"
-      :confirm-variant="toggleModal.data.value?.status === 1 ? 'destructive' : 'default'"
+      :title="normalizeOperationStatus(toggleModal.data.value || {}) === 1 ? '停用供应商' : '启用供应商'"
+      :description="`确认${normalizeOperationStatus(toggleModal.data.value || {}) === 1 ? '停用' : '启用'} ${toggleModal.data.value?.supplierName || ''}？`"
+      :confirm-text="normalizeOperationStatus(toggleModal.data.value || {}) === 1 ? '确认停用' : '确认启用'"
+      :confirm-variant="normalizeOperationStatus(toggleModal.data.value || {}) === 1 ? 'destructive' : 'default'"
       :confirm-loading="submitting"
       @confirm="confirmToggle"
     />

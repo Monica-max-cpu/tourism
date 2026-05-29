@@ -8,6 +8,13 @@ export const ROUTE_PATHS = {
   APPLY_STORE: '/apply/store',
   APPLY_RESULT: '/apply/result',
 
+  // 登录后入驻入口
+  ENTRY: '/entry',
+  ENTRY_B2B: '/entry/b2b',
+  ENTRY_B2C: '/entry/b2c',
+  ENTRY_APPLY_SUPPLIER: '/entry/apply/supplier',
+  ENTRY_APPLY_STORE: '/entry/apply/store',
+
   // 平台管理员
   ADMIN_WORKBENCH: '/admin/workbench',
   ADMIN_SUPPLIERS: '/admin/suppliers',

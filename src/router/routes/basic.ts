@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
+import { entryRoutes } from './entry';
 
 export const basicRoutes: RouteRecordRaw[] = [
   {
@@ -32,6 +33,7 @@ export const basicRoutes: RouteRecordRaw[] = [
     component: () => import('/@/views/apply/ApplyResult.vue'),
     meta: { title: '提交成功', hidden: true },
   },
+  entryRoutes,
   {
     path: ROUTE_PATHS.NOT_FOUND,
     name: 'NotFound',
