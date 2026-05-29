@@ -62,6 +62,7 @@ export const adminMenus: MenuItem[] = [
       { name: 'AdminSystemUsers', path: ROUTE_PATHS.ADMIN_SYSTEM_USERS, title: '用户管理', authCode: 'system:user:list' },
       { name: 'AdminSystemRoles', path: ROUTE_PATHS.ADMIN_SYSTEM_ROLES, title: '角色管理', authCode: 'system:role:list' },
       { name: 'AdminSystemMenus', path: ROUTE_PATHS.ADMIN_SYSTEM_MENUS, title: '菜单管理', authCode: 'system:menu:list' },
+      { name: 'AdminSystemDicts', path: ROUTE_PATHS.ADMIN_SYSTEM_DICTS, title: '数据字典', authCode: 'system:dict:list' },
     ],
   },
 ];

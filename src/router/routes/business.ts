@@ -36,6 +36,7 @@ export const adminRoutes: RouteRecordRaw = {
     { path: 'system/users', name: 'AdminSystemUsers', component: () => import('/@/views/system/user/UserManage.vue'), meta: { title: '用户管理', authCode: 'system:user:list' } },
     { path: 'system/roles', name: 'AdminSystemRoles', component: () => import('/@/views/system/role/RoleManage.vue'), meta: { title: '角色管理', authCode: 'system:role:list' } },
     { path: 'system/menus', name: 'AdminSystemMenus', component: () => import('/@/views/system/menu/MenuManage.vue'), meta: { title: '菜单管理', authCode: 'system:menu:list' } },
+    { path: 'system/dicts', name: 'AdminSystemDicts', component: () => import('/@/views/system/dict/DictManage.vue'), meta: { title: '数据字典', authCode: 'system:dict:list' } },
   ],
 };
 

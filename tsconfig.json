@@ -41,18 +41,10 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "types/**/*.ts",
-    "types/**/*.d.ts",
-    "vite.config.ts",
-    "uno.config.ts",
-    "tailwind.config.ts"
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
     "dist"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
   ]
 }

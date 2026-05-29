@@ -30,6 +30,26 @@ export interface SystemUser {
   createTime?: string;
 }
 
+export interface SystemDict {
+  id: string;
+  dictName: string;
+  dictCode: string;
+  description?: string;
+  createTime?: string;
+}
+
+export interface SystemDictItem {
+  id: string;
+  dictId: string;
+  itemText: string;
+  itemValue: string;
+  itemColor?: string;
+  description?: string;
+  sortOrder?: number;
+  status?: number | string;
+  status_dictText?: string;
+}
+
 export interface SystemMenu {
   id: string;
   name: string;

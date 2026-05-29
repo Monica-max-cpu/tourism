@@ -29,6 +29,7 @@ export const ROUTE_PATHS = {
   ADMIN_SYSTEM_USERS: '/admin/system/users',
   ADMIN_SYSTEM_ROLES: '/admin/system/roles',
   ADMIN_SYSTEM_MENUS: '/admin/system/menus',
+  ADMIN_SYSTEM_DICTS: '/admin/system/dicts',
 
   // 供应商（阶段 3 替换）
   // update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商路由路径

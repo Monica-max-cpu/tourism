@@ -1,4 +1,4 @@
-import type { PageResult, PermissionTreeNode, SystemMenu, SystemRole, SystemUser } from '/#/system';
+import type { PageResult, PermissionTreeNode, SystemDict, SystemDictItem, SystemMenu, SystemRole, SystemUser } from '/#/system';
 
 const roles: SystemRole[] = [
   { id: 'role-admin', roleName: '平台管理员', roleCode: 'admin', description: '平台后台管理角色', isAppConfig: '0', createTime: '2026-05-01 09:00:00' },
@@ -8,6 +8,20 @@ const roles: SystemRole[] = [
 const users: SystemUser[] = [
   { id: 'u-admin-001', username: 'admin', realname: '平台管理员', phone: '13800000000', email: 'admin@example.com', status: '1', status_dictText: '正常', orgCodeTxt: '平台运营部', selectedroles: ['role-admin'], createTime: '2026-05-01 09:30:00' },
   { id: 'u-op-001', username: 'operator', realname: '运营人员', phone: '13900000000', email: 'operator@example.com', status: '1', status_dictText: '正常', orgCodeTxt: '平台运营部', selectedroles: ['role-operator'], createTime: '2026-05-03 10:00:00' },
+];
+
+const dicts: SystemDict[] = [
+  { id: 'dict-status', dictName: '启用状态', dictCode: 'dict_item_status', description: '通用启停状态', createTime: '2026-05-01 09:00:00' },
+  { id: 'dict-pay', dictName: '支付方式', dictCode: 'pay_type', description: '平台支付渠道', createTime: '2026-05-02 09:00:00' },
+];
+
+const deletedDicts: SystemDict[] = [];
+
+const dictItems: SystemDictItem[] = [
+  { id: 'item-status-1', dictId: 'dict-status', itemText: '启用', itemValue: '1', itemColor: '#16a34a', sortOrder: 1, status: 1, status_dictText: '启用' },
+  { id: 'item-status-0', dictId: 'dict-status', itemText: '禁用', itemValue: '0', itemColor: '#64748b', sortOrder: 2, status: 1, status_dictText: '启用' },
+  { id: 'item-pay-cash', dictId: 'dict-pay', itemText: '现金', itemValue: 'cash', itemColor: '#0ea5e9', sortOrder: 1, status: 1, status_dictText: '启用' },
+  { id: 'item-pay-bank', dictId: 'dict-pay', itemText: '银行转账', itemValue: 'bank', itemColor: '#f59e0b', sortOrder: 2, status: 1, status_dictText: '启用' },
 ];
 
 const menus: SystemMenu[] = [
@@ -112,6 +126,91 @@ export function mockImportUsers() {
 
 export function mockExportUsers() {
   return Promise.resolve(new Blob(['username,realname\nadmin,平台管理员\n'], { type: 'text/csv;charset=utf-8' }));
+}
+
+export function mockListDicts(params: Recordable) {
+  return Promise.resolve(page(filterByKeyword(dicts, params, ['dictName', 'dictCode']), params));
+}
+
+export function mockSaveDict(data: Partial<SystemDict> & Recordable, isUpdate: boolean) {
+  if (isUpdate && data.id) {
+    const index = dicts.findIndex((item) => item.id === data.id);
+    if (index >= 0) dicts[index] = { ...dicts[index], ...data } as SystemDict;
+  } else {
+    dicts.unshift({ id: `dict-${Date.now()}`, createTime: new Date().toISOString(), ...data } as SystemDict);
+  }
+  return Promise.resolve();
+}
+
+export function mockDeleteDict(id: string) {
+  const index = dicts.findIndex((item) => item.id === id);
+  if (index >= 0) {
+    deletedDicts.unshift(dicts[index]);
+    dicts.splice(index, 1);
+  }
+  return Promise.resolve();
+}
+
+export function mockListDictItems(params: Recordable) {
+  const rows = dictItems
+    .filter((item) => item.dictId === params.dictId)
+    .filter((item) => (!params.itemText ? true : item.itemText.includes(String(params.itemText))))
+    .filter((item) => (!params.status && params.status !== 0 ? true : String(item.status) === String(params.status)));
+  return Promise.resolve(page(rows, params));
+}
+
+export function mockSaveDictItem(data: Partial<SystemDictItem> & Recordable, isUpdate: boolean) {
+  if (isUpdate && data.id) {
+    const index = dictItems.findIndex((item) => item.id === data.id);
+    if (index >= 0) dictItems[index] = { ...dictItems[index], ...data } as SystemDictItem;
+  } else {
+    dictItems.unshift({ id: `item-${Date.now()}`, sortOrder: 1, status: 1, ...data } as SystemDictItem);
+  }
+  return Promise.resolve();
+}
+
+export function mockDeleteDictItem(id: string) {
+  const index = dictItems.findIndex((item) => item.id === id);
+  if (index >= 0) dictItems.splice(index, 1);
+  return Promise.resolve();
+}
+
+export function mockListDictRecycleBin(params: Recordable) {
+  return Promise.resolve(page(deletedDicts, params));
+}
+
+export function mockRestoreDict(id: string) {
+  const index = deletedDicts.findIndex((item) => item.id === id);
+  if (index >= 0) {
+    dicts.unshift(deletedDicts[index]);
+    deletedDicts.splice(index, 1);
+  }
+  return Promise.resolve();
+}
+
+export function mockDeleteDictPhysically(id: string) {
+  const index = deletedDicts.findIndex((item) => item.id === id);
+  if (index >= 0) deletedDicts.splice(index, 1);
+  return Promise.resolve();
+}
+
+export function mockQueryAllDictItems() {
+  return Promise.resolve(
+    dictItems.reduce<Record<string, SystemDictItem[]>>((acc, item) => {
+      const dictCode = dicts.find((dict) => dict.id === item.dictId)?.dictCode;
+      if (!dictCode) return acc;
+      acc[dictCode] = [...(acc[dictCode] || []), item];
+      return acc;
+    }, {}),
+  );
+}
+
+export function mockImportDicts() {
+  return Promise.resolve();
+}
+
+export function mockExportDicts() {
+  return Promise.resolve(new Blob(['dictName,dictCode\n启用状态,dict_item_status\n'], { type: 'text/csv;charset=utf-8' }));
 }
 
 export function mockListRoles(params: Recordable) {
