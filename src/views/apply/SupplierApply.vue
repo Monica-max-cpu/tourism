@@ -23,6 +23,7 @@ const form = reactive({
   logoId: '',
   storeType: '1',
   mainCategory: '',
+  categoryIds: '',
   contactPerson: '',
   contactPhone: '',
   contactEmail: '',
@@ -36,6 +37,8 @@ const form = reactive({
   storePhotos: '',
   mapAddress: '',
   coordinate: '',
+  supplySourceId: '',
+  creditLimit: '',
   remark: '',
 });
 
@@ -57,8 +60,8 @@ function removeUpload(field: string) {
 
 async function onSubmit(e: Event) {
   e.preventDefault();
-  if (!form.supplierName || !form.contactPerson || !form.contactPhone) {
-    errorMsg.value = '请填写必填项（公司名称、联系人、联系电话）';
+  if (!form.supplierName || !form.authType || !form.contactPerson || !form.contactPhone || !form.address) {
+    errorMsg.value = '请填写必填项（公司名称、认证类型、联系人、联系电话、联系地址）';
     return;
   }
   if (!qualifications.businessLicense || !qualifications.taxCertificate) {
@@ -68,7 +71,12 @@ async function onSubmit(e: Event) {
   errorMsg.value = '';
   submitting.value = true;
   try {
-    const res = await supplierApplyApi({ ...form, storeType: Number(form.storeType), ...qualifications });
+    const res = await supplierApplyApi({
+      ...form,
+      storeType: Number(form.storeType),
+      creditLimit: form.creditLimit ? Number(form.creditLimit) : undefined,
+      ...qualifications,
+    });
     if (userStore.isLoggedIn) {
       router.push(ROUTE_PATHS.ENTRY_B2B);
       return;
@@ -143,6 +151,16 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2">
+                  <Label class="text-foreground/80">经营品类 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.categoryIds" placeholder="多个品类用逗号分隔" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">Logo 文件 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.logoId" placeholder="文件ID或URL" />
+                </div>
+
+                <div class="space-y-2">
                   <Label class="text-foreground/80">业务联系人 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
                   <div class="relative">
                     <User class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -177,10 +195,10 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
-                  <Label class="text-foreground/80">详细地址 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Label class="text-foreground/80">详细地址 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
                   <div class="relative">
                     <MapPin class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input v-model="form.address" placeholder="选填" class="pl-10" />
+                    <Input v-model="form.address" placeholder="请输入联系地址" class="pl-10" />
                   </div>
                 </div>
 
@@ -209,9 +227,24 @@ async function onSubmit(e: Event) {
                   <Input v-model="form.mapAddress" placeholder="地图选点展示地址" />
                 </div>
 
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">关联供应商来源 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.supplySourceId" placeholder="cm_supply_supplier.id（如有）" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">信用额度 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.creditLimit" type="number" min="0" step="0.01" placeholder="预留字段，可不填" />
+                </div>
+
                 <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">企业简介 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.description" placeholder="主体介绍、主营产品、服务能力等" />
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                  <Label class="text-foreground/80">店铺照片 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.storePhotos" placeholder="多张照片文件ID或URL，用逗号分隔" />
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
@@ -374,7 +407,7 @@ async function onSubmit(e: Event) {
 
               <div class="flex justify-between pt-6 border-t border-border">
                 <Button type="button" variant="outline" @click="router.push(ROUTE_PATHS.LOGIN)">取消</Button>
-                <Button :disabled="submitting" class="shadow-lg shadow-primary/20" @click="onSubmit">
+                <Button type="submit" :disabled="submitting" class="shadow-lg shadow-primary/20">
                   {{ submitting ? '提交中...' : '提交审核' }}
                 </Button>
               </div>

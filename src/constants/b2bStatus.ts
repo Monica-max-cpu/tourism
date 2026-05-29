@@ -167,12 +167,14 @@ export const CATALOG_STATUS_OPTIONS = [
 
 // ===== 门店类型 =====
 export const STORE_TYPE_LABEL: Record<StoreType, string> = {
-  1: '普通门店',
-  2: '连锁门店',
+  1: '普通',
+  2: '自营',
+  3: '文旅优选',
 };
 
 export const STORE_TYPE_OPTIONS = [
   { value: '', label: '全部' },
-  { value: '1', label: '普通门店' },
-  { value: '2', label: '连锁门店' },
+  { value: '1', label: '普通' },
+  { value: '2', label: '自营' },
+  { value: '3', label: '文旅优选' },
 ];

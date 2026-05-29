@@ -6,7 +6,7 @@
  * - 勾选提交 跳转 OrderDetail（待支付）
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】购物车结算
  */
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-vue-next';
 import { Button, Input, Label, Badge } from '/@/components/ui';
@@ -83,7 +83,7 @@ async function confirmCheckout() {
     // 移除已下单商品
     cartStore.removeBatch(items.map((x) => x.catalogId));
     checkout.close();
-    router.push(`/store/orders/${res.id}`);
+    router.push(ROUTE_PATHS.STORE_ORDER_DETAIL.replace(':id', res.id));
   } finally {
     submitting.value = false;
   }

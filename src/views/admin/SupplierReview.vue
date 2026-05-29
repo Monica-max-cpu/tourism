@@ -200,7 +200,9 @@ function onReset() {
           <div class="col-span-2"><span class="text-muted-foreground">供应商名称：</span>{{ detailModal.data.value.supplierName }}</div>
           <div><span class="text-muted-foreground">认证类型：</span>{{ detailModal.data.value.authType || '-' }}</div>
           <div><span class="text-muted-foreground">店铺类别：</span>{{ detailModal.data.value.storeType ? SUPPLIER_STORE_TYPE_LABEL[detailModal.data.value.storeType] : '-' }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">主营类别：</span>{{ detailModal.data.value.mainCategory || detailModal.data.value.categoryIds || '-' }}</div>
+          <div><span class="text-muted-foreground">主营类别：</span>{{ detailModal.data.value.mainCategory || '-' }}</div>
+          <div><span class="text-muted-foreground">经营品类：</span>{{ detailModal.data.value.categoryIds || '-' }}</div>
+          <div class="col-span-2"><span class="text-muted-foreground">Logo：</span>{{ detailModal.data.value.logoId || '-' }}</div>
           <div><span class="text-muted-foreground">联系人：</span>{{ detailModal.data.value.contactPerson }}</div>
           <div><span class="text-muted-foreground">联系电话：</span>{{ detailModal.data.value.contactPhone }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">联系邮箱：</span>{{ detailModal.data.value.contactEmail || '-' }}</div>
@@ -213,7 +215,9 @@ function onReset() {
           <div><span class="text-muted-foreground">银行账号：</span>{{ detailModal.data.value.bankAccount || '-' }}</div>
           <div><span class="text-muted-foreground">开户行号：</span>{{ detailModal.data.value.bankNo || '-' }}</div>
           <div><span class="text-muted-foreground">地图坐标：</span>{{ detailModal.data.value.coordinate || '-' }}</div>
+          <div><span class="text-muted-foreground">信用额度：</span>{{ detailModal.data.value.creditLimit != null ? `¥${detailModal.data.value.creditLimit}` : '-' }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">地图地址：</span>{{ detailModal.data.value.mapAddress || '-' }}</div>
+          <div class="col-span-2"><span class="text-muted-foreground">关联供应商来源：</span>{{ detailModal.data.value.supplySourceId || '-' }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">经营简介：</span>{{ detailModal.data.value.description || '-' }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">店铺照片：</span>{{ detailModal.data.value.storePhotos || '-' }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">备注：</span>{{ detailModal.data.value.remark || '-' }}</div>

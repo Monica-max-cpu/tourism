@@ -20,6 +20,7 @@ import {
 } from '/@/components/ui';
 import { storeApplyApi } from '/@/api/b2b/apply';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
+import { STORE_TYPE_OPTIONS } from '/@/constants/b2bStatus';
 import { useUserStore } from '/@/stores/modules/user';
 import ApplyShell from './ApplyShell.vue';
 
@@ -28,17 +29,13 @@ const userStore = useUserStore();
 const submitting = ref(false);
 const errorMsg = ref('');
 
-const STORE_TYPES = [
-  { value: 1, label: '普通门店' },
-  { value: 2, label: '连锁门店' },
-];
-
 const form = reactive({
   storeName: '',
   storeType: '1',
   authType: 'MERCHANT',
   logoId: '',
   mainCategory: '',
+  categoryIds: '',
   contactPerson: '',
   contactPhone: '',
   contactEmail: '',
@@ -52,6 +49,7 @@ const form = reactive({
   storePhotos: '',
   mapAddress: '',
   coordinate: '',
+  supplySourceId: '',
   remark: '',
 });
 
@@ -72,8 +70,8 @@ function removeUpload(field: string) {
 
 async function onSubmit(e: Event) {
   e.preventDefault();
-  if (!form.storeName || !form.contactPerson || !form.contactPhone) {
-    errorMsg.value = '请填写必填项';
+  if (!form.storeName || !form.authType || !form.contactPerson || !form.contactPhone || !form.address) {
+    errorMsg.value = '请填写必填项（门店名称、认证类型、负责人、联系电话、详细地址）';
     return;
   }
   if (!qualifications.businessLicense) {
@@ -144,13 +142,13 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2">
-                  <Label class="text-foreground/80">门店类型 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
+                  <Label class="text-foreground/80">店铺类别 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
                   <Select v-model="form.storeType">
                     <SelectTrigger>
-                      <SelectValue placeholder="请选择门店类型" />
+                      <SelectValue placeholder="请选择店铺类别" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem v-for="t in STORE_TYPES" :key="t.value" :value="String(t.value)">{{ t.label }}</SelectItem>
+                      <SelectItem v-for="t in STORE_TYPE_OPTIONS.filter((o) => o.value)" :key="t.value" :value="t.value">{{ t.label }}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -158,6 +156,16 @@ async function onSubmit(e: Event) {
                 <div class="space-y-2">
                   <Label class="text-foreground/80">主营类别 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.mainCategory" placeholder="如：文创零售、餐饮、特产" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">经营品类 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.categoryIds" placeholder="多个品类用逗号分隔" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">Logo 文件 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.logoId" placeholder="文件ID或URL" />
                 </div>
 
                 <div class="space-y-2">
@@ -195,10 +203,10 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
-                  <Label class="text-foreground/80">详细地址 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Label class="text-foreground/80">详细地址 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
                   <div class="relative">
                     <MapPin class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input v-model="form.address" placeholder="选填" class="pl-10" />
+                    <Input v-model="form.address" placeholder="请输入门店详细地址" class="pl-10" />
                   </div>
                 </div>
 
@@ -228,8 +236,18 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
+                  <Label class="text-foreground/80">关联供应商来源 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.supplySourceId" placeholder="cm_supply_supplier.id（如有）" />
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">门店简介 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.description" placeholder="门店特色、经营能力、服务范围等" />
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                  <Label class="text-foreground/80">店铺照片 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.storePhotos" placeholder="多张照片文件ID或URL，用逗号分隔" />
                 </div>
 
                 <div class="space-y-2 md:col-span-2">

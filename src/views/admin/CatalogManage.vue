@@ -64,7 +64,7 @@ function openCreate() {
 }
 
 function openEdit(row: PlatformCatalog) {
-  router.push({ path: `/admin/catalog/${row.id}/edit` });
+  router.push({ path: ROUTE_PATHS.ADMIN_CATALOG_EDIT.replace(':id', row.id) });
 }
 
 async function onShelf(row: PlatformCatalog) {

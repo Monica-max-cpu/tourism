@@ -51,11 +51,12 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         '/sys': {
-          target: 'http://192.168.10.60:8001',
+          target: 'http://127.0.0.1:8001',
           changeOrigin: true,
         },
         '/b2b': {
-          target: 'http://192.168.10.60:7015',
+          // B2B 联调走 gateway，由网关校验 X-Access-Token 后转发到 cm-cloud-b2b:7015。
+          target: 'http://127.0.0.1:9991',
           changeOrigin: true,
         },
       },

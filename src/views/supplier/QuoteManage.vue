@@ -69,7 +69,7 @@ function openCreate() {
 }
 
 function openEdit(row: SupplierQuoteRecord) {
-  router.push({ path: `/supplier/quote/${row.id}/edit` });
+  router.push({ path: ROUTE_PATHS.SUPPLIER_QUOTE_EDIT.replace(':id', row.id) });
 }
 
 async function offShelf(row: SupplierQuoteRecord) {

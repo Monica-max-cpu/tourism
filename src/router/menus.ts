@@ -9,7 +9,7 @@ export const adminMenus: MenuItem[] = [
   { name: 'AdminWorkbench', path: ROUTE_PATHS.ADMIN_WORKBENCH, title: 'B2B 工作台', icon: 'LayoutDashboard' },
   {
     name: 'AdminEntry',
-    path: '/admin/entry',
+    path: '/b2b/admin/entry',
     title: '入驻管理',
     icon: 'UserCheck',
     children: [
@@ -19,7 +19,7 @@ export const adminMenus: MenuItem[] = [
   },
   {
     name: 'AdminGoods',
-    path: '/admin/goods',
+    path: '/b2b/admin/goods',
     title: '商品与报价',
     icon: 'Package',
     children: [
@@ -32,7 +32,7 @@ export const adminMenus: MenuItem[] = [
   { name: 'AdminPayments', path: ROUTE_PATHS.ADMIN_PAYMENTS_PENDING, title: '支付管理', icon: 'CreditCard' },
   {
     name: 'AdminCollective',
-    path: '/admin/collective',
+    path: '/b2b/admin/collective',
     title: '集采管理',
     icon: 'GitMerge',
     children: [
@@ -44,7 +44,7 @@ export const adminMenus: MenuItem[] = [
   { name: 'AdminDeliveries', path: ROUTE_PATHS.ADMIN_DELIVERIES, title: '履约管理', icon: 'Truck' },
   {
     name: 'AdminSettlement',
-    path: '/admin/settlement',
+    path: '/b2b/admin/settlement',
     title: '结算管理',
     icon: 'Wallet',
     children: [
@@ -55,7 +55,7 @@ export const adminMenus: MenuItem[] = [
   },
   {
     name: 'AdminSystem',
-    path: '/admin/system',
+    path: '/b2b/admin/system',
     title: '系统管理',
     icon: 'Settings',
     children: [
@@ -73,7 +73,7 @@ export const supplierMenus: MenuItem[] = [
   { name: 'SupplierProducts', path: ROUTE_PATHS.SUPPLIER_PRODUCTS, title: '商品库', icon: 'Package' },
   {
     name: 'SupplierQuoteEntry',
-    path: '/supplier/quotes',
+    path: '/b2b/supplier/quotes',
     title: '报价管理',
     icon: 'Tags',
     children: [
@@ -83,7 +83,7 @@ export const supplierMenus: MenuItem[] = [
   },
   {
     name: 'SupplierOrderEntry',
-    path: '/supplier/orders',
+    path: '/b2b/supplier/orders',
     title: '集采订单',
     icon: 'GitMerge',
     children: [

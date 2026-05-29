@@ -7,9 +7,8 @@ export type ReviewStatus = 0 | 1 | 2;
 export type OperationStatus = 0 | 1 | 2;
 export type QuoteStatus = 0 | 1 | 2 | 3;
 export type CatalogStatus = 0 | 1 | 2;
-/** 1=普通门店 2=连锁门店 */
-export type StoreType = 1 | 2;
-/** 供应商店铺类别：1=普通 2=自营 3=文旅优选 */
+/** B2B 店铺类别：1=普通 2=自营 3=文旅优选 */
+export type StoreType = 1 | 2 | 3;
 export type SupplierStoreType = 1 | 2 | 3;
 export type MerchantType = 'SUPPLIER' | 'STORE';
 export type BindStatus = 0 | 1 | 2;
@@ -40,6 +39,7 @@ export interface SupplierApply {
   coordinate?: string;
   categoryIds?: string;
   supplySourceId?: string;
+  creditLimit?: number;
   status: ApplyStatus;
   statusLabel?: string;
   reviewStatus?: ReviewStatus;
@@ -76,6 +76,8 @@ export interface StoreApply {
   storePhotos?: string;
   mapAddress?: string;
   coordinate?: string;
+  categoryIds?: string;
+  supplySourceId?: string;
   status: ApplyStatus;
   statusLabel?: string;
   reviewStatus?: ReviewStatus;

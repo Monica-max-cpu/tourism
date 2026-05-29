@@ -189,7 +189,9 @@ function onReset() {
           <div class="col-span-2"><span class="text-muted-foreground">门店名称：</span>{{ detailModal.data.value.storeName }}</div>
           <div><span class="text-muted-foreground">门店类型：</span>{{ STORE_TYPE_LABEL[detailModal.data.value.storeType] ?? detailModal.data.value.storeTypeLabel }}</div>
           <div><span class="text-muted-foreground">认证类型：</span>{{ detailModal.data.value.authType || '-' }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">主营类别：</span>{{ detailModal.data.value.mainCategory || '-' }}</div>
+          <div><span class="text-muted-foreground">主营类别：</span>{{ detailModal.data.value.mainCategory || '-' }}</div>
+          <div><span class="text-muted-foreground">经营品类：</span>{{ detailModal.data.value.categoryIds || '-' }}</div>
+          <div class="col-span-2"><span class="text-muted-foreground">Logo：</span>{{ detailModal.data.value.logoId || '-' }}</div>
           <div><span class="text-muted-foreground">负责人：</span>{{ detailModal.data.value.contactPerson }}</div>
           <div><span class="text-muted-foreground">电话：</span>{{ detailModal.data.value.contactPhone }}</div>
           <div><span class="text-muted-foreground">邮箱：</span>{{ detailModal.data.value.contactEmail || '-' }}</div>
@@ -204,6 +206,7 @@ function onReset() {
           <div><span class="text-muted-foreground">开户行号：</span>{{ detailModal.data.value.bankNo || '-' }}</div>
           <div><span class="text-muted-foreground">地图坐标：</span>{{ detailModal.data.value.coordinate || '-' }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">地图地址：</span>{{ detailModal.data.value.mapAddress || '-' }}</div>
+          <div class="col-span-2"><span class="text-muted-foreground">关联供应商来源：</span>{{ detailModal.data.value.supplySourceId || '-' }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">经营简介：</span>{{ detailModal.data.value.description || '-' }}</div>
           <div class="col-span-2"><span class="text-muted-foreground">店铺照片：</span>{{ detailModal.data.value.storePhotos || '-' }}</div>
           <div v-if="detailModal.data.value.reviewRemark" class="col-span-2 text-destructive">

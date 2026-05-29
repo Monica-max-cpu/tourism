@@ -23,6 +23,7 @@ import { listStoreOrdersApi, cancelStoreOrderApi, confirmReceiveApi } from '/@/a
 import {
   STORE_ORDER_STATUS_LABEL, STORE_ORDER_STATUS_VARIANT,
 } from '/@/constants/storeStatus';
+import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { formatCurrency, formatDateTime, formatNumber } from '/@/utils/format';
 import { useUserStore } from '/@/stores/modules/user';
 import type { StoreViewOrder } from '/#/b2b-store';
@@ -100,8 +101,8 @@ const columns: BasicColumn[] = [
   { field: 'action', title: '操作', width: 280, fixed: 'right', slots: { default: 'action' } },
 ];
 
-function viewDetail(row: StoreViewOrder) { router.push(`/store/orders/${row.id}`); }
-function payNow(row: StoreViewOrder) { router.push(`/store/orders/${row.id}`); }
+function viewDetail(row: StoreViewOrder) { router.push(ROUTE_PATHS.STORE_ORDER_DETAIL.replace(':id', row.id)); }
+function payNow(row: StoreViewOrder) { router.push(ROUTE_PATHS.STORE_ORDER_DETAIL.replace(':id', row.id)); }
 
 // ====== 取消 ======
 const cancelModal = useModal<StoreViewOrder>();

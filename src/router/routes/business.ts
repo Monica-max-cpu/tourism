@@ -4,7 +4,7 @@ import { ROUTE_PATHS } from '/@/constants/routePaths';
 const Layout = () => import('/@/components/Layout/BasicLayout.vue');
 
 export const adminRoutes: RouteRecordRaw = {
-  path: '/admin',
+  path: '/b2b/admin',
   component: Layout,
   redirect: ROUTE_PATHS.ADMIN_WORKBENCH,
   meta: { roles: ['ADMIN'], requiresAuth: true },
@@ -42,7 +42,7 @@ export const adminRoutes: RouteRecordRaw = {
 
 // update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商端 10 模块路由
 export const supplierRoutes: RouteRecordRaw = {
-  path: '/supplier',
+  path: '/b2b/supplier',
   component: Layout,
   redirect: ROUTE_PATHS.SUPPLIER_WORKBENCH,
   meta: { roles: ['SUPPLIER'], requiresAuth: true },
@@ -74,7 +74,7 @@ export const supplierRoutes: RouteRecordRaw = {
 // update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商端 10 模块路由
 
 export const storeRoutes: RouteRecordRaw = {
-  path: '/store',
+  path: '/b2b/store',
   component: Layout,
   redirect: ROUTE_PATHS.STORE_WORKBENCH,
   meta: { roles: ['STORE'], requiresAuth: true },

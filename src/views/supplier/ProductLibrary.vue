@@ -47,7 +47,7 @@ const columns: BasicColumn[] = [
 ];
 
 function openCreate() { router.push(ROUTE_PATHS.SUPPLIER_PRODUCT_CREATE); }
-function openEdit(row: SupplierProduct) { router.push({ path: `/supplier/product/${row.id}/edit` }); }
+function openEdit(row: SupplierProduct) { router.push({ path: ROUTE_PATHS.SUPPLIER_PRODUCT_EDIT.replace(':id', row.id) }); }
 
 async function onShelf(row: SupplierProduct) {
   await toggleSupplierProductShelfApi(row.id, 1);

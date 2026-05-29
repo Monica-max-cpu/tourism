@@ -20,6 +20,9 @@ export interface SupplierApplyParams {
   storePhotos?: string;
   mapAddress?: string;
   coordinate?: string;
+  categoryIds?: string;
+  supplySourceId?: string;
+  creditLimit?: number;
   remark?: string;
 }
 
@@ -42,6 +45,8 @@ export interface StoreApplyParams {
   storePhotos?: string;
   mapAddress?: string;
   coordinate?: string;
+  categoryIds?: string;
+  supplySourceId?: string;
   remark?: string;
 }
 

@@ -1,5 +1,5 @@
 /**
- * 入驻申请 API（公开接口，无需 Token）
+ * 入驻申请 API（登录用户提交，携带当前 Token）
  */
 import { defHttp } from '/@/api/http';
 import {

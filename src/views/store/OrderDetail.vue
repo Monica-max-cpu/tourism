@@ -22,6 +22,7 @@ import {
   STORE_PAYMENT_METHOD_LABEL, PLATFORM_BANK_INFO,
 } from '/@/constants/storeStatus';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
+import { ROUTE_PATHS } from '/@/constants/routePaths';
 import type { StoreViewOrder, StorePaymentRecord, StorePaymentMethod } from '/#/b2b-store';
 
 const route = useRoute();
@@ -105,7 +106,7 @@ async function confirmCancel() {
   try {
     await cancelStoreOrderApi(order.value.id, cancelReason.value || '门店主动取消');
     cancelModal.close();
-    router.replace('/store/orders');
+    router.replace(ROUTE_PATHS.STORE_ORDERS);
   } finally {
     cancelSubmitting.value = false;
   }

@@ -85,7 +85,7 @@ function addToCart(it: StoreCatalogItem) {
 const toast = ref('');
 
 function goDetail(it: StoreCatalogItem) {
-  router.push(`/store/catalog/${it.id}`);
+  router.push(`/b2b/store/catalog/${it.id}`);
 }
 
 function toggleTier(id: string) {

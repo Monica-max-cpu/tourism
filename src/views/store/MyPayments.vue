@@ -22,6 +22,7 @@ import {
   STORE_PAYMENT_METHOD_LABEL, STORE_PAYMENT_METHOD_OPTIONS,
 } from '/@/constants/storeStatus';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
+import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { useUserStore } from '/@/stores/modules/user';
 import type { StorePaymentRecord } from '/#/b2b-store';
 
@@ -49,7 +50,7 @@ const columns: BasicColumn[] = [
 ];
 
 function viewDetail(row: StorePaymentRecord) { detailModal.open(row); }
-function viewOrder(row: StorePaymentRecord) { router.push(`/store/orders/${row.orderId}`); }
+function viewOrder(row: StorePaymentRecord) { router.push(ROUTE_PATHS.STORE_ORDER_DETAIL.replace(':id', row.orderId)); }
 
 function onSearch() { reload({ pageNo: 1 }); }
 function onReset() { search.keyword = ''; search.status = ''; search.method = ''; reload({ pageNo: 1 }); }

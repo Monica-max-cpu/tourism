@@ -5,7 +5,7 @@ import type { StoreApply, ApplyStatus, StoreType, OperationStatus } from '/#/b2b
 import { paginate, delay, pick, MOCK_DATA } from '../_helpers';
 
 const statuses: ApplyStatus[] = [0, 0, 1, 1, 2, 1, 3];
-const types: StoreType[] = [1, 1, 1, 2, 1, 2, 1];
+const types: StoreType[] = [1, 1, 2, 3, 1, 2, 3];
 
 const storeApplies: StoreApply[] = Array.from({ length: 38 }, (_, i) => {
   const name = `${pick(MOCK_DATA.STORE_NAMES)} #${i + 1}`;
@@ -16,7 +16,7 @@ const storeApplies: StoreApply[] = Array.from({ length: 38 }, (_, i) => {
     id: `str-apply-${2000 + i}`,
     storeName: name,
     storeType,
-    storeTypeLabel: { 1: '普通门店', 2: '连锁门店' }[storeType],
+    storeTypeLabel: { 1: '普通', 2: '自营', 3: '文旅优选' }[storeType],
     contactPerson: pick(['赵敏', '孙磊', '周悦', '吴婷', '郑海']),
     contactPhone: `139${String(20000000 + i * 211).slice(0, 8)}`,
     contactEmail: `store${i}@example.com`,
@@ -29,6 +29,8 @@ const storeApplies: StoreApply[] = Array.from({ length: 38 }, (_, i) => {
     operationStatus: status === 3 ? 2 : status === 1 ? 1 : 0,
     authType: 'MERCHANT',
     mainCategory: pick(['文创零售', '餐饮', '特产', '便利服务']),
+    categoryIds: pick(['文创,特产', '餐饮,零售', '便利服务', '粮油,快消']),
+    logoId: '/mock/upload/store-logo.png',
     bankAccount: `622700${String(2000000000 + i)}`,
     bankName: pick(['中国银行太原分行', '工商银行晋中支行', '建设银行大同支行']),
     bankNo: `CNAPS${String(200000 + i)}`,
@@ -36,6 +38,7 @@ const storeApplies: StoreApply[] = Array.from({ length: 38 }, (_, i) => {
     storePhotos: '/mock/upload/store-front.jpg',
     mapAddress: '山西省太原市迎泽区景区大道',
     coordinate: '112.549248,37.857014',
+    supplySourceId: i % 4 === 0 ? `supply-source-${i}` : undefined,
     reviewRemark: status === 2 ? '门店类型不符合要求' : undefined,
     loginAccount: status >= 1 ? `store_202605${String(i).padStart(3, '0')}` : undefined,
     creditLimit: status >= 1 ? 5000 : 0,
