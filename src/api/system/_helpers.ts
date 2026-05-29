@@ -21,3 +21,11 @@ export function buildQueryString(params: Record<string, any> = {}) {
   });
   return query.toString();
 }
+
+export function buildRolePermissionPayload(roleId: string, permissionIds: string[], lastPermissionIds: string[]) {
+  return {
+    roleId,
+    permissionIds: permissionIds.join(','),
+    lastpermissionIds: lastPermissionIds.join(','),
+  };
+}

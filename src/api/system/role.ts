@@ -1,6 +1,6 @@
 import { defHttp } from '/@/api/http';
 import type { PageResult, PermissionTreeNode, SystemRole, SystemUser } from '/#/system';
-import { normalizePageResult } from './_helpers';
+import { buildRolePermissionPayload, normalizePageResult } from './_helpers';
 import * as systemMock from '/@/mocks/system.mock';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -45,11 +45,7 @@ export function saveRolePermissionApi(roleId: string, permissionIds: string[], l
   if (USE_MOCK) return systemMock.mockSaveRolePermission(roleId, permissionIds);
   return defHttp.post({
     url: Api.SaveRolePermission,
-    params: {
-      roleId,
-      permissionIds: permissionIds.join(','),
-      lastpermissionIds: lastPermissionIds.join(','),
-    },
+    data: buildRolePermissionPayload(roleId, permissionIds, lastPermissionIds),
   });
 }
 
