@@ -71,6 +71,15 @@ class VAxios {
       const tenantId = localStorage.getItem('b2b:tenantId') || '';
       if (tenantId) config.headers['X-Tenant-Id'] = tenantId;
       // update-end--author:phase7---date:2026-05-25---for:【阶段7】JeecgBoot 防重放 + 多租户头
+
+      // 非 GET 请求：如果只传了 params 没传 data，自动将 params 转为 data（请求体）
+      // 避免大数据量 params 拼到 URL 上导致 431（Request Header Fields Too Large）
+      // DELETE 例外：通常参数少，保留 query string 形式与后端 @RequestParam 对齐
+      const method = (config.method || 'get').toUpperCase();
+      if (method !== 'GET' && method !== 'DELETE' && config.params && !config.data) {
+        config.data = config.params;
+        config.params = undefined;
+      }
       return config;
     });
 

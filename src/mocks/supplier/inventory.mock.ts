@@ -55,8 +55,7 @@ interface QueryParams {
 }
 
 export function mockListSupplierStocks({ pageNo, pageSize, keyword, health, supplierId }: QueryParams) {
-  if (!supplierId) return delay({ records: [], total: 0 });
-  let list = stocks.filter((x) => x.supplierId === supplierId);
+  let list = supplierId ? stocks.filter((x) => x.supplierId === supplierId) : [...stocks];
   if (health) list = list.filter((x) => x.health === health);
   if (keyword) {
     const k = keyword.toLowerCase();

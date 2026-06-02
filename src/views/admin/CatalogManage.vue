@@ -48,12 +48,12 @@ const columns: BasicColumn[] = [
   {
     field: 'supplierBasePrice', title: '成本价', width: 110, align: 'right',
     formatter: ({ cellValue }) => formatCurrency(cellValue),
-    authCode: 'b2b:profit:view',
+    authCode: 'b2b:settlement:profitList',
   },
   {
     field: 'marginRate', title: '毛利率', width: 90, align: 'center',
     formatter: ({ row }) => row.marginRate ? (row.marginRate * 100).toFixed(1) + '%' : '-',
-    authCode: 'b2b:profit:view',
+    authCode: 'b2b:settlement:profitList',
   },
   { field: 'status', title: '状态', width: 180, align: 'center', slots: { default: 'status' } },
   { field: 'action', title: '操作', width: 260, fixed: 'right', slots: { default: 'action' } },

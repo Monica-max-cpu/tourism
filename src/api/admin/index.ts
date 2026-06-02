@@ -28,6 +28,7 @@ enum Api {
   // 报价审核
   ListQuotes = '/b2b/supplier/quote/list',
   ReviewQuote = '/b2b/supplier/quote/review',
+  AdminWithdrawQuote = '/b2b/supplier/quote/admin/withdraw',
   // 商品目录（管理员侧）
   ListCatalogs = '/b2b/catalog/admin/list',
   UpdateCatalog = '/b2b/catalog/edit',
@@ -42,13 +43,13 @@ export function getSupplierApplyApi(id: string): Promise<SupplierApply | null> {
   return USE_MOCK ? supplierApplyMock.mockGetSupplierApply(id) : defHttp.get({ url: `${Api.GetSupplierApply}/${id}` });
 }
 export function approveSupplierApplyApi(id: string) {
-  return USE_MOCK ? supplierApplyMock.mockApproveSupplierApply(id) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, reviewStatus: 1 } });
+  return USE_MOCK ? supplierApplyMock.mockApproveSupplierApply(id) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, status: 1 } });
 }
 export function rejectSupplierApplyApi(id: string, reviewRemark: string) {
-  return USE_MOCK ? supplierApplyMock.mockRejectSupplierApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, reviewStatus: 2, reviewRemark } });
+  return USE_MOCK ? supplierApplyMock.mockRejectSupplierApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, status: 2, reviewRemark } });
 }
-export function toggleSupplierStatusApi(id: string, operationStatus: OperationStatus) {
-  return USE_MOCK ? supplierApplyMock.mockToggleSupplierStatus(id, operationStatus) : defHttp.put({ url: Api.ToggleSupplierStatus, data: { id, operationStatus } });
+export function toggleSupplierStatusApi(id: string, status: OperationStatus) {
+  return USE_MOCK ? supplierApplyMock.mockToggleSupplierStatus(id, status) : defHttp.put({ url: `${Api.ToggleSupplierStatus}?id=${id}&status=${status}` });
 }
 
 // ===== 门店审核 =====
@@ -59,32 +60,41 @@ export function getStoreApplyApi(id: string): Promise<StoreApply | null> {
   return USE_MOCK ? storeApplyMock.mockGetStoreApply(id) : defHttp.get({ url: `${Api.GetStoreApply}/${id}` });
 }
 export function approveStoreApplyApi(id: string) {
-  return USE_MOCK ? storeApplyMock.mockApproveStoreApply(id) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, reviewStatus: 1 } });
+  return USE_MOCK ? storeApplyMock.mockApproveStoreApply(id) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, status: 1 } });
 }
 export function rejectStoreApplyApi(id: string, reviewRemark: string) {
-  return USE_MOCK ? storeApplyMock.mockRejectStoreApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, reviewStatus: 2, reviewRemark } });
+  return USE_MOCK ? storeApplyMock.mockRejectStoreApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, status: 2, reviewRemark } });
 }
-export function toggleStoreStatusApi(id: string, operationStatus: OperationStatus) {
-  return USE_MOCK ? storeApplyMock.mockToggleStoreStatus(id, operationStatus) : defHttp.put({ url: Api.ToggleStoreStatus, data: { id, operationStatus } });
+export function toggleStoreStatusApi(id: string, status: OperationStatus) {
+  return USE_MOCK ? storeApplyMock.mockToggleStoreStatus(id, status) : defHttp.put({ url: `${Api.ToggleStoreStatus}?id=${id}&status=${status}` });
 }
 
 // ===== 报价审核 =====
+function buildQuoteReviewUrl(params: Record<string, string | number>) {
+  const query = new URLSearchParams(
+    Object.entries(params).map(([key, value]) => [key, String(value)]),
+  ).toString();
+  return `${Api.ReviewQuote}?${query}`;
+}
+
 export function listQuotesApi(params: any) {
   return USE_MOCK ? quoteMock.mockListQuotes(params) : defHttp.get({ url: Api.ListQuotes, params });
 }
 export function approveQuoteApi(id: string) {
-  return USE_MOCK ? quoteMock.mockApproveQuote(id) : defHttp.put({ url: Api.ReviewQuote, params: { id, status: 1 } });
+  return USE_MOCK ? quoteMock.mockApproveQuote(id) : defHttp.put({ url: buildQuoteReviewUrl({ id, status: 1 }) });
 }
-export function batchApproveQuotesApi(ids: string[]) {
-  return USE_MOCK
-    ? quoteMock.mockBatchApproveQuotes(ids)
-    : defHttp.put({ url: Api.ReviewQuote, params: { ids: ids.join(','), status: 1 } });
+export async function batchApproveQuotesApi(ids: string[]) {
+  if (USE_MOCK) return quoteMock.mockBatchApproveQuotes(ids);
+  await Promise.all(ids.map((id) => approveQuoteApi(id)));
+  return { success: true, count: ids.length };
 }
 export function rejectQuoteApi(id: string, reviewRemark: string) {
-  return USE_MOCK ? quoteMock.mockRejectQuote(id, reviewRemark) : defHttp.put({ url: Api.ReviewQuote, params: { id, status: 2, reviewRemark } });
+  return USE_MOCK
+    ? quoteMock.mockRejectQuote(id, reviewRemark)
+    : defHttp.put({ url: buildQuoteReviewUrl({ id, status: 2, reviewRemark }) });
 }
 export function withdrawApprovedQuoteApi(id: string) {
-  return USE_MOCK ? quoteMock.mockOffQuote(id) : defHttp.put({ url: `/b2b/supplier/quote/withdraw/${id}` });
+  return USE_MOCK ? quoteMock.mockOffQuote(id) : defHttp.put({ url: `${Api.AdminWithdrawQuote}/${id}` });
 }
 
 /** 获取所有已生效报价列表，供目录商品优选报价下拉选择 */

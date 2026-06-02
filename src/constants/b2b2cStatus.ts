@@ -55,18 +55,21 @@ export const DELIVERY_STATUS_OPTIONS = [
 
 // 结算
 export const SETTLEMENT_STATUS_LABEL: Record<SettlementStatus, string> = {
-  PENDING: '待确认',
+  PENDING: '待付款',
   CONFIRMED: '已确认',
   PAID: '已付款',
+  REFUNDED: '已退款',
 };
-export const SETTLEMENT_STATUS_VARIANT: Record<SettlementStatus, 'warning' | 'info' | 'success'> = {
+export const SETTLEMENT_STATUS_VARIANT: Record<SettlementStatus, 'warning' | 'info' | 'success' | 'muted'> = {
   PENDING: 'warning',
   CONFIRMED: 'info',
   PAID: 'success',
+  REFUNDED: 'muted',
 };
 export const SETTLEMENT_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'PENDING', label: '待确认' },
+  { value: 'PENDING', label: '待付款' },
   { value: 'CONFIRMED', label: '已确认' },
   { value: 'PAID', label: '已付款' },
+  { value: 'REFUNDED', label: '已退款' },
 ];

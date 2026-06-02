@@ -4,7 +4,7 @@
  * update-begin--author:claude---date:2026-05-27---for:【弹窗改页面】新建/编辑移入独立路由页面 QuoteForm
  * update-end--author:claude---date:2026-05-27---for:【弹窗改页面】新建/编辑移入独立路由页面 QuoteForm
  */
-import { reactive, computed } from 'vue';
+import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { Plus } from 'lucide-vue-next';
 import {
@@ -23,18 +23,15 @@ import {
 } from '/@/constants/supplierStatus';
 import { formatCurrency, formatDate } from '/@/utils/format';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
-import { useUserStore } from '/@/stores/modules/user';
 import type { SupplierQuoteRecord } from '/#/b2b-supplier';
 
 const router = useRouter();
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
-  const res: any = await listSupplierQuotesApi({ ...params, supplierId: supplierId.value, ...search });
+  const res: any = await listSupplierQuotesApi({ ...params, ...search });
   const list = Array.isArray(res) ? res : (res.records || []);
   const records = list.map((item: any) => {
     const q = item.quote || item;
@@ -47,7 +44,7 @@ const columns: BasicColumn[] = [
   { field: 'productName', title: '商品名称', minWidth: 180 },
   { field: 'basePrice', title: '报价', width: 90, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'minOrderQty', title: '起订量', width: 90, align: 'center' },
-  { field: 'minOrderQty', title: '档位', width: 90, align: 'center', formatter: ({ row }) => {
+  { field: 'tierSummary', title: '档位', width: 90, align: 'center', formatter: ({ row }) => {
     return row.tiers && row.tiers.length > 0 ? `${row.tiers.length} 档` : '-';
   } },
   { field: 'tiers', title: '档位详情', width: 300, formatter: ({ row }) => {

@@ -19,17 +19,14 @@ import {
   SHIPMENT_STATUS_LABEL, SHIPMENT_STATUS_VARIANT, SHIPMENT_STATUS_OPTIONS, CARRIER_OPTIONS,
 } from '/@/constants/supplierStatus';
 import { formatDateTime } from '/@/utils/format';
-import { useUserStore } from '/@/stores/modules/user';
 import type { ShipmentRecord } from '/#/b2b-supplier';
 
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
-  return await listShipmentsApi({ ...params, searchInfo: { ...search, supplierId: supplierId.value } });
+  return await listShipmentsApi({ ...params, searchInfo: { ...search } });
 }
 
 const columns: BasicColumn[] = [

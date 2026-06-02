@@ -17,7 +17,6 @@ import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import {
   listSupplierApplyApi,
-  getSupplierApplyApi,
   approveSupplierApplyApi,
   rejectSupplierApplyApi,
   toggleSupplierStatusApi,
@@ -28,7 +27,6 @@ import {
   REVIEW_STATUS_LABEL,
   REVIEW_STATUS_OPTIONS,
   REVIEW_STATUS_VARIANT,
-  SUPPLIER_STORE_TYPE_LABEL,
   isOperationDisabled,
   isOperationEnabled,
   isPendingReview,
@@ -38,7 +36,7 @@ import {
 } from '/@/constants/b2bStatus';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { formatDateTime } from '/@/utils/format';
-import type { SupplierApply, OperationStatus } from '/#/b2b';
+import type { SupplierApply } from '/#/b2b';
 
 const search = reactive({ keyword: '', status: '' });
 const router = useRouter();
@@ -54,29 +52,26 @@ const columns: BasicColumn[] = [
   { field: 'contactPerson', title: '联系人', width: 150 },
   { field: 'contactPhone', title: '联系电话', width: 200 },
   { field: 'province', title: '省份', width: 150 },
-  { field: 'status', title: '审核 / 运营', width: 220, slots: { default: 'status' } },
+  { field: 'reviewStatus', title: '审核状态', width: 150, align: 'center', slots: { default: 'reviewStatus' } },
+  { field: 'operationStatus', title: '运营状态', width: 100, align: 'center', slots: { default: 'operationStatus' } },
   { field: 'createTime', title: '提交时间', width: 200, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'action', title: '操作', width: 280, fixed: 'right', slots: { default: 'action' } },
+  { field: 'action', title: '操作', width: 200, fixed: 'right', slots: { default: 'action' } },
 ];
 
-// 详情/审核弹窗
-const detailModal = useModal<SupplierApply>();
+// 驳回 / 停启用弹窗
 const rejectModal = useModal<SupplierApply>();
 const toggleModal = useModal<SupplierApply>();
 const rejectReason = ref('');
 const submitting = ref(false);
 
-async function openDetail(row: SupplierApply) {
-  detailModal.open(row);
-  const fresh = await getSupplierApplyApi(row.id);
-  if (fresh) detailModal.data.value = fresh;
+function openDetail(row: SupplierApply) {
+  router.push(`/b2b/admin/supplier/${row.id}`);
 }
 
 async function approve(row: SupplierApply) {
   submitting.value = true;
   try {
     await approveSupplierApplyApi(row.id);
-    detailModal.close();
     reload();
   } finally {
     submitting.value = false;
@@ -94,7 +89,6 @@ async function confirmReject() {
   try {
     await rejectSupplierApplyApi(rejectModal.data.value.id, rejectReason.value.trim());
     rejectModal.close();
-    detailModal.close();
     reload();
   } finally {
     submitting.value = false;
@@ -110,10 +104,9 @@ async function confirmToggle() {
   submitting.value = true;
   try {
     const cur = toggleModal.data.value;
-    const target: OperationStatus = normalizeOperationStatus(cur) === 1 ? 2 : 1;
+    const target = normalizeOperationStatus(cur) === 1 ? 3 : 1;
     await toggleSupplierStatusApi(cur.id, target);
     toggleModal.close();
-    detailModal.close();
     reload();
   } finally {
     submitting.value = false;
@@ -156,11 +149,11 @@ function onReset() {
     </SearchBar>
 
     <BasicTable :columns="columns" :api="loadData" row-key="id" @register="registerTable">
-      <template #status="{ row }">
-        <div class="flex items-center justify-center gap-2">
-          <Badge :variant="REVIEW_STATUS_VARIANT[normalizeReviewStatus(row)]">{{ REVIEW_STATUS_LABEL[normalizeReviewStatus(row)] }}</Badge>
-          <Badge :variant="OPERATION_STATUS_VARIANT[normalizeOperationStatus(row)]">{{ OPERATION_STATUS_LABEL[normalizeOperationStatus(row)] }}</Badge>
-        </div>
+      <template #reviewStatus="{ row }">
+        <Badge :variant="REVIEW_STATUS_VARIANT[normalizeReviewStatus(row)]">{{ REVIEW_STATUS_LABEL[normalizeReviewStatus(row)] }}</Badge>
+      </template>
+      <template #operationStatus="{ row }">
+        <Badge :variant="OPERATION_STATUS_VARIANT[normalizeOperationStatus(row)]">{{ OPERATION_STATUS_LABEL[normalizeOperationStatus(row)] }}</Badge>
       </template>
       <template #action="{ row }">
         <TableAction
@@ -174,67 +167,6 @@ function onReset() {
         />
       </template>
     </BasicTable>
-
-    <!-- 详情弹窗 -->
-    <BasicModal
-      v-model:open="detailModal.visible.value"
-      title="供应商入驻详情"
-      width="640px"
-      hide-footer
-    >
-      <div v-if="detailModal.data.value" class="space-y-3 text-sm">
-        <div class="grid grid-cols-2 gap-x-6 gap-y-3">
-          <div><span class="text-muted-foreground">供应商ID：</span>{{ detailModal.data.value.id }}</div>
-          <div>
-            <span class="text-muted-foreground">审核状态：</span>
-            <Badge :variant="REVIEW_STATUS_VARIANT[normalizeReviewStatus(detailModal.data.value)]">
-              {{ REVIEW_STATUS_LABEL[normalizeReviewStatus(detailModal.data.value)] }}
-            </Badge>
-          </div>
-          <div>
-            <span class="text-muted-foreground">运营状态：</span>
-            <Badge :variant="OPERATION_STATUS_VARIANT[normalizeOperationStatus(detailModal.data.value)]">
-              {{ OPERATION_STATUS_LABEL[normalizeOperationStatus(detailModal.data.value)] }}
-            </Badge>
-          </div>
-          <div class="col-span-2"><span class="text-muted-foreground">供应商名称：</span>{{ detailModal.data.value.supplierName }}</div>
-          <div><span class="text-muted-foreground">认证类型：</span>{{ detailModal.data.value.authType || '-' }}</div>
-          <div><span class="text-muted-foreground">店铺类别：</span>{{ detailModal.data.value.storeType ? SUPPLIER_STORE_TYPE_LABEL[detailModal.data.value.storeType] : '-' }}</div>
-          <div><span class="text-muted-foreground">主营类别：</span>{{ detailModal.data.value.mainCategory || '-' }}</div>
-          <div><span class="text-muted-foreground">经营品类：</span>{{ detailModal.data.value.categoryIds || '-' }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">Logo：</span>{{ detailModal.data.value.logoId || '-' }}</div>
-          <div><span class="text-muted-foreground">联系人：</span>{{ detailModal.data.value.contactPerson }}</div>
-          <div><span class="text-muted-foreground">联系电话：</span>{{ detailModal.data.value.contactPhone }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">联系邮箱：</span>{{ detailModal.data.value.contactEmail || '-' }}</div>
-          <div><span class="text-muted-foreground">所在地：</span>{{ detailModal.data.value.province }} {{ detailModal.data.value.city }}</div>
-          <div><span class="text-muted-foreground">提交时间：</span>{{ formatDateTime(detailModal.data.value.createTime) }}</div>
-          <div v-if="detailModal.data.value.reviewTime"><span class="text-muted-foreground">审核时间：</span>{{ formatDateTime(detailModal.data.value.reviewTime) }}</div>
-          <div v-if="detailModal.data.value.loginAccount"><span class="text-muted-foreground">登录账号：</span>{{ detailModal.data.value.loginAccount }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">详细地址：</span>{{ detailModal.data.value.address || '-' }}</div>
-          <div><span class="text-muted-foreground">开户行：</span>{{ detailModal.data.value.bankName || '-' }}</div>
-          <div><span class="text-muted-foreground">银行账号：</span>{{ detailModal.data.value.bankAccount || '-' }}</div>
-          <div><span class="text-muted-foreground">开户行号：</span>{{ detailModal.data.value.bankNo || '-' }}</div>
-          <div><span class="text-muted-foreground">地图坐标：</span>{{ detailModal.data.value.coordinate || '-' }}</div>
-          <div><span class="text-muted-foreground">信用额度：</span>{{ detailModal.data.value.creditLimit != null ? `¥${detailModal.data.value.creditLimit}` : '-' }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">地图地址：</span>{{ detailModal.data.value.mapAddress || '-' }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">关联供应商来源：</span>{{ detailModal.data.value.supplySourceId || '-' }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">经营简介：</span>{{ detailModal.data.value.description || '-' }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">店铺照片：</span>{{ detailModal.data.value.storePhotos || '-' }}</div>
-          <div class="col-span-2"><span class="text-muted-foreground">备注：</span>{{ detailModal.data.value.remark || '-' }}</div>
-          <div v-if="detailModal.data.value.reviewRemark" class="col-span-2 text-destructive">
-            <span class="text-muted-foreground">审核备注：</span>{{ detailModal.data.value.reviewRemark }}
-          </div>
-        </div>
-        <div v-if="isPendingReview(normalizeReviewStatus(detailModal.data.value))" v-auth="'b2b:supplier:review'" class="flex justify-end gap-2 pt-4 border-t border-border">
-          <Button variant="outline" :disabled="submitting" @click="openReject(detailModal.data.value)">驳回</Button>
-          <Button :disabled="submitting" @click="approve(detailModal.data.value)">通过审核</Button>
-        </div>
-        <div v-if="isReviewApproved(normalizeReviewStatus(detailModal.data.value))" v-auth="'b2b:supplier:review'" class="flex justify-end gap-2 pt-4 border-t border-border">
-          <Button v-if="isOperationEnabled(normalizeOperationStatus(detailModal.data.value))" variant="outline" :disabled="submitting" @click="openToggle(detailModal.data.value)">停用</Button>
-          <Button v-if="isOperationDisabled(normalizeOperationStatus(detailModal.data.value))" :disabled="submitting" @click="openToggle(detailModal.data.value)">启用</Button>
-        </div>
-      </div>
-    </BasicModal>
 
     <!-- 驳回弹窗 -->
     <BasicModal

@@ -15,10 +15,10 @@ const warehouses: SupplierWarehouse[] = [
   { id: 'wh-003', supplierId: 'sup-001', warehouseName: '冷链-华北', province: '河北省', city: '石家庄市', address: '鹿泉区物流园区3号库', contactPerson: '赵库管', contactPhone: '13900003333', isDefault: 0, createTime: '2026-03-20 11:00:00' },
 ];
 
-export function mockListWarehouses(params: { supplierId: string; pageNo?: number; pageSize?: number }) {
-  if (!params.supplierId) return delay({ records: [], total: 0 });
+export function mockListWarehouses(params: { supplierId?: string; pageNo?: number; pageSize?: number }) {
+  const sid = params.supplierId || CURRENT_SUPPLIER_ID;
   const list = warehouses
-    .filter((x) => x.supplierId === params.supplierId)
+    .filter((x) => x.supplierId === sid)
     .sort((a, b) => (b.isDefault as number) - (a.isDefault as number) || (a.createTime! < b.createTime! ? -1 : 1));
   return delay(paginate(list, params.pageNo || 0, params.pageSize || 50));
 }

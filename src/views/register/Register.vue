@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ChevronLeft, User, Phone, Lock, Shield } from 'lucide-vue-next';
+import { ChevronLeft, Shield, XCircle } from 'lucide-vue-next';
 import {
   Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Input, Label, Badge,
 } from '/@/components/ui';
-import { registerApi, getCaptchaApi } from '/@/api/login/api';
+import { registerApi, checkOnlyUserApi, getCaptchaApi } from '/@/api/login/api';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 
 const router = useRouter();
 
 const form = reactive({
-  username: '',
+  realname: '',
   phone: '',
   smsCode: '',
   password: '',
@@ -21,6 +21,8 @@ const form = reactive({
 const submitting = ref(false);
 const errorMsg = ref('');
 const successMsg = ref('');
+const phoneChecking = ref(false);
+const phoneAvailable = ref(true);
 
 // 短信验证码倒计时
 const smsCountdown = ref(0);
@@ -38,6 +40,24 @@ function startSmsCountdown() {
   }, 1000);
 }
 
+async function handlePhoneBlur() {
+  if (!form.phone || !/^1[3-9]\d{9}$/.test(form.phone)) return;
+  phoneChecking.value = true;
+  phoneAvailable.value = true;
+  errorMsg.value = '';
+  try {
+    const res = await checkOnlyUserApi({ phone: form.phone });
+    if (!res.success) {
+      phoneAvailable.value = false;
+      errorMsg.value = res.message || '手机号已被注册';
+    }
+  } catch (err) {
+    // 接口异常不阻塞
+  } finally {
+    phoneChecking.value = false;
+  }
+}
+
 async function handleSendSms() {
   if (smsCountdown.value > 0 || smsSending.value) return;
   if (!form.phone) {
@@ -46,6 +66,10 @@ async function handleSendSms() {
   }
   if (!/^1[3-9]\d{9}$/.test(form.phone)) {
     errorMsg.value = '请输入正确的手机号';
+    return;
+  }
+  if (!phoneAvailable.value) {
+    errorMsg.value = '手机号已被注册';
     return;
   }
   errorMsg.value = '';
@@ -61,10 +85,10 @@ async function handleSendSms() {
 }
 
 function validate(): boolean {
-  if (!form.username) { errorMsg.value = '请输入用户名'; return false; }
-  if (form.username.length < 2) { errorMsg.value = '用户名至少2个字符'; return false; }
+  if (form.realname && form.realname.length < 2) { errorMsg.value = '昵称至少2个字符'; return false; }
   if (!form.phone) { errorMsg.value = '请输入手机号'; return false; }
   if (!/^1[3-9]\d{9}$/.test(form.phone)) { errorMsg.value = '请输入正确的手机号'; return false; }
+  if (!phoneAvailable.value) { errorMsg.value = '手机号已被注册'; return false; }
   if (!form.smsCode) { errorMsg.value = '请输入短信验证码'; return false; }
   if (!form.password) { errorMsg.value = '请输入密码'; return false; }
   if (form.password.length < 6) { errorMsg.value = '密码至少6位'; return false; }
@@ -78,12 +102,16 @@ async function handleSubmit(e: Event) {
   if (!validate()) return;
   submitting.value = true;
   try {
-    const res = await registerApi({
-      username: form.username.trim(),
+    const payload: Record<string, string> = {
+      username: form.phone,
       password: form.password,
       phone: form.phone,
       smscode: form.smsCode,
-    });
+    };
+    if (form.realname.trim()) {
+      payload.realname = form.realname.trim();
+    }
+    const res = await registerApi(payload as any);
     if (res.success) {
       successMsg.value = '注册成功！即将跳转到登录页...';
       setTimeout(() => {
@@ -127,32 +155,31 @@ async function handleSubmit(e: Event) {
 
     <!-- 主内容 -->
     <main class="flex-1 flex items-center justify-center px-4 py-12">
-      <Card class="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-md animate-fade-in-up">
-        <CardHeader class="text-center pb-4 pt-8">
-          <div class="mx-auto mb-4 w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Shield class="w-6 h-6 text-primary" />
+      <Card class="w-full max-w-3xl shadow-2xl border-0 bg-card/80 backdrop-blur-md animate-fade-in-up">
+        <CardHeader class="text-center pb-8 pt-14">
+          <div class="mx-auto mb-6 w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center">
+            <Shield class="w-12 h-12 text-primary" />
           </div>
-          <CardTitle class="text-2xl font-bold">注册账号</CardTitle>
-          <CardDescription class="text-base">注册后即可申请供应商或门店入驻</CardDescription>
+          <CardTitle class="text-4xl font-bold">注册账号</CardTitle>
+          <CardDescription class="text-lg">注册后即可申请供应商或门店入驻</CardDescription>
+          <p class="mt-3 text-sm text-amber-600 bg-amber-50 rounded-lg px-4 py-2 text-center">
+            请使用入驻时填写的联系电话注册，否则无法自动认领
+          </p>
         </CardHeader>
-        <CardContent class="px-8 pb-8">
+        <CardContent class="px-14 pb-14">
           <form class="space-y-4" @submit="handleSubmit">
-            <!-- 用户名 -->
+            <!-- 昵称 -->
             <div class="space-y-2">
-              <Label for="reg-username">用户名 <Badge variant="secondary">必填</Badge></Label>
-              <div class="relative">
-                <User class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="reg-username" v-model="form.username" placeholder="请输入用户名" class="pl-10" />
-              </div>
+              <Label for="reg-realname">昵称 <Badge variant="outline">选填</Badge></Label>
+              <Input id="reg-realname" v-model="form.realname" placeholder="给自己起个名字，方便识别" />
             </div>
 
             <!-- 手机号 -->
             <div class="space-y-2">
               <Label for="reg-phone">手机号 <Badge variant="secondary">必填</Badge></Label>
-              <div class="relative">
-                <Phone class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="reg-phone" v-model="form.phone" placeholder="请输入手机号" class="pl-10" maxlength="11" />
-              </div>
+              <Input id="reg-phone" v-model="form.phone" placeholder="请输入手机号" maxlength="11" @blur="handlePhoneBlur" />
+              <p v-if="phoneChecking" class="text-xs text-muted-foreground">检查中...</p>
+              <p v-else-if="form.phone && /^1[3-9]\d{9}$/.test(form.phone) && phoneAvailable" class="text-xs text-emerald-600">手机号可用</p>
             </div>
 
             <!-- 短信验证码 -->
@@ -176,23 +203,24 @@ async function handleSubmit(e: Event) {
             <!-- 密码 -->
             <div class="space-y-2">
               <Label for="reg-pwd">密码 <Badge variant="secondary">必填</Badge></Label>
-              <div class="relative">
-                <Lock class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="reg-pwd" v-model="form.password" type="password" placeholder="请输入密码（至少6位）" class="pl-10" />
-              </div>
+              <Input id="reg-pwd" v-model="form.password" type="password" placeholder="请输入密码（至少6位）" />
             </div>
 
             <!-- 确认密码 -->
             <div class="space-y-2">
               <Label for="reg-pwd2">确认密码 <Badge variant="secondary">必填</Badge></Label>
-              <div class="relative">
-                <Lock class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="reg-pwd2" v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" class="pl-10" />
-              </div>
+              <Input id="reg-pwd2" v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" />
             </div>
 
-            <!-- 消息 -->
-            <p v-if="errorMsg" class="text-sm text-destructive bg-destructive/10 rounded-lg px-4 py-2">{{ errorMsg }}</p>
+            <!-- 错误提示 -->
+            <div v-if="errorMsg" class="flex items-start gap-3 border-2 border-destructive bg-destructive/10 rounded-lg px-4 py-3">
+              <XCircle class="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p class="text-sm font-semibold text-destructive">注册失败</p>
+                <p class="text-sm text-destructive/80 mt-0.5">{{ errorMsg }}</p>
+              </div>
+            </div>
+            <!-- 成功提示 -->
             <p v-if="successMsg" class="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-4 py-2">{{ successMsg }}</p>
 
             <!-- 提交 -->

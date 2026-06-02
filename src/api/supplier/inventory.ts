@@ -24,15 +24,15 @@ enum Api {
 export function listSupplierStocksApi(params: any) {
   return USE_MOCK ? invMock.mockListSupplierStocks(params) : defHttp.get({ url: Api.ListStocks, params });
 }
-export function replenishStockApi(data: { supplierId: string; productId: string; warehouseId?: string; qty: number; remark?: string }) {
-  return USE_MOCK ? invMock.mockReplenishStock(data) : defHttp.post({ url: Api.ReplenishStock, data });
+export function replenishStockApi(data: { supplierId?: string; productId: string; warehouseId?: string; qty: number; remark?: string }) {
+  return USE_MOCK ? invMock.mockReplenishStock({ ...data, supplierId: data.supplierId || '' }) : defHttp.post({ url: Api.ReplenishStock, data });
 }
 export function updateSupplierStockThresholdApi(id: string, warnThreshold: number) {
   return USE_MOCK ? invMock.mockUpdateStockThreshold(id, warnThreshold) : defHttp.put({ url: Api.UpdateAlertQty, data: { id, alertQty: warnThreshold } });
 }
-export function getSupplierStockSummaryApi(supplierId: string) {
+export function getSupplierStockSummaryApi(supplierId?: string) {
   // 后端无库存汇总接口，使用 mock
-  return invMock.mockSupplierStockSummary(supplierId);
+  return invMock.mockSupplierStockSummary(supplierId || '');
 }
 
 // ===== 结算 =====
@@ -43,15 +43,15 @@ export function confirmSupplierSettlementApi(id: string) {
   // 结算确认为管理员操作，供应商侧无此接口，使用 mock
   return invMock.mockConfirmSettlement(id);
 }
-export function getSupplierSettlementSummaryApi(supplierId: string) {
+export function getSupplierSettlementSummaryApi(supplierId?: string) {
   // 后端无结算汇总接口，使用 mock
-  return invMock.mockSupplierSettlementSummary(supplierId);
+  return invMock.mockSupplierSettlementSummary(supplierId || '');
 }
 
 // ===== 资料 =====
-export function getSupplierProfileApi(supplierId: string) {
+export function getSupplierProfileApi(supplierId?: string) {
   // 后端无企业资料独立接口，使用 mock
-  return invMock.mockGetSupplierProfile(supplierId);
+  return invMock.mockGetSupplierProfile(supplierId || '');
 }
 export function updateSupplierProfileApi(patch: Partial<SupplierProfile>) {
   if (USE_MOCK) return invMock.mockUpdateSupplierProfile(patch);

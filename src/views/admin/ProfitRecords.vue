@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * 平台管理员 - 利润记录
- * 全页 v-auth='b2b:profit:view'（路由层已限制，但页内再次确保）
+ * 全页由路由权限 b2b:settlement:profitList 控制。
  */
 import { reactive, ref, onMounted } from 'vue';
 import { TrendingUp, ShoppingBag, Receipt, Percent } from 'lucide-vue-next';

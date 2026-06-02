@@ -15,10 +15,11 @@ import { BasicModal, useModal } from '/@/components/BasicModal';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
 import { TableAction } from '/@/components/TableAction';
 import { deleteMenuApi, listMenusApi, saveMenuApi } from '/@/api/system/menu';
+import { usePermissionStore } from '/@/stores/modules/permission';
 import type { SystemMenu } from '/#/system';
 
 const search = reactive({ name: '' });
-const form = reactive<Partial<SystemMenu>>({
+const DEFAULT_FORM: Partial<SystemMenu> = {
   menuType: 0,
   sortNo: 1,
   route: true,
@@ -29,15 +30,19 @@ const form = reactive<Partial<SystemMenu>>({
   internalOrExternal: false,
   permsType: '1',
   status: '1',
-});
+};
+
+const form = reactive<Partial<SystemMenu>>({ ...DEFAULT_FORM });
 const menuTree = ref<SystemMenu[]>([]);
 const submitting = ref(false);
 const menuModal = useModal<SystemMenu & { mode: 'create' | 'edit' }>();
 const [registerTable, tableAction] = useTable();
+const permissionStore = usePermissionStore();
 
 const isEdit = computed(() => menuModal.data.value?.mode === 'edit');
 const isButton = computed(() => Number(form.menuType) === 2);
 const isTopMenu = computed(() => Number(form.menuType) === 0);
+const hasPerm = (code: string) => permissionStore.getPermCodeList.includes(code);
 
 const columns: BasicColumn[] = [
   { field: 'name', title: '菜单名称', minWidth: 220, treeNode: true },
@@ -61,23 +66,24 @@ function toTreeSelect(nodes: SystemMenu[]): any[] {
 const parentOptions = computed(() => toTreeSelect(menuTree.value));
 
 function resetForm() {
-  Object.keys(form).forEach((key) => delete (form as Recordable)[key]);
-  form.menuType = 0;
-  form.sortNo = 1;
-  form.route = true;
-  form.hidden = false;
-  form.hideTab = false;
-  form.keepAlive = false;
-  form.alwaysShow = false;
-  form.internalOrExternal = false;
-  form.permsType = '1';
-  form.status = '1';
+  // 不能用 delete 破坏 reactive 的响应式追踪
+  // 先将所有可能被 Object.assign 写入的字段清为 undefined，再覆盖默认值
+  const clean: Record<string, any> = {};
+  Object.keys(form).forEach((key) => {
+    clean[key] = undefined;
+  });
+  Object.assign(form, clean, DEFAULT_FORM);
 }
 
 async function loadData() {
   const data = await listMenusApi(search);
   menuTree.value = data || [];
   return { records: menuTree.value, total: menuTree.value.length };
+}
+
+async function refreshCurrentUserMenus() {
+  permissionStore.resetState();
+  await permissionStore.buildRoutesAction();
 }
 
 async function openCreate() {
@@ -125,6 +131,7 @@ async function submitMenu() {
     message.success(isEdit.value ? '菜单已更新' : '菜单已新增');
     menuModal.close();
     tableAction.reload();
+    await refreshCurrentUserMenus();
   } finally {
     submitting.value = false;
   }
@@ -135,6 +142,7 @@ async function deleteMenu(row: SystemMenu) {
   await deleteMenuApi(row.id);
   message.success('菜单已删除');
   tableAction.reload();
+  await refreshCurrentUserMenus();
 }
 
 function onSearch() {
@@ -165,7 +173,7 @@ function menuTypeLabel(type: number) {
           <ChevronRight class="mr-2 h-4 w-4" />
           折叠全部
         </Button>
-        <Button @click="openCreate">
+        <Button v-if="hasPerm('system:permission:add')" @click="openCreate">
           <Plus class="mr-2 h-4 w-4" />
           新增菜单
         </Button>
@@ -193,9 +201,9 @@ function menuTypeLabel(type: number) {
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '编辑', onClick: () => openEdit(row) },
-            { label: '添加下级', hidden: Number(row.menuType) === 2, onClick: () => openAddChild(row) },
-            { label: '删除', variant: 'destructive', onClick: () => deleteMenu(row) },
+            { label: '编辑', authCode: 'system:permission:edit', onClick: () => openEdit(row) },
+            { label: '添加下级', authCode: 'system:permission:add', hidden: Number(row.menuType) === 2, onClick: () => openAddChild(row) },
+            { label: '删除', authCode: 'system:permission:delete', variant: 'destructive', onClick: () => deleteMenu(row) },
           ]"
         />
       </template>
@@ -211,7 +219,7 @@ function menuTypeLabel(type: number) {
       <div class="grid grid-cols-2 gap-4">
         <div class="space-y-2">
           <Label>菜单类型</Label>
-          <ASelect v-model:value="form.menuType" class="w-full">
+          <ASelect v-model:value="form.menuType" class="w-full" :getPopupContainer="(trigger) => trigger?.parentNode">
             <ASelectOption :value="0">一级菜单</ASelectOption>
             <ASelectOption :value="1">子菜单</ASelectOption>
             <ASelectOption :value="2">按钮/权限</ASelectOption>
@@ -223,6 +231,7 @@ function menuTypeLabel(type: number) {
             v-model:value="form.parentId"
             class="w-full"
             :tree-data="parentOptions"
+            :get-popup-container="(trigger) => trigger?.parentNode"
             allow-clear
             tree-default-expand-all
             placeholder="请选择上级菜单"
@@ -254,14 +263,14 @@ function menuTypeLabel(type: number) {
         </div>
         <div v-if="isButton" class="space-y-2">
           <Label>授权策略</Label>
-          <ASelect v-model:value="form.permsType" class="w-full">
+          <ASelect v-model:value="form.permsType" class="w-full" :getPopupContainer="(trigger) => trigger?.parentNode">
             <ASelectOption value="1">可见/可访问</ASelectOption>
             <ASelectOption value="2">可编辑</ASelectOption>
           </ASelect>
         </div>
         <div v-if="isButton" class="space-y-2">
           <Label>状态</Label>
-          <ASelect v-model:value="form.status" class="w-full">
+          <ASelect v-model:value="form.status" class="w-full" :getPopupContainer="(trigger) => trigger?.parentNode">
             <ASelectOption value="1">有效</ASelectOption>
             <ASelectOption value="0">无效</ASelectOption>
           </ASelect>

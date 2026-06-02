@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { onMounted, onUnmounted } from 'vue';
 import { ArrowRight, Eye, EyeOff, Shield, BarChart3, Store, Truck, CreditCard, Users, Building2, Store as StoreIcon } from 'lucide-vue-next';
 import {
@@ -24,6 +24,7 @@ import { ROUTE_PATHS } from '/@/constants/routePaths';
 import type { UserRole } from '/#/user';
 
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
 
 const showPassword = ref(false);
@@ -38,7 +39,7 @@ const form = reactive({
 // update-end--author:claude---date:2026-05-24---for:【修复】登录页移除角色下拉，按用户名自动派发角色
 
 const stats = [
-  { label: '合作景区', value: '120+', icon: 'icon-building' },
+  { label: '合作单位', value: '120+', icon: 'icon-building' },
   { label: '入驻门店', value: '2,800+', icon: 'icon-store' },
   { label: '供应商', value: '450+', icon: 'icon-qiyeruzhu' },
   { label: '月交易额', value: '¥8.5M', icon: 'icon-chart' },
@@ -127,9 +128,9 @@ async function handleLogin(e: Event) {
   errorMsg.value = '';
   isLoading.value = true;
   try {
-    // Mock 阶段：用户名 = 角色键（admin / supplier / store），后端按 username 解析角色
     const user = await userStore.login({ username: form.username.trim(), password: form.password });
-    router.push(ROLE_HOME[user.role]);
+    const redirect = route.query.redirect as string;
+    router.push(redirect || ROLE_HOME[user.role]);
   } catch (err) {
     errorMsg.value = (err as Error).message || '登录失败';
   } finally {
@@ -236,10 +237,6 @@ async function handleLogin(e: Event) {
                     还没有账号？
                     <RouterLink :to="ROUTE_PATHS.REGISTER" class="text-primary font-medium hover:underline">注册账号</RouterLink>
                   </p>
-
-                  <p class="text-center text-sm text-muted-foreground">
-                    演示账号：admin（管理员） / supplier（供应商） / store（门店） / basic（普通用户），密码任意
-                  </p>
                   <!-- update-end--author:claude---date:2026-05-24---for:【修复】移除角色下拉，按用户名自动派发角色 -->
 
                   <!-- update-begin--author:claude---date:2026-05-24---for:【B2B-阶段1】登录页底部入驻入口 -->
@@ -323,14 +320,6 @@ async function handleLogin(e: Event) {
               <Users class="w-5 h-5 mr-2" />
               申请入驻
               <ArrowRight class="w-5 h-5 ml-2" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              class="px-8 py-4 text-lg font-semibold !bg-transparent !border-white/30 !text-white hover:!bg-white/10"
-              @click="featuresSection?.scrollIntoView({ behavior: 'smooth' })"
-            >
-              了解更多
             </Button>
           </div>
         </div>

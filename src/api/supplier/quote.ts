@@ -1,7 +1,7 @@
 /**
  * 阶段 3 - 供应商报价 + 自营商品 API
  * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商报价 API
- * 强制：调用方传入 supplierId（来自 useUserStore.user.supplierId）作为 searchInfo 强制过滤条件
+ * 供应商/门店用户无需传 supplierId，后端按登录用户自动关联
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商报价 API
  */
 import { defHttp } from '/@/api/http';

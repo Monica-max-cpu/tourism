@@ -37,23 +37,40 @@ function joinParentPath(menus: Menu[], parentPath = '') {
   }
 }
 
+/** 递归展开 single 包装项：把 { single:true, children:[realItem] } → realItem */
+function flattenSingleRoutes(items: any[]): any[] {
+  const result: any[] = [];
+  for (const item of items) {
+    if (item.meta?.single) {
+      const realItem = item.children?.[0];
+      if (realItem) {
+        if (realItem.children?.length) {
+          realItem.children = flattenSingleRoutes(realItem.children);
+        }
+        result.push(realItem);
+      }
+    } else {
+      if (item.children?.length) {
+        item.children = flattenSingleRoutes(item.children);
+      }
+      result.push(item);
+    }
+  }
+  return result;
+}
+
 // 将路由转换成菜单
 export function transformRouteToMenu(routeModList: any[], routerMapping = false) {
   const cloneRouteModList = cloneDeep(routeModList);
-  const routeList: any[] = [];
 
   cloneRouteModList.forEach((item) => {
     if (routerMapping && item.meta.hideChildrenInMenu && typeof item.redirect === 'string') {
       item.path = item.redirect;
     }
-
-    if (item.meta?.single) {
-      const realItem = item?.children?.[0];
-      realItem && routeList.push(realItem);
-    } else {
-      routeList.push(item);
-    }
   });
+
+  // 递归展开所有层级的 single 包装
+  const routeList = flattenSingleRoutes(cloneRouteModList);
 
   const list = treeMap(routeList, {
     conversion: (node: any) => {

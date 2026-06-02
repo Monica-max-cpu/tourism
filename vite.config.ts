@@ -55,9 +55,14 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
         '/b2b': {
-          // B2B 联调走 gateway，由网关校验 X-Access-Token 后转发到 cm-cloud-b2b:7015。
-          target: 'http://127.0.0.1:9991',
+          // 直连 B2B 服务，绕过网关
+          target: 'http://127.0.0.1:7015',
           changeOrigin: true,
+          bypass(req) {
+            if (req.headers.accept?.includes('text/html')) {
+              return '/index.html';
+            }
+          },
         },
       },
     },

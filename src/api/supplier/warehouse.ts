@@ -16,7 +16,7 @@ enum Api {
   Edit = '/b2b/supplier/warehouse/edit',
 }
 
-export function listWarehousesApi(params: { supplierId: string; pageNo?: number; pageSize?: number }) {
+export function listWarehousesApi(params: { supplierId?: string; pageNo?: number; pageSize?: number }) {
   return USE_MOCK ? mock.mockListWarehouses(params) : defHttp.get({ url: Api.List, params });
 }
 export function addWarehouseApi(data: Partial<SupplierWarehouse>) {

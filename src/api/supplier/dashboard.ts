@@ -12,7 +12,7 @@
 import { defHttp } from '/@/api/http';
 import { delay } from '/@/mocks/_helpers';
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+const USE_MOCK = true;
 
 export interface SupplierDashboardKpi {
   totalOrders: number;
@@ -52,15 +52,6 @@ function buildMonths(n = 12): string[] {
 }
 
 function mockSupplierDashboard(supplierId: string): Promise<SupplierDashboardData> {
-  if (!supplierId) {
-    return delay({
-      kpi: { totalOrders: 0, totalShipped: 0, totalQuotes: 0, approveRate: 0 },
-      acceptTrend: [],
-      quoteFunnel: { submitted: 0, approved: 0, rejected: 0, conversion: 0 },
-      settleMonthly: [],
-    });
-  }
-
   // 12 周接单趋势
   const acceptTrend: SupplierAcceptPoint[] = Array.from({ length: 12 }, (_, i) => ({
     week: `W${i + 1}`,
@@ -93,8 +84,8 @@ enum Api {
   Dashboard = '/b2b/dashboard/supplier',
 }
 
-export function getSupplierDashboardApi(supplierId: string) {
+export function getSupplierDashboardApi(supplierId?: string) {
   return USE_MOCK
-    ? mockSupplierDashboard(supplierId)
+    ? mockSupplierDashboard(supplierId || 'mock-supplier')
     : defHttp.get<SupplierDashboardData>({ url: Api.Dashboard, params: { supplierId } });
 }

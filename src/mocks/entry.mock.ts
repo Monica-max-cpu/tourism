@@ -2,13 +2,21 @@ import type { UserApplicationStatus } from '/#/b2b';
 
 let userApplicationStatus: UserApplicationStatus = {
   supplier: {
-    merchantType: 'SUPPLIER',
-    reviewStatus: 0,
-    operationStatus: 0,
+    applied: true,
     bindStatus: 0,
-    createTime: '2026-05-29 09:30:00',
+    merchantId: 'mock-sup-001',
+    memberRole: 'OWNER',
+    reviewStatus: 1,
+    operationStatus: 0,
   },
-  store: undefined,
+  store: {
+    applied: true,
+    bindStatus: 0,
+    merchantId: 'mock-str-001',
+    memberRole: 'OWNER',
+    reviewStatus: 1,
+    operationStatus: 0,
+  },
 };
 
 export function setMockUserApplicationStatus(status: UserApplicationStatus) {

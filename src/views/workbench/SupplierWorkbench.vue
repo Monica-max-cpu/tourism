@@ -2,7 +2,7 @@
 /**
  * 供应商工作台
  * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商工作台接入真实统计
- * - 订单/库存/结算汇总通过 API 拉取（按 supplierId）
+ * - 订单/库存/结算汇总通过 API 拉取（后端按登录用户自动关联）
  * - 卡片可点击跳转对应模块
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商工作台接入真实统计
  */
@@ -12,7 +12,6 @@ import { Tags, Truck, Boxes, Wallet, GitMerge, AlertTriangle } from 'lucide-vue-
 import { Card, CardContent, Badge } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { useAuth } from '/@/composables/useAuth';
-import { useUserStore } from '/@/stores/modules/user';
 import { getSupplierOrderSummaryApi } from '/@/api/supplier/order';
 import { getSupplierStockSummaryApi, getSupplierSettlementSummaryApi } from '/@/api/supplier/inventory';
 import { getShipmentSummaryApi } from '/@/api/supplier/shipment';
@@ -20,9 +19,7 @@ import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { formatCurrency } from '/@/utils/format';
 
 const { user } = useAuth();
-const userStore = useUserStore();
 const router = useRouter();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const orderSum = reactive({ triggered: 0, confirmed: 0, shipping: 0, completed: 0 });
 const stockSum = reactive({ total: 0, low: 0, out: 0 });
@@ -30,12 +27,11 @@ const shipSum = reactive({ pending: 0, shipped: 0, delivered: 0, exception: 0 })
 const settleSum = reactive({ pendingAmount: 0, confirmedAmount: 0, paidAmount: 0 });
 
 async function loadAll() {
-  if (!supplierId.value) return;
   const [o, s, sh, st] = await Promise.all([
-    getSupplierOrderSummaryApi(supplierId.value),
-    getSupplierStockSummaryApi(supplierId.value),
-    getShipmentSummaryApi(supplierId.value),
-    getSupplierSettlementSummaryApi(supplierId.value),
+    getSupplierOrderSummaryApi(),
+    getSupplierStockSummaryApi(),
+    getShipmentSummaryApi(),
+    getSupplierSettlementSummaryApi(),
   ]);
   Object.assign(orderSum, o);
   Object.assign(stockSum, s);

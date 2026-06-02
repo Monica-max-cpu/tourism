@@ -17,11 +17,7 @@ import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable
 import { TableAction } from '/@/components/TableAction';
 import { BasicModal, useModal } from '/@/components/BasicModal';
 import { listWarehousesApi, addWarehouseApi, editWarehouseApi, deleteWarehouseApi } from '/@/api/supplier/warehouse';
-import { useUserStore } from '/@/stores/modules/user';
 import type { SupplierWarehouse } from '/#/b2b-supplier';
-
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const [registerTable, { reload }] = useTable();
 
@@ -37,7 +33,7 @@ const columns: BasicColumn[] = [
 ];
 
 async function loadData(params: any) {
-  return await listWarehousesApi({ ...params, supplierId: supplierId.value });
+  return await listWarehousesApi({ ...params });
 }
 
 // 新增 / 编辑弹窗
@@ -78,9 +74,9 @@ async function submitForm() {
   try {
     const target = formModal.data.value;
     if (target) {
-      await editWarehouseApi({ id: target.id, ...form, supplierId: supplierId.value });
+      await editWarehouseApi({ id: target.id, ...form });
     } else {
-      await addWarehouseApi({ ...form, supplierId: supplierId.value });
+      await addWarehouseApi({ ...form });
     }
     formModal.close();
     reload();
@@ -98,7 +94,7 @@ async function onDelete(row: SupplierWarehouse) {
 <template>
   <PageWrapper title="仓库管理" subtitle="维护供应商发货仓库，新建报价时将关联仓库">
     <template #extra>
-      <Button v-auth="'b2b:supplier:product'" @click="openCreate">
+      <Button v-auth="'b2b:supplier:warehouse'" @click="openCreate">
         <Plus class="w-4 h-4 mr-1.5" />新增仓库
       </Button>
     </template>
@@ -110,8 +106,8 @@ async function onDelete(row: SupplierWarehouse) {
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '编辑', onClick: () => openEdit(row) },
-            { label: '删除', variant: 'destructive', onClick: () => onDelete(row) },
+            { label: '编辑', authCode: 'b2b:supplier:warehouse', onClick: () => openEdit(row) },
+            { label: '删除', authCode: 'b2b:supplier:warehouse', variant: 'destructive', onClick: () => onDelete(row) },
           ]"
         />
       </template>

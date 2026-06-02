@@ -27,9 +27,9 @@ const columns: BasicColumn[] = [
   { field: 'collectiveNo', title: '集采单号', width: 160 },
   { field: 'supplierName', title: '供应商', minWidth: 200 },
   { field: 'storeOrderCount', title: '关联门店订单', width: 120, align: 'right', formatter: ({ cellValue }) => `${cellValue} 笔` },
-  { field: 'purchaseAmount', title: '采购金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue), authCode: 'b2b:profit:view' },
+  { field: 'purchaseAmount', title: '采购金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue), authCode: 'b2b:settlement:profitList' },
   { field: 'saleAmount', title: '销售金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'profit', title: '毛利', width: 130, align: 'right', slots: { default: 'profit' }, authCode: 'b2b:profit:view' },
+  { field: 'profit', title: '毛利', width: 130, align: 'right', slots: { default: 'profit' }, authCode: 'b2b:settlement:profitList' },
   { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
   { field: 'triggeredAt', title: '触发时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'action', title: '操作', width: 100, fixed: 'right', slots: { default: 'action' } },
@@ -121,7 +121,7 @@ function onReset() {
           </div>
         </div>
 
-        <div v-auth="'b2b:profit:view'" class="grid grid-cols-3 gap-4 bg-muted/30 rounded-md p-4">
+        <div v-auth="'b2b:settlement:profitList'" class="grid grid-cols-3 gap-4 bg-muted/30 rounded-md p-4">
           <div>
             <div class="text-xs text-muted-foreground">采购金额</div>
             <div class="text-lg font-semibold mt-1">{{ formatCurrency(detailModal.data.value.purchaseAmount) }}</div>

@@ -5,7 +5,7 @@
  */
 import { computed } from 'vue';
 import { Button } from '/@/components/ui';
-import { useUserStore } from '/@/stores/modules/user';
+import { usePermissionStore } from '/@/stores/modules/permission';
 
 interface ActionItem {
   label: string;
@@ -17,12 +17,12 @@ interface ActionItem {
 }
 
 const props = defineProps<{ actions: ActionItem[] }>();
-const userStore = useUserStore();
+const permissionStore = usePermissionStore();
 
 const visibleActions = computed(() =>
   props.actions.filter((a) => {
     if (a.hidden) return false;
-    if (a.authCode && !userStore.getPermissions.includes(a.authCode)) return false;
+    if (a.authCode && !permissionStore.getPermCodeList.includes(a.authCode)) return false;
     return true;
   }),
 );

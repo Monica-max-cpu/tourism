@@ -8,12 +8,12 @@ import * as systemMock from '/@/mocks/system.mock';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
-  List = '/sys/user/listAll',
+  List = '/sys/user/list',
   Save = '/sys/user/add',
   Edit = '/sys/user/edit',
   Delete = '/sys/user/delete',
   QueryUserRole = '/sys/user/queryUserRole',
-  AllRoles = '/sys/role/queryallNoByTenant',
+  AllRoles = '/sys/role/listByTenant',
   ImportExcel = '/sys/user/importExcel',
   ExportXls = '/sys/user/exportXls',
 }
@@ -26,7 +26,7 @@ export async function listUsersApi(params: Recordable): Promise<PageResult<Syste
 
 export function saveUserApi(data: Partial<SystemUser> & Recordable, isUpdate: boolean) {
   if (USE_MOCK) return systemMock.mockSaveUser(data, isUpdate);
-  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, params: data });
+  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, data });
 }
 
 export function deleteUserApi(id: string) {
@@ -39,9 +39,10 @@ export function queryUserRoleApi(userId: string): Promise<string[]> {
   return defHttp.get({ url: Api.QueryUserRole, params: { userid: userId } });
 }
 
-export function queryAllRolesApi(): Promise<SystemRole[]> {
+export async function queryAllRolesApi(): Promise<SystemRole[]> {
   if (USE_MOCK) return systemMock.mockRoles();
-  return defHttp.get({ url: Api.AllRoles });
+  const res = await defHttp.get<any>({ url: Api.AllRoles, params: { pageNo: 1, pageSize: 999 } });
+  return normalizePageResult<SystemRole>(res).records;
 }
 
 export function getUserImportUrl() {

@@ -31,7 +31,7 @@ export function rejectSupplierOrderApi(id: string, reason: string) {
 export function shipSupplierOrderApi(params: ShipParams) {
   return USE_MOCK ? orderMock.mockShipSupplierOrder(params) : defHttp.post({ url: Api.ShipOrder, data: params });
 }
-export function getSupplierOrderSummaryApi(supplierId: string) {
+export function getSupplierOrderSummaryApi(supplierId?: string) {
   // 后端无汇总接口，使用 mock
-  return orderMock.mockSupplierOrderSummary(supplierId);
+  return orderMock.mockSupplierOrderSummary(supplierId || '');
 }

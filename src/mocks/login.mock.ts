@@ -12,18 +12,23 @@ export const mockUsers: Record<UserRole, UserInfo> = {
     email: 'admin@b2b.example.com',
     avatar: '',
     role: 'ADMIN',
+    roleCode: 'admin,b2b_admin',
     permissions: [
       'b2b:supplier:review',
       'b2b:store:review',
       'b2b:quote:review',
       'b2b:catalog:edit',
       'b2b:catalog:shelf',
-      'b2b:payment:confirm',
+      'b2b:payment:pendingList',
+      'b2b:payment:manualConfirm',
       'b2b:collective:trigger',
       'b2b:collective:config',
       'b2b:delivery:exception',
-      'b2b:settlement:pay',
-      'b2b:profit:view',
+      'b2b:settlement:storeList',
+      'b2b:settlement:supplierList',
+      'b2b:settlement:supplierPay',
+      'b2b:settlement:profitList',
+      'b2b:settlement:profitSummary',
     ],
   },
   SUPPLIER: {
@@ -33,6 +38,7 @@ export const mockUsers: Record<UserRole, UserInfo> = {
     email: 'supplier@b2b.example.com',
     avatar: '',
     role: 'SUPPLIER',
+    roleCode: 'b2b_supplier',
     supplierId: 'sup-001',
     permissions: [
       'b2b:supplier:product',
@@ -50,6 +56,7 @@ export const mockUsers: Record<UserRole, UserInfo> = {
     email: 'store@b2b.example.com',
     avatar: '',
     role: 'STORE',
+    roleCode: 'b2b_store',
     storeId: 'str-001',
     permissions: [
       'b2b:store:catalog',
@@ -68,6 +75,7 @@ export const mockUsers: Record<UserRole, UserInfo> = {
     email: 'basic@b2b.example.com',
     avatar: '',
     role: 'BASIC_USER',
+    roleCode: '',
     permissions: [],
   },
 };
@@ -92,6 +100,7 @@ export function mockLogin(params: LoginParams): Promise<LoginResult> {
             email: '',
             avatar: '',
             role: 'BASIC_USER' as UserRole,
+            roleCode: '',
             permissions: [],
           },
         });

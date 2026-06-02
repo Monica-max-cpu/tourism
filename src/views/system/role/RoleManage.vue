@@ -10,6 +10,7 @@ import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable
 import { TableAction } from '/@/components/TableAction';
 import RolePermissionModal from './components/RolePermissionModal.vue';
 import { deleteRoleApi, listRolesApi, saveRoleApi } from '/@/api/system/role';
+import { usePermissionStore } from '/@/stores/modules/permission';
 import type { SystemRole } from '/#/system';
 
 const search = reactive({
@@ -23,7 +24,9 @@ const submitting = ref(false);
 const roleModal = useModal<SystemRole & { mode: 'create' | 'edit' }>();
 const permissionModalRef = ref<InstanceType<typeof RolePermissionModal>>();
 const [registerTable, { reload }] = useTable();
+const permissionStore = usePermissionStore();
 const isEdit = computed(() => roleModal.data.value?.mode === 'edit');
+const hasPerm = (code: string) => permissionStore.getPermCodeList.includes(code);
 
 const columns: BasicColumn[] = [
   { field: 'roleName', title: '角色名称', minWidth: 160 },
@@ -90,7 +93,7 @@ function onReset() {
 <template>
   <PageWrapper title="角色管理" subtitle="维护角色信息并配置菜单与按钮权限">
     <template #extra>
-      <Button @click="openCreate">
+      <Button v-if="hasPerm('system:role:add')" @click="openCreate">
         <Plus class="mr-2 h-4 w-4" />
         新增角色
       </Button>
@@ -111,9 +114,9 @@ function onReset() {
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '授权', onClick: () => permissionModalRef?.open(row.id) },
-            { label: '编辑', onClick: () => openEdit(row) },
-            { label: '删除', variant: 'destructive', onClick: () => deleteRole(row) },
+            { label: '授权', authCode: 'system:permission:saveRole', onClick: () => permissionModalRef?.open(row.id) },
+            { label: '编辑', authCode: 'system:role:edit', onClick: () => openEdit(row) },
+            { label: '删除', authCode: 'system:role:delete', variant: 'destructive', onClick: () => deleteRole(row) },
           ]"
         />
       </template>

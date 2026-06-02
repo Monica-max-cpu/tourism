@@ -19,7 +19,7 @@ export function listMenusApi(params?: Recordable): Promise<SystemMenu[]> {
 
 export function saveMenuApi(data: Partial<SystemMenu> & Recordable, isUpdate: boolean) {
   if (USE_MOCK) return systemMock.mockSaveMenu(data, isUpdate);
-  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, params: data });
+  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, data });
 }
 
 export function deleteMenuApi(id: string) {

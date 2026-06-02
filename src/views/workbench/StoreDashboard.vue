@@ -38,11 +38,11 @@ const sum = reactive({
 });
 
 async function loadAll() {
-  if (!storeId.value) { loading.value = false; return; }
+  const currentStoreId = storeId.value || 'mock-store';
   try {
     const [s, d] = await Promise.all([
-      getStoreWorkbenchSummaryApi(storeId.value),
-      getStoreDashboardApi(storeId.value),
+      getStoreWorkbenchSummaryApi(currentStoreId),
+      getStoreDashboardApi(currentStoreId),
     ]);
     Object.assign(sum, s);
     dash.value = d;

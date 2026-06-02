@@ -14,7 +14,6 @@ import { Card, CardContent, Badge } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicChart, B2B_COLOR_PALETTE, type ChartOption } from '/@/components/ECharts';
 import { useAuth } from '/@/composables/useAuth';
-import { useUserStore } from '/@/stores/modules/user';
 import { getSupplierOrderSummaryApi } from '/@/api/supplier/order';
 import { getSupplierStockSummaryApi, getSupplierSettlementSummaryApi } from '/@/api/supplier/inventory';
 import { getShipmentSummaryApi } from '/@/api/supplier/shipment';
@@ -23,9 +22,7 @@ import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { formatCurrency, formatNumber } from '/@/utils/format';
 
 const { user } = useAuth();
-const userStore = useUserStore();
 const router = useRouter();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const loading = ref(true);
 const dash = ref<SupplierDashboardData | null>(null);
@@ -36,17 +33,13 @@ const shipSum = reactive({ pending: 0, shipped: 0, delivered: 0, exception: 0 })
 const settleSum = reactive({ pendingAmount: 0, confirmedAmount: 0, paidAmount: 0 });
 
 async function loadAll() {
-  if (!supplierId.value) {
-    loading.value = false;
-    return;
-  }
   try {
     const [o, s, sh, st, d] = await Promise.all([
-      getSupplierOrderSummaryApi(supplierId.value),
-      getSupplierStockSummaryApi(supplierId.value),
-      getShipmentSummaryApi(supplierId.value),
-      getSupplierSettlementSummaryApi(supplierId.value),
-      getSupplierDashboardApi(supplierId.value),
+      getSupplierOrderSummaryApi(),
+      getSupplierStockSummaryApi(),
+      getShipmentSummaryApi(),
+      getSupplierSettlementSummaryApi(),
+      getSupplierDashboardApi(),
     ]);
     Object.assign(orderSum, o);
     Object.assign(stockSum, s);

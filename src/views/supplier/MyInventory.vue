@@ -20,23 +20,17 @@ import {
   SUPPLIER_STOCK_HEALTH_LABEL, SUPPLIER_STOCK_HEALTH_VARIANT, SUPPLIER_STOCK_HEALTH_OPTIONS,
 } from '/@/constants/supplierStatus';
 import { formatDateTime } from '/@/utils/format';
-import { useUserStore } from '/@/stores/modules/user';
 import type { SupplierStock } from '/#/b2b-supplier';
 
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const search = reactive({ keyword: '', health: '' });
 const [registerTable, { reload }] = useTable();
 
 /** 从商品档案中补齐库存列表里不存在的商品（虚拟行，availableQty=0） */
 async function mergeProductsIntoStocks(stocks: SupplierStock[]): Promise<SupplierStock[]> {
-  if (!supplierId.value) return stocks;
-
   const stockProductIds = new Set(stocks.map((s) => s.productId));
   const productRes: any = await listSupplierProductsApi({
     pageNo: 1, pageSize: 999,
-    supplierId: supplierId.value,
   });
   const productList: any[] = Array.isArray(productRes) ? productRes : (productRes?.records || []);
   const virtualRows: SupplierStock[] = [];
@@ -65,7 +59,7 @@ async function mergeProductsIntoStocks(stocks: SupplierStock[]): Promise<Supplie
 }
 
 async function loadData(params: any) {
-  const query: any = { ...params, supplierId: supplierId.value };
+  const query: any = { ...params };
   if (search.keyword) query.keyword = search.keyword;
   if (search.health) query.health = search.health;
   const res: any = await listSupplierStocksApi(query);
@@ -112,7 +106,6 @@ async function confirmQty() {
   try {
     const row = qtyModal.data.value as any;
     await replenishStockApi({
-      supplierId: supplierId.value,
       productId: row.productId,
       warehouseId: row.warehouseId || undefined,
       qty: qtyValue.value,

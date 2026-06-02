@@ -20,11 +20,8 @@ import {
   CARRIER_OPTIONS,
 } from '/@/constants/supplierStatus';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
-import { useUserStore } from '/@/stores/modules/user';
 import type { SupplierOrder } from '/#/b2b-supplier';
 
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
@@ -32,7 +29,7 @@ const [registerTable, { reload }] = useTable();
 async function loadData(params: any) {
   return await listSupplierOrdersApi({
     ...params,
-    searchInfo: { ...search, supplierId: supplierId.value, bucket: 'active' },
+    searchInfo: { ...search, bucket: 'active' },
   });
 }
 

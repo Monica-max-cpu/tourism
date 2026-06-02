@@ -2,6 +2,8 @@ import type { RouteRecordRaw } from 'vue-router';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { entryRoutes } from './entry';
 
+const Layout = () => import('/@/components/Layout/BasicLayout.vue');
+
 export const basicRoutes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -45,7 +47,69 @@ export const basicRoutes: RouteRecordRaw[] = [
     component: () => import('/@/views/apply/ApplyResult.vue'),
     meta: { title: '提交成功', hidden: true },
   },
+  {
+    path: ROUTE_PATHS.CLAIM_ONBOARDING,
+    name: 'ClaimOnboarding',
+    component: () => import('/@/views/apply/ClaimOnboarding.vue'),
+    meta: { title: '认领入驻申请', hidden: true },
+  },
   entryRoutes,
+  {
+    path: '/b2b/admin/supplier/:id',
+    name: 'AdminSupplierDetail',
+    component: Layout,
+    meta: { roles: ['ADMIN'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'AdminSupplierDetailContent',
+        component: () => import('/@/views/admin/SupplierDetail.vue'),
+        meta: { title: '供应商入驻详情', icon: 'UserCheck', hideInMenu: true },
+      },
+    ],
+  },
+  {
+    path: '/b2b/admin/store/:id',
+    name: 'AdminStoreDetail',
+    component: Layout,
+    meta: { roles: ['ADMIN'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'AdminStoreDetailContent',
+        component: () => import('/@/views/admin/StoreDetail.vue'),
+        meta: { title: '门店入驻详情', icon: 'Store', hideInMenu: true },
+      },
+    ],
+  },
+  {
+    path: '/b2b/store/orders/:id',
+    name: 'StoreOrderDetail',
+    component: Layout,
+    meta: { roles: ['STORE'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'StoreOrderDetailContent',
+        component: () => import('/@/views/store/OrderDetail.vue'),
+        meta: { title: '订单详情', hideInMenu: true },
+      },
+    ],
+  },
+  {
+    path: '/b2b/store/catalog/:id',
+    name: 'StoreCatalogDetail',
+    component: Layout,
+    meta: { roles: ['STORE'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'StoreCatalogDetailContent',
+        component: () => import('/@/views/store/ProductDetail.vue'),
+        meta: { title: '商品详情', hideInMenu: true },
+      },
+    ],
+  },
   {
     path: ROUTE_PATHS.NOT_FOUND,
     name: 'NotFound',

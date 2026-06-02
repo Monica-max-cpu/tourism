@@ -27,6 +27,101 @@ enum Api {
   GetProfitSummary = '/b2b/profit/summary',
 }
 
+function normalizePage(page: any, normalizeRecord: (row: any) => any = (row) => row) {
+  if (!page?.records) return page;
+  return {
+    ...page,
+    records: page.records.map(normalizeRecord),
+  };
+}
+
+function flattenSearchParams(params: any, keywordField?: string) {
+  const { searchInfo, ...rest } = params || {};
+  const flat = { ...rest, ...(searchInfo || {}) };
+  if (keywordField && flat.keyword) {
+    flat[keywordField] = flat.keyword;
+    delete flat.keyword;
+  }
+  Object.keys(flat).forEach((key) => {
+    if (flat[key] === '' || flat[key] === undefined || flat[key] === null || key === 'keyword') delete flat[key];
+  });
+  return flat;
+}
+
+function toSettlementStatus(status: number | string) {
+  if (status === 1 || status === '1') return 'PAID';
+  if (status === 2 || status === '2') return 'REFUNDED';
+  return 'PENDING';
+}
+
+function fromSettlementStatus(status?: string) {
+  if (status === 'PAID') return 1;
+  if (status === 'REFUNDED') return 2;
+  if (status === 'PENDING') return 0;
+  return undefined;
+}
+
+function normalizeStoreSettlement(row: any) {
+  return {
+    ...row,
+    type: 'STORE',
+    partyName: row.partyName || row.storeName || row.storeId || '-',
+    partyId: row.partyId || row.storeId,
+    periodFrom: row.periodFrom || row.createTime,
+    periodTo: row.periodTo || row.settleTime || row.createTime,
+    orderCount: row.orderCount ?? 1,
+    amount: row.amount ?? row.totalPayable ?? row.settlementAmount ?? 0,
+    status: toSettlementStatus(row.status),
+    generatedAt: row.generatedAt || row.createTime,
+    paidAt: row.paidAt || row.settleTime,
+  };
+}
+
+function normalizeSupplierSettlement(row: any) {
+  return {
+    ...row,
+    type: 'SUPPLIER',
+    partyName: row.partyName || row.supplierName || row.supplierId || '-',
+    partyId: row.partyId || row.supplierId,
+    periodFrom: row.periodFrom || row.createTime,
+    periodTo: row.periodTo || row.settleTime || row.createTime,
+    orderCount: row.orderCount ?? 1,
+    amount: row.amount ?? row.settlementAmount ?? 0,
+    status: toSettlementStatus(row.status),
+    generatedAt: row.generatedAt || row.createTime,
+    paidAt: row.paidAt || row.settleTime,
+  };
+}
+
+function normalizeProfit(row: any) {
+  const rate = Number(row.profitRate ?? 0);
+  return {
+    ...row,
+    collectiveNo: row.collectiveNo || row.collectiveOrderId,
+    productSku: row.productSku || '-',
+    qty: row.qty ?? 1,
+    unit: row.unit || '单',
+    salePrice: row.salePrice ?? row.storeSettlementTotal ?? 0,
+    costPrice: row.costPrice ?? row.supplierSettlementTotal ?? 0,
+    saleAmount: row.saleAmount ?? row.storeSettlementTotal ?? 0,
+    costAmount: row.costAmount ?? row.supplierSettlementTotal ?? 0,
+    profit: row.profit ?? row.grossProfit ?? 0,
+    profitRate: rate <= 1 ? +(rate * 100).toFixed(2) : rate,
+    postedAt: row.postedAt || row.calcTime || row.createTime,
+  };
+}
+
+function normalizeProfitSummary(summary: any) {
+  const rate = Number(summary?.avgProfitRate ?? summary?.profitRate ?? 0);
+  return {
+    totalSale: summary?.totalSale ?? summary?.totalStoreAmount ?? 0,
+    totalCost: summary?.totalCost ?? summary?.totalSupplierAmount ?? 0,
+    totalProfit: summary?.totalProfit ?? summary?.totalGrossProfit ?? 0,
+    profitRate: rate <= 1 ? +(rate * 100).toFixed(2) : rate,
+    orderCount: summary?.orderCount ?? summary?.totalOrders ?? 0,
+  };
+}
+
 // ===== 集采 =====
 export function listPendingCollectiveApi() {
   return USE_MOCK ? collectiveMock.mockListPendingCollective() : defHttp.get({ url: Api.ListPendingCollective });
@@ -58,20 +153,38 @@ export function handleDeliveryExceptionApi(id: string, action: 'retry' | 'cancel
 }
 
 // ===== 结算 =====
-export function listStoreSettlementsApi(params: any) {
-  return USE_MOCK ? fulfillmentMock.mockListStoreSettlements(params) : defHttp.get({ url: Api.ListStoreSettlements, params });
+export async function listStoreSettlementsApi(params: any) {
+  if (USE_MOCK) return fulfillmentMock.mockListStoreSettlements(params);
+  const flat = flattenSearchParams(params);
+  const status = fromSettlementStatus(flat.status);
+  if (status === undefined) delete flat.status;
+  else flat.status = status;
+  const res = await defHttp.get({ url: Api.ListStoreSettlements, params: flat });
+  return normalizePage(res, normalizeStoreSettlement);
 }
-export function listSupplierSettlementsApi(params: any) {
-  return USE_MOCK ? fulfillmentMock.mockListSupplierSettlements(params) : defHttp.get({ url: Api.ListSupplierSettlements, params });
+export async function listSupplierSettlementsApi(params: any) {
+  if (USE_MOCK) return fulfillmentMock.mockListSupplierSettlements(params);
+  const flat = flattenSearchParams(params);
+  const status = fromSettlementStatus(flat.status);
+  if (status === undefined) delete flat.status;
+  else flat.status = status;
+  const res = await defHttp.get({ url: Api.ListSupplierSettlements, params: flat });
+  return normalizePage(res, normalizeSupplierSettlement);
 }
-export function paySettlementApi(id: string) {
-  return USE_MOCK ? fulfillmentMock.mockPaySettlement(id) : defHttp.put({ url: `/b2b/settlement/supplier/pay/${id}` });
+export function paySettlementApi(id: string, actualPaidAmount: number, remark = '') {
+  const query = new URLSearchParams({ actualPaidAmount: String(actualPaidAmount) });
+  if (remark) query.set('remark', remark);
+  return USE_MOCK ? fulfillmentMock.mockPaySettlement(id) : defHttp.put({ url: `/b2b/settlement/supplier/pay/${id}?${query.toString()}` });
 }
 
 // ===== 利润 =====
-export function listProfitsApi(params: any) {
-  return USE_MOCK ? fulfillmentMock.mockListProfits(params) : defHttp.get({ url: Api.ListProfits, params });
+export async function listProfitsApi(params: any) {
+  if (USE_MOCK) return fulfillmentMock.mockListProfits(params);
+  const res = await defHttp.get({ url: Api.ListProfits, params: flattenSearchParams(params, 'collectiveOrderId') });
+  return normalizePage(res, normalizeProfit);
 }
-export function getProfitSummaryApi() {
-  return USE_MOCK ? fulfillmentMock.mockGetProfitSummary() : defHttp.get({ url: Api.GetProfitSummary });
+export async function getProfitSummaryApi() {
+  if (USE_MOCK) return fulfillmentMock.mockGetProfitSummary();
+  const res = await defHttp.get({ url: Api.GetProfitSummary });
+  return normalizeProfitSummary(res);
 }

@@ -6,11 +6,13 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 
 export type LayoutMapKey = 'LAYOUT';
 const IFRAME = () => import('/@/views/sys/iframe/FrameBlank.vue');
+const ROUTE_VIEW = () => import('/@/views/sys/RouteView.vue');
 
 const LayoutMap = new Map<string, () => Promise<typeof import('*.vue')>>();
 LayoutMap.set('LAYOUT', LAYOUT);
 LayoutMap.set('IFRAME', IFRAME);
 LayoutMap.set('LAYOUTS/DEFAULT/INDEX', LAYOUT);
+LayoutMap.set('LAYOUTS/ROUTEVIEW', ROUTE_VIEW);
 
 let dynamicViewsModules: Record<string, () => Promise<Recordable>>;
 
@@ -95,8 +97,10 @@ export function transformObjToRoute<T = AppRouteRecordRaw>(routeList: AppRouteRe
   routeList.forEach((route) => {
     const component = route.component as string;
     if (component) {
-      if (component.toUpperCase() === 'LAYOUT') {
-        route.component = LayoutMap.get(component.toUpperCase());
+      const normalizedComp = component.replace(/^\//, '').toUpperCase();
+      const layoutFound = LayoutMap.get(normalizedComp);
+      if (layoutFound) {
+        route.component = layoutFound;
       } else {
         route.children = [cloneDeep(route as any)];
         route.component = LAYOUT;
@@ -122,7 +126,7 @@ export function addSlashToRouteComponent(routeList: AppRouteRecordRaw[]) {
   routeList.forEach((route) => {
     let component = route.component as string;
     if (component) {
-      const layoutFound = LayoutMap.get(component);
+      const layoutFound = LayoutMap.get(component.toUpperCase());
       if (!layoutFound) {
         route.component = component.startsWith('/') ? component : `/${component}`;
       }

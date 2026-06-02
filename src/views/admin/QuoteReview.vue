@@ -48,7 +48,7 @@ const columns: BasicColumn[] = [
   { field: 'productName', title: '商品名称', width: 200 },
    { field: 'minOrderQty', title: '起订量', width: 100, align: 'center' },
   { field: 'basePrice', title: '报价', width: 90, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'minOrderQty', title: '档位', width: 100, align: 'center', formatter: ({ row }) => {
+  { field: 'tierSummary', title: '档位', width: 100, align: 'center', formatter: ({ row }) => {
     return row.tiers && row.tiers.length > 0 ? `${row.tiers.length} 档` : '-';
   } },
   { field: 'tiers', title: '档位详情', width: 280, formatter: ({ row }) => {

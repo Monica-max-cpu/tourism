@@ -46,13 +46,20 @@ export const useUserStore = defineStore({
       return !!state.token && !!state.user;
     },
     isAdmin(state): boolean {
-      return state.user?.role === 'ADMIN';
+      const rc = state.user?.roleCode || '';
+      return rc.includes('admin') || rc.includes('b2b_admin');
     },
     isSupplier(state): boolean {
-      return state.user?.role === 'SUPPLIER';
+      const rc = state.user?.roleCode || '';
+      return rc.includes('b2b_supplier');
     },
     isStore(state): boolean {
-      return state.user?.role === 'STORE';
+      const rc = state.user?.roleCode || '';
+      return rc.includes('b2b_store');
+    },
+    isBasicUser(state): boolean {
+      const rc = state.user?.roleCode || '';
+      return !rc.includes('admin') && !rc.includes('b2b_admin') && !rc.includes('b2b_supplier') && !rc.includes('b2b_store');
     },
   },
   actions: {
@@ -68,13 +75,27 @@ export const useUserStore = defineStore({
       const { token, user } = await loginApi(params);
       this.setToken(token);
       this.setUserInfo(user);
-      // 登录接口不返回权限，补调 getUserInfo 拿权限
+      // 登录接口不返回权限/角色码/店铺ID，补调 getUserInfo 拿
       try {
         const info = await getUserInfoApi();
+        let changed = false;
         if (info.permissions && info.permissions.length > 0) {
           user.permissions = info.permissions;
-          this.setUserInfo(user);
+          changed = true;
         }
+        if (!user.roleCode && info.roleCode) {
+          user.roleCode = info.roleCode;
+          changed = true;
+        }
+        if (!user.supplierId && info.supplierId) {
+          user.supplierId = info.supplierId;
+          changed = true;
+        }
+        if (!user.storeId && info.storeId) {
+          user.storeId = info.storeId;
+          changed = true;
+        }
+        if (changed) this.setUserInfo(user);
       } catch {
         // 拿不到权限不阻塞登录
       }
@@ -96,6 +117,8 @@ export const useUserStore = defineStore({
       } catch {
         // 忽略登出接口异常
       }
+      const { usePermissionStore } = await import('/@/stores/modules/permission');
+      usePermissionStore().resetState();
       this.user = null;
       this.token = '';
       clearAuth();

@@ -2,23 +2,21 @@
 /**
  * 平台管理员 - 门店结算（应收）
  */
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 import {
   Badge, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
-import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
-import { listStoreSettlementsApi, paySettlementApi } from '/@/api/admin/fulfillment';
+import { listStoreSettlementsApi } from '/@/api/admin/fulfillment';
 import { SETTLEMENT_STATUS_LABEL, SETTLEMENT_STATUS_VARIANT, SETTLEMENT_STATUS_OPTIONS } from '/@/constants/b2b2cStatus';
 import { formatCurrency, formatDate, formatDateTime } from '/@/utils/format';
-import type { SettlementRecord } from '/#/b2b-2c';
+import type { SettlementStatus } from '/#/b2b-2c';
 
 const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
-const submitting = ref(false);
 
 async function loadData(params: any) {
   return await listStoreSettlementsApi({ ...params, searchInfo: { ...search } });
@@ -33,17 +31,14 @@ const columns: BasicColumn[] = [
   { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
   { field: 'generatedAt', title: '生成时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'paidAt', title: '到账时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'action', title: '操作', width: 130, fixed: 'right', slots: { default: 'action' } },
 ];
 
-async function pay(row: SettlementRecord) {
-  submitting.value = true;
-  try {
-    await paySettlementApi(row.id);
-    reload();
-  } finally {
-    submitting.value = false;
-  }
+function settlementStatusLabel(status: SettlementStatus) {
+  return SETTLEMENT_STATUS_LABEL[status] || status || '-';
+}
+
+function settlementStatusVariant(status: SettlementStatus) {
+  return SETTLEMENT_STATUS_VARIANT[status] || 'warning';
 }
 
 function onSearch() { reload({ pageNo: 1 }); }
@@ -74,14 +69,7 @@ function onReset() {
 
     <BasicTable :columns="columns" :api="loadData" row-key="id" @register="registerTable">
       <template #status="{ row }">
-        <Badge :variant="SETTLEMENT_STATUS_VARIANT[row.status]">{{ SETTLEMENT_STATUS_LABEL[row.status] }}</Badge>
-      </template>
-      <template #action="{ row }">
-        <TableAction
-          :actions="[
-            { label: '标记到账', authCode: 'b2b:settlement:pay', hidden: row.status !== 'CONFIRMED', onClick: () => pay(row) },
-          ]"
-        />
+        <Badge :variant="settlementStatusVariant(row.status)">{{ settlementStatusLabel(row.status) }}</Badge>
       </template>
     </BasicTable>
   </PageWrapper>

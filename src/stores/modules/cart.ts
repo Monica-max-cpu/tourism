@@ -16,16 +16,22 @@ function matchTierPrice(qty: number, basePrice: number, tiers?: CatalogTier[]): 
   return match ? match.unitPrice : basePrice;
 }
 
+const DEFAULT_CART_KEY = '__default__';
+
 interface CartState {
   storeId: string;
   items: CartItem[];
   selectedIds: string[];
+  _loaded: boolean;
+}
+
+function storageKey(storeId: string): string {
+  return STORAGE_PREFIX + (storeId || DEFAULT_CART_KEY);
 }
 
 function readStorage(storeId: string): CartItem[] {
-  if (!storeId) return [];
   try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + storeId);
+    const raw = localStorage.getItem(storageKey(storeId));
     return raw ? (JSON.parse(raw) as CartItem[]) : [];
   } catch {
     return [];
@@ -33,9 +39,8 @@ function readStorage(storeId: string): CartItem[] {
 }
 
 function writeStorage(storeId: string, items: CartItem[]) {
-  if (!storeId) return;
   try {
-    localStorage.setItem(STORAGE_PREFIX + storeId, JSON.stringify(items));
+    localStorage.setItem(storageKey(storeId), JSON.stringify(items));
   } catch {
     /* ignore */
   }
@@ -47,6 +52,7 @@ export const useCartStore = defineStore({
     storeId: '',
     items: [],
     selectedIds: [],
+    _loaded: false,
   }),
   getters: {
     getItems(state): CartItem[] {
@@ -88,8 +94,10 @@ export const useCartStore = defineStore({
   },
   actions: {
     init(storeId: string) {
+      if (this._loaded) return;
       this.storeId = storeId || '';
       this.items = readStorage(this.storeId);
+      this._loaded = true;
       const ids = new Set(this.items.map((x) => x.catalogId));
       this.selectedIds = this.selectedIds.filter((id) => ids.has(id));
     },

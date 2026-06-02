@@ -6,15 +6,11 @@ import { Button, Card, CardContent, Input, Label, Badge } from '/@/components/ui
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '/@/components/ui'
 import { PageWrapper } from '/@/components/PageWrapper'
 import { saveSupplierProductApi, listSupplierProductsApi } from '/@/api/supplier/quote'
-import { useUserStore } from '/@/stores/modules/user'
 import { ROUTE_PATHS } from '/@/constants/routePaths'
 import type { SupplierProduct } from '/#/b2b-supplier'
 
 const router = useRouter()
 const route = useRoute()
-const userStore = useUserStore()
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '')
-
 const isEdit = computed(() => !!route.params.id)
 const productId = computed(() => (route.params.id as string) || '')
 const pageTitle = computed(() => isEdit.value ? '编辑商品' : '新建商品')
@@ -82,7 +78,7 @@ async function loadProduct() {
   if (!isEdit.value) return
   loading.value = true
   try {
-    const result: any = await listSupplierProductsApi({ pageNo: 1, pageSize: 200, supplierId: supplierId.value })
+    const result: any = await listSupplierProductsApi({ pageNo: 1, pageSize: 200 })
     const product = result.records?.find((p: SupplierProduct) => p.id === productId.value)
     if (product) {
       Object.assign(form, {
@@ -116,7 +112,6 @@ async function handleSubmit() {
   try {
     await saveSupplierProductApi({
       id: isEdit.value ? productId.value : '',
-      supplierId: supplierId.value,
       productName: form.productName,
       unit: form.unit,
       brand: form.brand,

@@ -25,7 +25,7 @@ export function updateTrackingApi(id: string, carrier: string, trackingNo: strin
   // 后端无单独更新物流信息接口，使用 mock
   return shipmentMock.mockUpdateTracking(id, carrier, trackingNo);
 }
-export function getShipmentSummaryApi(supplierId: string) {
+export function getShipmentSummaryApi(supplierId?: string) {
   // 后端无发货汇总接口，使用 mock
-  return shipmentMock.mockSupplierShipmentSummary(supplierId);
+  return shipmentMock.mockSupplierShipmentSummary(supplierId || '');
 }

@@ -39,7 +39,7 @@ export async function listDictsApi(params: Recordable): Promise<PageResult<Syste
 
 export function saveDictApi(data: Partial<SystemDict> & Recordable, isUpdate: boolean) {
   if (USE_MOCK) return systemMock.mockSaveDict(data, isUpdate);
-  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, params: data });
+  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, data });
 }
 
 export function deleteDictApi(id: string) {
@@ -61,7 +61,7 @@ export async function listDictItemsApi(params: Recordable): Promise<PageResult<S
 export function saveDictItemApi(data: Partial<SystemDictItem> & Recordable, dictId: string, isUpdate: boolean) {
   const payload = normalizeDictItemPayload(data, dictId);
   if (USE_MOCK) return systemMock.mockSaveDictItem(payload, isUpdate);
-  return defHttp.post({ url: isUpdate ? Api.ItemEdit : Api.ItemSave, params: payload });
+  return defHttp.post({ url: isUpdate ? Api.ItemEdit : Api.ItemSave, data: payload });
 }
 
 export function deleteDictItemApi(id: string) {

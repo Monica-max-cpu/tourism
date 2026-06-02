@@ -4,7 +4,7 @@
  * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段5】AdminDashboard
  * - KPI 4 卡 + 销售/采购/毛利趋势折线 + 供应商分布饼 + Top10 SKU 柱
  * - 兼容原 AdminWorkbench 的待办区与风险提醒
- * - 利润口径用 v-auth='b2b:profit:view' 控制
+ * - 利润口径用 v-auth='b2b:settlement:profitList' 控制
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段5】AdminDashboard
  */
 import { ref, computed, onMounted } from 'vue';
@@ -116,7 +116,7 @@ const kpi = computed(() => data.value?.kpi);
 
     <!-- KPI 区 — 浮在 Hero 上 -->
      <section class="-mt-16 relative z-10 mb-6">
-    <!-- <section class="-mt-16 relative z-10 mb-6" v-auth="'b2b:profit:view'"> -->
+    <!-- <section class="-mt-16 relative z-10 mb-6" v-auth="'b2b:settlement:profitList'"> -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
         <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0s">
           <CardContent class="py-16 px-3">
@@ -186,7 +186,7 @@ const kpi = computed(() => data.value?.kpi);
               <TrendingUp class="w-4 h-4 text-primary" />
               销售 / 采购 / 毛利 趋势
             </h3>
-            <Button variant="outline" size="sm" v-auth="'b2b:profit:view'">查看明细</Button>
+            <Button variant="outline" size="sm" v-auth="'b2b:settlement:profitList'">查看明细</Button>
           </div>
           <BasicChart :option="trendOption" :loading="loading" :height="300" />
         </CardContent>

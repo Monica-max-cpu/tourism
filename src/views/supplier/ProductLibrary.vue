@@ -4,7 +4,7 @@
  * - 维护本供应商 SKU 主数据，作为新建报价时的来源
  * - 新建/编辑跳转至 ProductForm 二级页面
  */
-import { reactive, computed } from 'vue';
+import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { Plus } from 'lucide-vue-next';
 import {
@@ -20,19 +20,17 @@ import {
   SUPPLIER_PRODUCT_STATUS_LABEL, SUPPLIER_PRODUCT_STATUS_VARIANT, SUPPLIER_PRODUCT_STATUS_OPTIONS,
 } from '/@/constants/supplierStatus';
 import { formatDateTime } from '/@/utils/format';
-import { useUserStore } from '/@/stores/modules/user';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import type { SupplierProduct } from '/#/b2b-supplier';
 
 const router = useRouter();
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
+
 
 const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
-  return await listSupplierProductsApi({ ...params, supplierId: supplierId.value, ...search });
+  return await listSupplierProductsApi({ ...params, ...search });
 }
 
 const columns: BasicColumn[] = [

@@ -7,7 +7,6 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '/
 import { PageWrapper } from '/@/components/PageWrapper'
 import { ROUTE_PATHS } from '/@/constants/routePaths'
 import { formatCurrency } from '/@/utils/format'
-import { useUserStore } from '/@/stores/modules/user'
 import type { SupplierQuoteRecord, SupplierProduct, QuoteTier } from '/#/b2b-supplier'
 import {
   listSupplierQuotesApi, createSupplierQuoteApi, updateSupplierQuoteApi, listSupplierProductsApi,
@@ -15,9 +14,6 @@ import {
 
 const router = useRouter()
 const route = useRoute()
-const userStore = useUserStore()
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '')
-
 const isEdit = computed(() => !!route.params.id)
 const quoteId = computed(() => (route.params.id as string) || '')
 const pageTitle = computed(() => isEdit.value ? '编辑报价' : '新建报价')
@@ -71,7 +67,7 @@ function onProductChange(v: string) {
 async function loadProductOptions() {
   try {
     const { records } = await listSupplierProductsApi({
-      pageNo: 1, pageSize: 200, supplierId: supplierId.value, status: '1',
+      pageNo: 1, pageSize: 200, status: '1',
     })
     productOptions.value = records || []
   } catch { productOptions.value = [] }
@@ -81,7 +77,7 @@ async function loadQuote() {
   if (!isEdit.value) return
   loading.value = true
   try {
-    const res: any = await listSupplierQuotesApi({ pageNo: 1, pageSize: 200, supplierId: supplierId.value })
+    const res: any = await listSupplierQuotesApi({ pageNo: 1, pageSize: 200 })
     const list = Array.isArray(res) ? res : (res.records || [])
     const record = list.find((item: any) => {
       const q = item.quote || item
@@ -131,7 +127,7 @@ async function handleSubmit() {
       } as any)
     } else {
       await createSupplierQuoteApi({
-        supplierId: supplierId.value, productId: form.productId,
+        productId: form.productId,
         minOrderQty: form.minOrderQty, basePrice: form.basePrice,
         validFrom: form.validFrom + ' 00:00:00', validTo: form.validTo + ' 00:00:00',
         currency: form.currency, leadTimeDays: form.leadTimeDays,

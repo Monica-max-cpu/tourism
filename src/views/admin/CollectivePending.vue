@@ -32,8 +32,8 @@ const columns: BasicColumn[] = [
   { field: 'orderCount', title: '关联订单', width: 90, align: 'right', formatter: ({ cellValue }) => `${cellValue} 笔` },
   { field: 'totalQty', title: '累计数量', width: 110, align: 'right', formatter: ({ cellValue, row }) => `${formatNumber(cellValue)} ${row.unit}` },
   { field: 'saleAmount', title: '销售额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'bestCostPrice', title: '最优成本价', width: 110, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue), authCode: 'b2b:profit:view' },
-  { field: 'estimatedProfit', title: '预估毛利', width: 130, align: 'right', slots: { default: 'profit' }, authCode: 'b2b:profit:view' },
+  { field: 'bestCostPrice', title: '最优成本价', width: 110, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue), authCode: 'b2b:settlement:profitList' },
+  { field: 'estimatedProfit', title: '预估毛利', width: 130, align: 'right', slots: { default: 'profit' }, authCode: 'b2b:settlement:profitList' },
   { field: 'hoursSinceLast', title: '间隔时长', width: 100, slots: { default: 'hours' } },
   { field: 'reachedThreshold', title: '触发标识', width: 110, slots: { default: 'flag' } },
 ];
@@ -104,7 +104,7 @@ onMounted(() => {});
           </div>
         </CardContent>
       </Card>
-      <Card v-auth="'b2b:profit:view'">
+      <Card v-auth="'b2b:settlement:profitList'">
         <CardContent class="p-5">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">

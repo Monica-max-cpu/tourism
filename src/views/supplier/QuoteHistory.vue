@@ -4,7 +4,7 @@
  * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商报价历史
  * - 只读视图，展示已下架/驳回/过期/已通过的所有历史报 * - 仅本供应商数 * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商报价历史
  */
-import { reactive, computed } from 'vue';
+import { reactive } from 'vue';
 import {
   Badge, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -17,16 +17,12 @@ import {
   SUPPLIER_QUOTE_STATUS_LABEL, SUPPLIER_QUOTE_STATUS_VARIANT, SUPPLIER_QUOTE_STATUS_OPTIONS,
 } from '/@/constants/supplierStatus';
 import { formatCurrency, formatDate, formatDateTime } from '/@/utils/format';
-import { useUserStore } from '/@/stores/modules/user';
-
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
-  const res: any = await listSupplierQuotesApi({ ...params, supplierId: supplierId.value, ...search });
+  const res: any = await listSupplierQuotesApi({ ...params, ...search });
   const list = Array.isArray(res) ? res : (res.records || []);
   const records = list.map((item: any) => {
     const q = item.quote || item;

@@ -9,6 +9,7 @@ export const ROUTE_PATHS = {
   APPLY_SUPPLIER: '/apply/supplier',
   APPLY_STORE: '/apply/store',
   APPLY_RESULT: '/apply/result',
+  CLAIM_ONBOARDING: '/claim-onboarding',
 
   // 登录后入驻入口
   ENTRY: '/entry',

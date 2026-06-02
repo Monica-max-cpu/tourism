@@ -6,13 +6,13 @@
  *  - trend: 近 12 月 sales / cost / profit 三条折线
  *  - supplierShare: 供应商交易额分布（饼，TOP6 + 其他）
  *  - topSkus: 销量 Top10 SKU（柱）
- * 注：admin 看板含 costPrice/profit，前端用 v-auth='b2b:profit:view' 控制可见性
+ * 注：admin 看板含 costPrice/profit，前端用 v-auth='b2b:settlement:profitList' 控制可见性
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段5】admin dashboard
  */
 import { defHttp } from '/@/api/http';
 import { delay, MOCK_DATA } from '/@/mocks/_helpers';
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+const USE_MOCK = true;
 
 export interface AdminDashboardKpi {
   totalSales: number;

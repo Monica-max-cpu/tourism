@@ -26,16 +26,13 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
   // update-begin--author:phase7---date:2026-05-25---for:【阶段7】适配 JeecgBoot 返回结构
   const res = await defHttp.post<any>({ url: Api.Login, data: params });
   const raw = res.userInfo ?? res.user ?? {};
-  // JeecgBoot 角色在 roleList[0]，可能为空（用户未分配角色）
+  // 角色码（逗号分隔的字符串），优先从 userInfo.roleCode 取
+  const roleCode: string = raw.roleCode || res.roleCode || '';
+  // 基于 roleCode 判定角色
   const resolveRole = (): UserInfo['role'] => {
-    const codes = (res.roleList?.length ? res.roleList : [raw.role || raw.username || '']).map((s: string) => s.toUpperCase());
-    for (const code of codes) {
-      if (code === 'STOREUSER') return 'STORE';
-      if (code === 'ADMIN' || code === 'SUPPLIER' || code === 'STORE') return code;
-      if (code.includes('ADMIN')) return 'ADMIN';
-      if (code.includes('SUPPLIER')) return 'SUPPLIER';
-      if (code.includes('STORE')) return 'STORE';
-    }
+    if (roleCode.includes('admin') || roleCode.includes('b2b_admin')) return 'ADMIN';
+    if (roleCode.includes('b2b_supplier')) return 'SUPPLIER';
+    if (roleCode.includes('b2b_store')) return 'STORE';
     return 'BASIC_USER';
   };
   // 权限提取：JeecgBoot 可能在 userInfo.permissionList / res.permissions / raw.perms 等字段
@@ -47,7 +44,21 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
     // 后端未返回权限时，ADMIN 兜底完整权限，其他角色空数组
     const role = resolveRole();
     if (role === 'ADMIN') {
-      return ['b2b:supplier:review', 'b2b:store:review', 'b2b:quote:review', 'b2b:catalog:edit', 'b2b:admin:dashboard', 'b2b:admin:fulfillment'];
+      return [
+        'b2b:supplier:review',
+        'b2b:store:review',
+        'b2b:quote:review',
+        'b2b:catalog:edit',
+        'b2b:payment:pendingList',
+        'b2b:payment:manualConfirm',
+        'b2b:settlement:storeList',
+        'b2b:settlement:supplierList',
+        'b2b:settlement:supplierPay',
+        'b2b:settlement:profitList',
+        'b2b:settlement:profitSummary',
+        'b2b:admin:dashboard',
+        'b2b:admin:fulfillment',
+      ];
     }
     return [];
   };
@@ -61,6 +72,9 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
       email: raw.email || '',
       avatar: raw.avatar || '',
       role: resolveRole(),
+      roleCode: roleCode || undefined,
+      supplierId: raw.supplierId || raw.supplier_id || undefined,
+      storeId: raw.storeId || raw.store_id || undefined,
       permissions: resolvePermissions(),
     },
   };
@@ -77,6 +91,7 @@ export interface RegisterParams {
   password: string;
   phone: string;
   smscode: string;
+  realname?: string;
 }
 
 /** 注册 */
@@ -117,17 +132,38 @@ export async function getUserInfoApi(): Promise<UserInfo> {
     return Promise.reject(new Error('未登录'));
   }
   const raw = await defHttp.get<any>({ url: Api.GetUserInfo });
+  const roleCode: string = raw.roleCode || '';
   // 提取权限，兜底同 loginApi
   const resolvePerms = (): string[] => {
     const candidates = [raw.permissionList, raw.permissions, raw.perms, raw.authList];
     for (const c of candidates) {
       if (Array.isArray(c) && c.length > 0) return c;
     }
-    const code = (raw.role || raw.username || '').toUpperCase();
-    if (code === 'ADMIN') {
-      return ['b2b:supplier:review', 'b2b:store:review', 'b2b:quote:review', 'b2b:catalog:edit', 'b2b:admin:dashboard', 'b2b:admin:fulfillment'];
+    if (roleCode.includes('admin') || roleCode.includes('b2b_admin')) {
+      return [
+        'b2b:supplier:review',
+        'b2b:store:review',
+        'b2b:quote:review',
+        'b2b:catalog:edit',
+        'b2b:payment:pendingList',
+        'b2b:payment:manualConfirm',
+        'b2b:settlement:storeList',
+        'b2b:settlement:supplierList',
+        'b2b:settlement:supplierPay',
+        'b2b:settlement:profitList',
+        'b2b:settlement:profitSummary',
+        'b2b:admin:dashboard',
+        'b2b:admin:fulfillment',
+      ];
     }
     return [];
+  };
+  // 基于 roleCode 判定角色
+  const resolveRole = (): UserInfo['role'] => {
+    if (roleCode.includes('admin') || roleCode.includes('b2b_admin')) return 'ADMIN';
+    if (roleCode.includes('b2b_supplier')) return 'SUPPLIER';
+    if (roleCode.includes('b2b_store')) return 'STORE';
+    return 'BASIC_USER';
   };
   return {
     id: raw.id || '',
@@ -135,7 +171,10 @@ export async function getUserInfoApi(): Promise<UserInfo> {
     realName: raw.realname || raw.realName || '',
     email: raw.email || '',
     avatar: raw.avatar || '',
-    role: raw.role || 'BASIC_USER',
+    role: resolveRole(),
+    roleCode: roleCode || undefined,
+    supplierId: raw.supplierId || raw.supplier_id || undefined,
+    storeId: raw.storeId || raw.store_id || undefined,
     permissions: resolvePerms(),
   };
 }

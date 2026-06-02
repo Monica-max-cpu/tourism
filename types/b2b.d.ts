@@ -147,15 +147,12 @@ export interface CatalogTier {
 }
 
 export interface MerchantApplicationStatus {
-  merchantType: MerchantType;
-  merchantId?: string;
-  name?: string;
+  applied: boolean;
+  bindStatus: BindStatus | null;
+  merchantId: string | null;
+  memberRole?: 'OWNER' | 'MEMBER' | null;
   reviewStatus?: ReviewStatus;
   operationStatus?: OperationStatus;
-  bindStatus?: BindStatus;
-  reviewRemark?: string;
-  createTime?: string;
-  reviewTime?: string;
 }
 
 export interface UserApplicationStatus {

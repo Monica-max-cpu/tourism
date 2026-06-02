@@ -3,7 +3,7 @@
  * 供应商 - 待确认集采单
  * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商待确认订 * - 仅展status=TRIGGERED 的订单（bucket=pending * - 操作：确认接单（CONFIRMED/ 拒绝（→ CANCELLED 并写reason * - 仅展示成本价；不展示销售价/毛利
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商待确认订 */
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref } from 'vue';
 import {
   Badge, Button, Input, Label,
   Card, CardContent,
@@ -18,11 +18,8 @@ import {
   SUPPLIER_ORDER_STATUS_LABEL, SUPPLIER_ORDER_STATUS_VARIANT,
 } from '/@/constants/supplierStatus';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
-import { useUserStore } from '/@/stores/modules/user';
 import type { SupplierOrder } from '/#/b2b-supplier';
 
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const search = reactive({ keyword: '' });
 const [registerTable, { reload }] = useTable();
@@ -30,7 +27,7 @@ const [registerTable, { reload }] = useTable();
 async function loadData(params: any) {
   return await listSupplierOrdersApi({
     ...params,
-    searchInfo: { ...search, supplierId: supplierId.value, bucket: 'pending' },
+    searchInfo: { ...search, bucket: 'pending' },
   });
 }
 

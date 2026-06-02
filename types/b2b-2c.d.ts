@@ -103,7 +103,7 @@ export interface DeliveryRecord {
 }
 
 // ===== 结算 =====
-export type SettlementStatus = 'PENDING' | 'CONFIRMED' | 'PAID';
+export type SettlementStatus = 'PENDING' | 'CONFIRMED' | 'PAID' | 'REFUNDED';
 export type SettlementType = 'STORE' | 'SUPPLIER';
 
 export interface SettlementRecord {

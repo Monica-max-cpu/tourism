@@ -43,9 +43,15 @@ export const OPERATION_STATUS_OPTIONS = [
 ];
 
 export const BIND_STATUS_LABEL: Record<BindStatus, string> = {
-  0: '待绑定',
+  0: '待审核',
   1: '已绑定',
   2: '已解绑',
+};
+
+export const AUTH_TYPE_LABEL: Record<string, string> = {
+  SUPPLIER: '供应商',
+  MERCHANT: '商户',
+  PERSONAL: '个人',
 };
 
 export const SUPPLIER_STORE_TYPE_LABEL: Record<SupplierStoreType, string> = {
@@ -83,7 +89,7 @@ export function isOperationEnabled(status: OperationStatus | number): boolean {
 }
 
 export function isOperationDisabled(status: OperationStatus | number): boolean {
-  return status === 2;
+  return status === 0 || status === 2;
 }
 
 // ===== 入驻审核状态 =====

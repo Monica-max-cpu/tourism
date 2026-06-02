@@ -6,13 +6,14 @@ import { useUserStore } from '/@/stores/modules/user';
 
 export function useAuth() {
   const userStore = useUserStore();
-  const { user, token, isAdmin, isSupplier, isStore, isLoggedIn } = storeToRefs(userStore);
+  const { user, token, isAdmin, isSupplier, isStore, isBasicUser, isLoggedIn } = storeToRefs(userStore);
   return {
     user,
     token,
     isAdmin,
     isSupplier,
     isStore,
+    isBasicUser,
     isLoggedIn,
     login: userStore.login,
     logout: userStore.logout,

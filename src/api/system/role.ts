@@ -7,6 +7,7 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
   List = '/sys/role/list',
+  ListByTenant = '/sys/role/listByTenant',
   Save = '/sys/role/add',
   Edit = '/sys/role/edit',
   Delete = '/sys/role/delete',
@@ -17,13 +18,13 @@ enum Api {
 
 export async function listRolesApi(params: Recordable): Promise<PageResult<SystemRole>> {
   if (USE_MOCK) return systemMock.mockListRoles(params);
-  const res = await defHttp.get<any>({ url: Api.List, params });
+  const res = await defHttp.get<any>({ url: Api.ListByTenant, params });
   return normalizePageResult<SystemRole>(res);
 }
 
 export function saveRoleApi(data: Partial<SystemRole> & Recordable, isUpdate: boolean) {
   if (USE_MOCK) return systemMock.mockSaveRole(data, isUpdate);
-  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, params: data });
+  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, data });
 }
 
 export function deleteRoleApi(id: string) {

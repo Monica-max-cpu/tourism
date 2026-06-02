@@ -8,6 +8,7 @@ import { SearchBar } from '/@/components/SearchBar';
 import { BasicModal, useModal } from '/@/components/BasicModal';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
 import { TableAction } from '/@/components/TableAction';
+import { usePermissionStore } from '/@/stores/modules/permission';
 import {
   deleteUserApi,
   downloadUserExportApi,
@@ -36,8 +37,10 @@ const importing = ref(false);
 const fileInputRef = ref<HTMLInputElement>();
 const userModal = useModal<SystemUser & { mode: 'create' | 'edit' }>();
 const [registerTable, { reload }] = useTable();
+const permissionStore = usePermissionStore();
 
 const isEdit = computed(() => userModal.data.value?.mode === 'edit');
+const hasPerm = (code: string) => permissionStore.getPermCodeList.includes(code);
 
 const columns: BasicColumn[] = [
   { field: 'username', title: '用户账号', minWidth: 120 },
@@ -157,15 +160,15 @@ async function onImportFile(event: Event) {
     <template #extra>
       <div class="flex items-center gap-2">
         <input ref="fileInputRef" type="file" class="hidden" accept=".xls,.xlsx" @change="onImportFile" />
-        <Button variant="outline" :disabled="importing" @click="chooseImportFile">
+        <Button v-if="hasPerm('system:user:import')" variant="outline" :disabled="importing" @click="chooseImportFile">
           <Upload class="mr-2 h-4 w-4" />
           {{ importing ? '导入中...' : '导入' }}
         </Button>
-        <Button variant="outline" @click="exportUsers">
+        <Button v-if="hasPerm('system:user:export')" variant="outline" @click="exportUsers">
           <Download class="mr-2 h-4 w-4" />
           导出
         </Button>
-        <Button @click="openCreate">
+        <Button v-if="hasPerm('system:user:add')" @click="openCreate">
           <Plus class="mr-2 h-4 w-4" />
           新增用户
         </Button>
@@ -203,8 +206,8 @@ async function onImportFile(event: Event) {
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '编辑', onClick: () => openEdit(row) },
-            { label: '删除', variant: 'destructive', onClick: () => deleteUser(row) },
+            { label: '编辑', authCode: 'system:user:edit', onClick: () => openEdit(row) },
+            { label: '删除', authCode: 'system:user:delete', variant: 'destructive', onClick: () => deleteUser(row) },
           ]"
         />
       </template>

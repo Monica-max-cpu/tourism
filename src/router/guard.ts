@@ -18,7 +18,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   BASIC_USER: ROUTE_PATHS.ENTRY_B2B,
 };
 
-const WHITE_LIST = new Set(['Login', 'Register', 'ForgetPassword', 'SupplierApply', 'StoreApply', 'ApplyResult', 'NotFound', 'Forbidden']);
+const WHITE_LIST = new Set(['Login', 'Register', 'ForgetPassword', 'SupplierApply', 'StoreApply', 'ApplyResult', 'ClaimOnboarding', 'NotFound', 'Forbidden']);
 /** 404 兜底路由，动态路由构建后追加 */
 const PAGE_NOT_FOUND_ROUTE: RouteRecordRaw = {
   path: '/:pathMatch(.*)*',
@@ -70,11 +70,20 @@ export function setupGuards(router: Router) {
 
     // ========== 首次进入业务页：构建动态路由 ==========
     try {
-      console.log('[guard] 开始构建动态路由, to:', to.name, to.path);
       const routes = await permissionStore.buildRoutesAction();
-      console.log('[guard] 构建完成, 路由数:', routes.length);
+
+      /** 修复 flatMultiLevelRoutes 引入的 RouteRecordNormalized：components → component */
+      function normalizeRouteComponent(r: any) {
+        if (r.children?.length) {
+          r.children.forEach((c: any) => normalizeRouteComponent(c));
+        }
+        if (!r.component && r.components) {
+          r.component = r.components.default || Object.values(r.components)[0];
+        }
+      }
 
       routes.forEach((route) => {
+        normalizeRouteComponent(route);
         router.addRoute(route as unknown as RouteRecordRaw);
       });
       router.addRoute(PAGE_NOT_FOUND_ROUTE);
@@ -82,12 +91,10 @@ export function setupGuards(router: Router) {
 
       // 动态路由加完后，重新导航到目标
       if (to.name === PAGE_NOT_FOUND_NAME) {
-        console.log('[guard] 目标为 NotFound, 重定向到:', to.fullPath);
         return { path: to.fullPath, replace: true, query: to.query };
       }
       const redirectPath = (from.query.redirect as string) || to.path;
       const redirect = decodeURIComponent(redirectPath);
-      console.log('[guard] 重导航到:', redirect);
       if (to.path === redirect) {
         return { ...to, replace: true };
       }

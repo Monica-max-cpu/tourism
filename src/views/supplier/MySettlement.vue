@@ -5,7 +5,7 @@
  * - 仅展示自己的结算单（应收金额按成本价聚合 * - 待确认：可点击「确认对账」→ CONFIRMED；CONFIRMED 等待平台付款
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商结算
  */
-import { reactive, ref, computed, onMounted } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import {
   Badge, Input, Label, Card, CardContent,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -20,23 +20,20 @@ import {
   SUPPLIER_SETTLEMENT_STATUS_LABEL, SUPPLIER_SETTLEMENT_STATUS_VARIANT, SUPPLIER_SETTLEMENT_STATUS_OPTIONS,
 } from '/@/constants/supplierStatus';
 import { formatCurrency, formatDate, formatDateTime } from '/@/utils/format';
-import { useUserStore } from '/@/stores/modules/user';
 import type { SupplierSettlement } from '/#/b2b-supplier';
 
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const search = reactive({ status: '' });
 const [registerTable, { reload }] = useTable();
 const submitting = ref(false);
 
 async function loadData(params: any) {
-  return await listSupplierSettlementsApi({ ...params, searchInfo: { ...search, supplierId: supplierId.value } });
+  return await listSupplierSettlementsApi({ ...params, searchInfo: { ...search } });
 }
 
 const summary = reactive({ pendingAmount: 0, confirmedAmount: 0, paidAmount: 0 });
 async function loadSummary() {
-  const s = await getSupplierSettlementSummaryApi(supplierId.value);
+  const s = await getSupplierSettlementSummaryApi();
   Object.assign(summary, s);
 }
 onMounted(() => loadSummary());

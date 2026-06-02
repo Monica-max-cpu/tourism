@@ -12,7 +12,7 @@
 import { defHttp } from '/@/api/http';
 import { delay } from '/@/mocks/_helpers';
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+const USE_MOCK = true;
 
 export interface StoreDashboardKpi {
   monthPurchase: number;
@@ -56,15 +56,6 @@ function buildDays(n = 30): string[] {
 }
 
 function mockStoreDashboard(storeId: string): Promise<StoreDashboardData> {
-  if (!storeId) {
-    return delay({
-      kpi: { monthPurchase: 0, monthSales: 0, shippingOrders: 0, turnoverRate: 0 },
-      purchaseMonthly: [],
-      salesTrend: [],
-      turnover: { rate: 0, max: 6 },
-    });
-  }
-
   const months = buildMonths();
   const purchaseMonthly: PurchaseMonth[] = months.map((m, i) => ({
     month: m,
@@ -100,6 +91,6 @@ enum Api {
 
 export function getStoreDashboardApi(storeId: string) {
   return USE_MOCK
-    ? mockStoreDashboard(storeId)
+    ? mockStoreDashboard(storeId || 'mock-store')
     : defHttp.get<StoreDashboardData>({ url: Api.Dashboard, params: { storeId } });
 }

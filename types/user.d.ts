@@ -7,6 +7,8 @@ export interface UserInfo {
   email: string;
   avatar?: string;
   role: UserRole;
+  /** 角色码（逗号分隔，如 "b2b_supplier,b2b_store"），用于前端角色判定 */
+  roleCode?: string;
   /** 供应商 ID（角色为 SUPPLIER 时有效） */
   supplierId?: string;
   /** 门店 ID（角色为 STORE 时有效） */

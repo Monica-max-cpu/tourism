@@ -16,7 +16,7 @@ import { SearchBar } from '/@/components/SearchBar';
 import { listStoreOrdersApi, getStoreOrderApi, cancelStoreOrderApi } from '/@/api/admin/operations';
 import { ORDER_STATUS_LABEL, ORDER_STATUS_VARIANT, ORDER_STATUS_OPTIONS } from '/@/constants/b2b2bStatus';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
-import type { StoreOrder } from '/#/b2b-2b';
+import type { OrderStatus, StoreOrder } from '/#/b2b-2b';
 
 const search = reactive({ keyword: '', orderStatus: '' });
 const [registerTable, { reload }] = useTable();
@@ -39,6 +39,14 @@ const columns: BasicColumn[] = [
   { field: 'collectiveOrderId', title: '集采单号', width: 130 },
   { field: 'action', title: '操作', width: 160, fixed: 'right', slots: { default: 'action' } },
 ];
+
+function orderStatusLabel(status: OrderStatus, fallback?: string) {
+  return fallback || ORDER_STATUS_LABEL[status] || '-';
+}
+
+function orderStatusVariant(status: OrderStatus) {
+  return ORDER_STATUS_VARIANT[status] || 'warning';
+}
 
 const detailModal = useModal<StoreOrder>();
 const cancelModal = useModal<StoreOrder>();
@@ -96,7 +104,7 @@ function onReset() {
 
     <BasicTable :columns="columns" :api="loadData" row-key="id" @register="registerTable">
       <template #status="{ row }">
-        <Badge :variant="ORDER_STATUS_VARIANT[row.orderStatus]">{{ row.statusLabel || ORDER_STATUS_LABEL[row.orderStatus] }}</Badge>
+        <Badge :variant="orderStatusVariant(row.orderStatus)">{{ orderStatusLabel(row.orderStatus, row.statusLabel) }}</Badge>
       </template>
       <template #action="{ row }">
         <TableAction
@@ -119,11 +127,11 @@ function onReset() {
           <div><span class="text-muted-foreground">订单号：</span><span class="font-mono">{{ detailModal.data.value.orderNo }}</span></div>
           <div>
             <span class="text-muted-foreground">状态：</span>
-            <Badge :variant="ORDER_STATUS_VARIANT[detailModal.data.value.orderStatus]">{{ detailModal.data.value.statusLabel || ORDER_STATUS_LABEL[detailModal.data.value.orderStatus] }}</Badge>
+            <Badge :variant="orderStatusVariant(detailModal.data.value.orderStatus)">{{ orderStatusLabel(detailModal.data.value.orderStatus, detailModal.data.value.statusLabel) }}</Badge>
           </div>
           <div><span class="text-muted-foreground">门店：</span>{{ detailModal.data.value.storeName }}</div>
-          <div><span class="text-muted-foreground">下单人：</span>{{ formatDateTime(detailModal.data.value.createdAt) }}</div>
-          <div><span class="text-muted-foreground">支付人：</span>{{ formatDateTime(detailModal.data.value.paidAt) || '-' }}</div>
+          <div><span class="text-muted-foreground">下单时间：</span>{{ formatDateTime(detailModal.data.value.createdAt) }}</div>
+          <div><span class="text-muted-foreground">支付时间：</span>{{ formatDateTime(detailModal.data.value.paidAt) || '-' }}</div>
           <div><span class="text-muted-foreground">集采单：</span>{{ detailModal.data.value.collectiveOrderId || '-' }}</div>
         </div>
 

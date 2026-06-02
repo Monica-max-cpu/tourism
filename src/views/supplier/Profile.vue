@@ -14,11 +14,7 @@ import {
 import { PageWrapper } from '/@/components/PageWrapper';
 import { getSupplierProfileApi, updateSupplierProfileApi } from '/@/api/supplier/inventory';
 import { formatDateTime } from '/@/utils/format';
-import { useUserStore } from '/@/stores/modules/user';
 import type { SupplierProfile } from '/#/b2b-supplier';
-
-const userStore = useUserStore();
-const supplierId = computed(() => userStore.getUserInfo?.supplierId || '');
 
 const editing = ref(false);
 const saving = ref(false);
@@ -44,8 +40,7 @@ const form = reactive<SupplierProfile>({
 const valid = computed(() => !!form.supplierName && !!form.contactPerson && !!form.contactPhone);
 
 async function loadProfile() {
-  if (!supplierId.value) return;
-  const data = await getSupplierProfileApi(supplierId.value);
+  const data = await getSupplierProfileApi();
   if (data) {
     Object.assign(form, data);
     updatedAt.value = data.updatedAt;
@@ -61,7 +56,6 @@ async function save() {
   saving.value = true;
   try {
     await updateSupplierProfileApi({
-      id: supplierId.value,
       contactPerson: form.contactPerson,
       contactPhone: form.contactPhone,
       contactEmail: form.contactEmail,

@@ -70,7 +70,7 @@ const collective = {
               <TrendingUp class="w-5 h-5 text-primary" />
               利润概览
             </h3>
-            <Button variant="outline" size="sm" v-auth="'b2b:profit:view'">查看详情</Button>
+            <Button variant="outline" size="sm" v-auth="'b2b:settlement:profitList'">查看详情</Button>
           </div>
 
           <div class="grid grid-cols-2 md:grid-cols-4 gap-6">

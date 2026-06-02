@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Store, User, Phone, Mail, MapPin, FileText, BarChart3, HeadphonesIcon, Upload, CheckCircle, AlertCircle } from 'lucide-vue-next';
+import { Store, BarChart3, HeadphonesIcon, Image } from 'lucide-vue-next';
 import {
   Button,
   Card,
@@ -18,10 +18,11 @@ import {
   SelectContent,
   SelectItem,
 } from '/@/components/ui';
-import { storeApplyApi } from '/@/api/b2b/apply';
+import { storeApplyApi, publicOnboardingApplyApi } from '/@/api/b2b/apply';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { STORE_TYPE_OPTIONS } from '/@/constants/b2bStatus';
 import { useUserStore } from '/@/stores/modules/user';
+import MapLocationPicker from '/@/components/MapLocationPicker.vue';
 import ApplyShell from './ApplyShell.vue';
 
 const router = useRouter();
@@ -36,6 +37,7 @@ const form = reactive({
   logoId: '',
   mainCategory: '',
   categoryIds: '',
+  businessLicense: '',
   contactPerson: '',
   contactPhone: '',
   contactEmail: '',
@@ -50,46 +52,68 @@ const form = reactive({
   mapAddress: '',
   coordinate: '',
   supplySourceId: '',
-  remark: '',
-});
-
-const qualifications = reactive<Record<string, string>>({
-  businessLicense: '',
-  healthPermit: '',
-  foodBizLicense: '',
-  other: '',
+  creditLimit: '',
 });
 
 function simulateUpload(field: string) {
-  qualifications[field] = `/mock/upload/${field}_${Date.now()}.jpg`;
+  (form as Record<string, string>)[field] = `/mock/upload/${field}_${Date.now()}.jpg`;
 }
 
 function removeUpload(field: string) {
-  qualifications[field] = '';
+  (form as Record<string, string>)[field] = '';
+}
+
+function addStorePhoto() {
+  const url = `/mock/upload/store_${Date.now()}.jpg`;
+  form.storePhotos = form.storePhotos ? `${form.storePhotos},${url}` : url;
+}
+
+function removeStorePhoto(index: number) {
+  const list = form.storePhotos.split(',').filter(Boolean);
+  list.splice(index, 1);
+  form.storePhotos = list.join(',');
+}
+
+function onLocationSelect(data: { province: string; city: string; address: string; mapAddress: string; coordinate: string }) {
+  form.province = data.province;
+  form.city = data.city;
+  form.address = data.address;
+  form.mapAddress = data.mapAddress;
+  form.coordinate = data.coordinate;
 }
 
 async function onSubmit(e: Event) {
   e.preventDefault();
-  if (!form.storeName || !form.authType || !form.contactPerson || !form.contactPhone || !form.address) {
-    errorMsg.value = '请填写必填项（门店名称、认证类型、负责人、联系电话、详细地址）';
+  if (!form.storeName || !form.contactPerson || !form.contactPhone || !form.address || !form.mainCategory) {
+    errorMsg.value = '请填写必填项（门店名称、主营类别、负责人、联系电话、详细地址）';
     return;
   }
-  if (!qualifications.businessLicense) {
-    errorMsg.value = '请上传必填资质材料（营业执照）';
+  if (!form.businessLicense) {
+    errorMsg.value = '请上传营业执照';
     return;
   }
   errorMsg.value = '';
   submitting.value = true;
   try {
-    const res = await storeApplyApi({ ...form, storeType: Number(form.storeType), ...qualifications });
-    if (userStore.isLoggedIn) {
+    if (userStore.getToken) {
+      // 登录入驻 — 不传 merchantType
+      await storeApplyApi({ ...form, storeType: Number(form.storeType), creditLimit: form.creditLimit ? Number(form.creditLimit) : undefined });
       router.push(ROUTE_PATHS.ENTRY_B2B);
-      return;
+    } else {
+      // 公开入驻 — 字段名用 name，加 merchantType
+      const { storeName, ...rest } = form as Record<string, unknown>;
+      const res = await publicOnboardingApplyApi({
+        ...rest,
+        merchantType: 'STORE',
+        name: storeName,
+        storeType: Number(form.storeType),
+        creditLimit: form.creditLimit ? Number(form.creditLimit) : undefined,
+      });
+      router.push({
+        path: ROUTE_PATHS.APPLY_RESULT,
+        query: { type: 'store', id: res.id, name: form.storeName },
+      });
     }
-    router.push({
-      path: ROUTE_PATHS.APPLY_RESULT,
-      query: { type: 'store', id: res.id, name: form.storeName },
-    });
   } catch (err) {
     errorMsg.value = (err as Error).message || '提交失败';
   } finally {
@@ -121,24 +145,12 @@ async function onSubmit(e: Event) {
               <div class="grid md:grid-cols-2 gap-6">
                 <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">门店名称 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
-                  <div class="relative">
-                    <Store class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input v-model="form.storeName" placeholder="请输入门店名称" class="pl-10" />
-                  </div>
+                  <Input v-model="form.storeName" placeholder="请输入门店名称" />
                 </div>
 
                 <div class="space-y-2">
-                  <Label class="text-foreground/80">认证类型 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
-                  <Select v-model="form.authType">
-                    <SelectTrigger>
-                      <SelectValue placeholder="请选择认证类型" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PERSONAL">个人</SelectItem>
-                      <SelectItem value="MERCHANT">商户</SelectItem>
-                      <SelectItem value="SUPPLIER">供应商</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label class="text-foreground/80">认证类型</Label>
+                  <div class="h-10 flex items-center px-3 rounded-md border border-border bg-muted/50 text-sm text-foreground/70">商户</div>
                 </div>
 
                 <div class="space-y-2">
@@ -154,7 +166,7 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2">
-                  <Label class="text-foreground/80">主营类别 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Label class="text-foreground/80">主营类别 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
                   <Input v-model="form.mainCategory" placeholder="如：文创零售、餐饮、特产" />
                 </div>
 
@@ -164,50 +176,28 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2">
-                  <Label class="text-foreground/80">Logo 文件 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <Input v-model="form.logoId" placeholder="文件ID或URL" />
-                </div>
-
-                <div class="space-y-2">
                   <Label class="text-foreground/80">负责人 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
-                  <div class="relative">
-                    <User class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input v-model="form.contactPerson" placeholder="请输入负责人姓名" class="pl-10" />
-                  </div>
+                  <Input v-model="form.contactPerson" placeholder="请输入负责人姓名" />
                 </div>
 
                 <div class="space-y-2">
                   <Label class="text-foreground/80">联系电话 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
-                  <div class="relative">
-                    <Phone class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input v-model="form.contactPhone" placeholder="请输入手机号" class="pl-10" />
-                  </div>
+                  <Input v-model="form.contactPhone" placeholder="请输入手机号" />
                 </div>
 
                 <div class="space-y-2">
                   <Label class="text-foreground/80">联系邮箱 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <div class="relative">
-                    <Mail class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input v-model="form.contactEmail" type="email" placeholder="选填" class="pl-10" />
-                  </div>
+                  <Input v-model="form.contactEmail" type="email" placeholder="选填" />
                 </div>
 
-                <div class="space-y-2">
-                  <Label class="text-foreground/80">省份 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <Input v-model="form.province" placeholder="选填" />
-                </div>
-
-                <div class="space-y-2">
-                  <Label class="text-foreground/80">城市 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <Input v-model="form.city" placeholder="选填" />
+                <div class="space-y-2 md:col-span-2">
+                  <Label class="text-foreground/80">地图定位 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
+                  <MapLocationPicker :model-value="form.coordinate" @select="onLocationSelect" />
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">详细地址 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
-                  <div class="relative">
-                    <MapPin class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input v-model="form.address" placeholder="请输入门店详细地址" class="pl-10" />
-                  </div>
+                  <Input v-model="form.address" placeholder="门牌号、楼层等补充信息" />
                 </div>
 
                 <div class="space-y-2">
@@ -226,162 +216,87 @@ async function onSubmit(e: Event) {
                 </div>
 
                 <div class="space-y-2">
-                  <Label class="text-foreground/80">地图坐标 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <Input v-model="form.coordinate" placeholder="lng,lat" />
-                </div>
-
-                <div class="space-y-2 md:col-span-2">
-                  <Label class="text-foreground/80">地图地址 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <Input v-model="form.mapAddress" placeholder="地图选点展示地址" />
-                </div>
-
-                <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">关联供应商来源 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.supplySourceId" placeholder="cm_supply_supplier.id（如有）" />
                 </div>
 
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">信用额度 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <Input v-model="form.creditLimit" type="number" min="0" step="0.01" placeholder="预留字段，可不填" />
+                </div>
+
                 <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">门店简介 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <Input v-model="form.description" placeholder="门店特色、经营能力、服务范围等" />
+                  <textarea v-model="form.description" rows="4" placeholder="门店特色、经营能力、服务范围等" class="flex w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none" />
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">Logo 文件 <Badge variant="outline" class="ml-1">选填</Badge></Label>
+                  <div
+                    v-if="form.logoId"
+                    class="relative border-2 border-emerald-200 rounded-xl p-4 text-center bg-emerald-50/50 cursor-pointer hover:bg-emerald-50 transition-colors"
+                    @click="removeUpload('logoId')"
+                  >
+                    <p class="text-sm font-medium text-emerald-700">已上传</p>
+                    <p class="text-xs text-muted-foreground mt-1 truncate">{{ form.logoId }}</p>
+                    <p class="text-xs text-muted-foreground">点击移除</p>
+                  </div>
+                  <div
+                    v-else
+                    class="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
+                    @click="simulateUpload('logoId')"
+                  >
+                    <Image class="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+                    <p class="text-sm font-medium">点击上传</p>
+                    <p class="text-xs text-muted-foreground mt-1">品牌 Logo，jpg / png</p>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <Label class="text-foreground/80">营业执照 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
+                  <div
+                    v-if="form.businessLicense"
+                    class="relative border-2 border-emerald-200 rounded-xl p-4 text-center bg-emerald-50/50 cursor-pointer hover:bg-emerald-50 transition-colors"
+                    @click="removeUpload('businessLicense')"
+                  >
+                    <p class="text-sm font-medium text-emerald-700">已上传</p>
+                    <p class="text-xs text-muted-foreground mt-1 truncate">{{ form.businessLicense }}</p>
+                    <p class="text-xs text-muted-foreground">点击移除</p>
+                  </div>
+                  <div
+                    v-else
+                    class="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
+                    @click="simulateUpload('businessLicense')"
+                  >
+                    <Image class="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+                    <p class="text-sm font-medium">点击上传</p>
+                    <p class="text-xs text-muted-foreground mt-1">营业执照照片，jpg / png</p>
+                  </div>
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">店铺照片 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <Input v-model="form.storePhotos" placeholder="多张照片文件ID或URL，用逗号分隔" />
-                </div>
-
-                <div class="space-y-2 md:col-span-2">
-                  <Label class="text-foreground/80">备注说明 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                  <div class="relative">
-                    <FileText class="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input v-model="form.remark" placeholder="可补充说明门店特色、经营品类等信息" class="pl-10" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- 资质材料 -->
-              <div class="pt-2">
-                <div class="flex items-center gap-3 mb-4">
-                  <div class="p-1.5 bg-amber-100 rounded-full">
-                    <FileText class="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <h3 class="text-lg font-semibold">资质材料</h3>
-                    <p class="text-sm text-muted-foreground">请上传清晰的资质证明照片，支持 jpg、png 格式</p>
-                  </div>
-                </div>
-
-                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3 mb-6">
-                  <AlertCircle class="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-                  <div>
-                    <p class="font-medium text-amber-800">资质材料说明</p>
-                    <p class="text-sm text-amber-700 mt-1">
-                      请上传营业执照等相关资质照片。照片需清晰可辨，单个文件不超过 5MB。
-                      <span class="text-amber-800 font-medium block mt-1">食品类门店需额外上传食品经营许可证</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="space-y-2">
-                    <Label class="text-foreground/80">营业执照 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
+                  <div class="flex flex-wrap gap-3">
                     <div
-                      v-if="qualifications.businessLicense"
-                      class="relative border-2 border-emerald-200 rounded-xl p-6 text-center bg-emerald-50/50 cursor-pointer hover:bg-emerald-50 transition-colors"
-                      @click="removeUpload('businessLicense')"
+                      v-for="(_url, idx) in form.storePhotos.split(',').filter(Boolean)"
+                      :key="idx"
+                      class="relative border-2 border-emerald-200 rounded-xl p-3 w-24 h-24 flex flex-col items-center justify-center bg-emerald-50/50 group cursor-pointer hover:bg-red-50 hover:border-red-200 transition-colors"
+                      @click="removeStorePhoto(idx)"
                     >
-                      <CheckCircle class="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                      <p class="text-sm font-medium text-emerald-700">已上传</p>
-                      <p class="text-xs text-muted-foreground mt-1">点击移除</p>
+                      <Image class="h-6 w-6 text-emerald-500 group-hover:text-red-400 transition-colors" />
+                      <p class="text-xs text-muted-foreground mt-1 truncate w-full text-center">图{{ idx + 1 }}</p>
+                      <p class="text-xs text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">点击移除</p>
                     </div>
                     <div
-                      v-else
-                      class="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                      @click="simulateUpload('businessLicense')"
+                      class="border-2 border-dashed border-border rounded-xl p-3 w-24 h-24 flex flex-col items-center justify-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
+                      @click="addStorePhoto()"
                     >
-                      <Upload class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p class="text-sm font-medium">点击上传</p>
-                      <p class="text-xs text-muted-foreground mt-1">jpg / png，不超过 5MB</p>
-                    </div>
-                  </div>
-
-                  <div class="space-y-2">
-                    <Label class="text-foreground/80">卫生许可证 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                    <div
-                      v-if="qualifications.healthPermit"
-                      class="relative border-2 border-emerald-200 rounded-xl p-6 text-center bg-emerald-50/50 cursor-pointer hover:bg-emerald-50 transition-colors"
-                      @click="removeUpload('healthPermit')"
-                    >
-                      <CheckCircle class="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                      <p class="text-sm font-medium text-emerald-700">已上传</p>
-                      <p class="text-xs text-muted-foreground mt-1">点击移除</p>
-                    </div>
-                    <div
-                      v-else
-                      class="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                      @click="simulateUpload('healthPermit')"
-                    >
-                      <Upload class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p class="text-sm font-medium">点击上传</p>
-                      <p class="text-xs text-muted-foreground mt-1">jpg / png，不超过 5MB</p>
+                      <Image class="h-6 w-6 text-muted-foreground mb-1" />
+                      <p class="text-xs text-muted-foreground">添加照片</p>
                     </div>
                   </div>
                 </div>
 
-                <!-- 食品类资质 -->
-                <div class="mt-6">
-                  <h4 class="font-medium mb-4 flex items-center gap-2">
-                    食品类资质
-                    <Badge variant="outline">食品类门店必填</Badge>
-                  </h4>
-                  <div class="space-y-2">
-                    <Label class="text-foreground/80">食品经营许可证 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                    <div
-                      v-if="qualifications.foodBizLicense"
-                      class="relative border-2 border-emerald-200 rounded-xl p-6 text-center bg-emerald-50/50 cursor-pointer hover:bg-emerald-50 transition-colors max-w-md"
-                      @click="removeUpload('foodBizLicense')"
-                    >
-                      <CheckCircle class="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                      <p class="text-sm font-medium text-emerald-700">已上传</p>
-                      <p class="text-xs text-muted-foreground mt-1">点击移除</p>
-                    </div>
-                    <div
-                      v-else
-                      class="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors max-w-md"
-                      @click="simulateUpload('foodBizLicense')"
-                    >
-                      <Upload class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p class="text-sm font-medium">点击上传</p>
-                      <p class="text-xs text-muted-foreground mt-1">jpg / png，不超过 5MB</p>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 其他资质 -->
-                <div class="mt-6">
-                  <h4 class="font-medium mb-4">其他资质（选填）</h4>
-                  <div class="space-y-2">
-                    <Label class="text-foreground/80">其他补充资质 <Badge variant="outline" class="ml-1">选填</Badge></Label>
-                    <div
-                      v-if="qualifications.other"
-                      class="relative border-2 border-emerald-200 rounded-xl p-6 text-center bg-emerald-50/50 cursor-pointer hover:bg-emerald-50 transition-colors max-w-md"
-                      @click="removeUpload('other')"
-                    >
-                      <CheckCircle class="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                      <p class="text-sm font-medium text-emerald-700">已上传</p>
-                      <p class="text-xs text-muted-foreground mt-1">点击移除</p>
-                    </div>
-                    <div
-                      v-else
-                      class="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors max-w-md"
-                      @click="simulateUpload('other')"
-                    >
-                      <Upload class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p class="text-sm font-medium">点击上传</p>
-                      <p class="text-xs text-muted-foreground mt-1">jpg / png，不超过 5MB</p>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <p v-if="errorMsg" class="text-sm text-destructive bg-destructive/10 rounded-lg px-4 py-2">{{ errorMsg }}</p>

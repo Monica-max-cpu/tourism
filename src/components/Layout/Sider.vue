@@ -2,12 +2,12 @@
 import { computed, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { ChevronDown, LogOut } from 'lucide-vue-next';
-import * as Icons from 'lucide-vue-next';
+import { LogOut } from 'lucide-vue-next';
 import { usePermissionStore } from '/@/stores/modules/permission';
 import { useAppStore } from '/@/stores/modules/app';
 import { useUserStore } from '/@/stores/modules/user';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
+import MenuItemRenderer from './MenuItemRenderer.vue';
 import type { MenuItem } from '/#/menu';
 
 const permissionStore = usePermissionStore();
@@ -23,12 +23,26 @@ const entryMenus: MenuItem[] = [
   { name: 'EntryB2C', path: ROUTE_PATHS.ENTRY_B2C, title: 'B2C 入驻', icon: 'Store' },
 ];
 
+function filterHidden(items: MenuItem[]): MenuItem[] {
+  return items
+    .filter((item) => (
+      !item.hidden
+      && item.title !== '首页'
+      && item.title !== '认证管理'
+      && item.path !== '/dashboard/analysis'
+    ))
+    .map((item) => ({
+      ...item,
+      children: item.children ? filterHidden(item.children) : undefined,
+    }));
+}
+
 const flatMenus = computed<MenuItem[]>(() => {
-  if (menus.value.length > 0) return menus.value;
-  return userStore.getRole === 'BASIC_USER' ? entryMenus : [];
+  if (userStore.isBasicUser) return entryMenus;
+  if (menus.value.length > 0) return filterHidden(menus.value);
+  return [];
 });
 
-// 分组折叠状态
 const expandedGroups = reactive<Record<string, boolean>>({});
 
 function isGroupExpanded(name: string) {
@@ -39,24 +53,12 @@ function toggleGroup(name: string) {
   expandedGroups[name] = !isGroupExpanded(name);
 }
 
-function getIcon(name?: string) {
-  if (!name) return null;
-  return (Icons as any)[name] || null;
-}
-
-function isActive(item: MenuItem) {
-  if (item.path === route.path) return true;
-  if (item.children) return item.children.some((c) => c.path === route.path);
-  return false;
-}
-
-function isChildActive(child: MenuItem) {
-  return route.path === child.path;
-}
-
 function go(item: MenuItem) {
-  if (item.children && item.children.length) return;
-  router.push(item.path);
+  if (item.children && item.children.length) {
+    toggleGroup(item.name);
+    return;
+  }
+  if (item.path) router.push(item.path);
 }
 
 async function handleLogout() {
@@ -82,50 +84,16 @@ async function handleLogout() {
     </div>
 
     <!-- 导航区 -->
-    <nav class="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+    <nav class="flex-1 overflow-y-auto px-4 py-4 space-y-1">
       <template v-for="item in flatMenus" :key="item.name">
-        <!-- 一级菜单（无 children） -->
-        <button
-          v-if="!item.children || item.children.length === 0"
-          class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm"
-          :class="isActive(item)
-            ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10'
-            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'"
-          @click="go(item)"
-        >
-          <component :is="getIcon(item.icon)" v-if="getIcon(item.icon)" class="w-5 h-5 shrink-0" />
-          <span class="font-medium truncate">{{ item.title }}</span>
-          <span v-if="isActive(item)" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground shrink-0" />
-        </button>
-
-        <!-- 一级带子菜单（可折叠） -->
-        <div v-else>
-          <button
-            class="w-full flex items-center justify-between px-4 py-2 h-auto text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-            @click="toggleGroup(item.name)"
-          >
-            <span>{{ item.title }}</span>
-            <ChevronDown
-              class="w-4 h-4 shrink-0 transition-transform duration-200"
-              :class="isGroupExpanded(item.name) ? 'rotate-180' : ''"
-            />
-          </button>
-          <div v-show="isGroupExpanded(item.name)" class="space-y-1 mt-2">
-            <button
-              v-for="child in item.children"
-              :key="child.name"
-              class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm"
-              :class="isChildActive(child)
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground ml-4'"
-              @click="go(child)"
-            >
-              <component :is="getIcon(child.icon)" v-if="getIcon(child.icon)" class="w-4 h-4 shrink-0" />
-              <span class="font-medium truncate">{{ child.title }}</span>
-              <span v-if="isChildActive(child)" class="ml-auto w-1.5 h-1.5 rounded-full bg-primary-foreground shrink-0" />
-            </button>
-          </div>
-        </div>
+        <MenuItemRenderer
+          :item="item"
+          :depth="0"
+          :active-path="route.path"
+          :expanded-groups="expandedGroups"
+          @toggle="toggleGroup"
+          @navigate="go"
+        />
       </template>
     </nav>
 
@@ -145,3 +113,4 @@ async function handleLogout() {
     </div>
   </aside>
 </template>
+

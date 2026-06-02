@@ -12,13 +12,13 @@ import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable
 import { BasicModal, useModal } from '/@/components/BasicModal';
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
-import { listPaymentsApi, confirmPaymentApi, rejectPaymentApi } from '/@/api/admin/operations';
+import { listPaymentsApi, confirmPaymentApi } from '/@/api/admin/operations';
 import {
   PAYMENT_STATUS_LABEL, PAYMENT_STATUS_VARIANT, PAYMENT_STATUS_OPTIONS,
   PAYMENT_METHOD_LABEL,
 } from '/@/constants/b2b2bStatus';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
-import type { PaymentRecord } from '/#/b2b-2b';
+import type { PaymentMethod, PaymentRecord, PaymentStatus } from '/#/b2b-2b';
 
 const search = reactive({ keyword: '', status: 'PENDING_CONFIRM', method: '' });
 const [registerTable, { reload }] = useTable();
@@ -32,21 +32,31 @@ function methodIcon(m: string) {
   return CreditCard;
 }
 
+function methodLabel(method: PaymentMethod) {
+  return PAYMENT_METHOD_LABEL[method] || method || '-';
+}
+
+function paymentStatusLabel(status: PaymentStatus) {
+  return PAYMENT_STATUS_LABEL[status] || status || '-';
+}
+
+function paymentStatusVariant(status: PaymentStatus) {
+  return PAYMENT_STATUS_VARIANT[status] || 'warning';
+}
+
 const columns: BasicColumn[] = [
-  { field: 'paymentNo', title: '支付编号', width: 160 },
+  { field: 'paymentNo', title: '支付编号', minWidth: 160 },
   { field: 'orderNo', title: '关联订单号', width: 160 },
-  { field: 'storeName', title: '门店', minWidth: 180 },
-  { field: 'amount', title: '金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'method', title: '支付方式', width: 110, slots: { default: 'method' } },
+  { field: 'storeName', title: '门店',align: 'center', width: 190 },
+  { field: 'amount', title: '金额', width: 130, align: 'center', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'method', title: '支付方式',align: 'center', width: 180, slots: { default: 'method' } },
   { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
   { field: 'submittedAt', title: '提交时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'confirmedAt', title: '确认时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'confirmedAt', title: '确认时间', align: 'center',width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'action', title: '操作', width: 200, fixed: 'right', slots: { default: 'action' } },
 ];
 
 const detailModal = useModal<PaymentRecord>();
-const rejectModal = useModal<PaymentRecord>();
-const rejectReason = ref('');
 const submitting = ref(false);
 
 function openDetail(row: PaymentRecord) {
@@ -56,25 +66,7 @@ function openDetail(row: PaymentRecord) {
 async function confirm(row: PaymentRecord) {
   submitting.value = true;
   try {
-    await confirmPaymentApi(row.id);
-    detailModal.close();
-    reload();
-  } finally {
-    submitting.value = false;
-  }
-}
-
-function openReject(row: PaymentRecord) {
-  rejectReason.value = '';
-  rejectModal.open(row);
-}
-
-async function confirmReject() {
-  if (!rejectReason.value.trim() || !rejectModal.data.value) return;
-  submitting.value = true;
-  try {
-    await rejectPaymentApi(rejectModal.data.value.id, rejectReason.value.trim());
-    rejectModal.close();
+    await confirmPaymentApi(row.id, row.amount);
     detailModal.close();
     reload();
   } finally {
@@ -84,7 +76,7 @@ async function confirmReject() {
 
 function onSearch() { reload({ pageNo: 1 }); }
 function onReset() {
-  search.keyword = ''; search.status = ''; search.method = '';
+  search.keyword = ''; search.status = 'PENDING_CONFIRM'; search.method = '';
   reload({ pageNo: 1 });
 }
 </script>
@@ -124,18 +116,17 @@ function onReset() {
       <template #method="{ row }">
         <div class="flex items-center gap-1.5">
           <component :is="methodIcon(row.method)" class="w-3.5 h-3.5 text-muted-foreground" />
-          {{ PAYMENT_METHOD_LABEL[row.method] }}
+          {{ methodLabel(row.method) }}
         </div>
       </template>
       <template #status="{ row }">
-        <Badge :variant="PAYMENT_STATUS_VARIANT[row.status]">{{ PAYMENT_STATUS_LABEL[row.status] }}</Badge>
+        <Badge :variant="paymentStatusVariant(row.status)">{{ paymentStatusLabel(row.status) }}</Badge>
       </template>
       <template #action="{ row }">
         <TableAction
           :actions="[
             { label: '查看', onClick: () => openDetail(row) },
-            { label: '确认收款', authCode: 'b2b:payment:confirm', hidden: row.status !== 'PENDING_CONFIRM', onClick: () => confirm(row) },
-            { label: '驳回', authCode: 'b2b:payment:confirm', hidden: row.status !== 'PENDING_CONFIRM', onClick: () => openReject(row) },
+            { label: '确认收款', authCode: 'b2b:payment:manualConfirm', hidden: row.status !== 'PENDING_CONFIRM', onClick: () => confirm(row) },
           ]"
         />
       </template>
@@ -152,7 +143,7 @@ function onReset() {
           <div><span class="text-muted-foreground">支付编号：</span><span class="font-mono">{{ detailModal.data.value.paymentNo }}</span></div>
           <div>
             <span class="text-muted-foreground">状态：</span>
-            <Badge :variant="PAYMENT_STATUS_VARIANT[detailModal.data.value.status]">{{ PAYMENT_STATUS_LABEL[detailModal.data.value.status] }}</Badge>
+            <Badge :variant="paymentStatusVariant(detailModal.data.value.status)">{{ paymentStatusLabel(detailModal.data.value.status) }}</Badge>
           </div>
           <div><span class="text-muted-foreground">关联订单号：</span><span class="font-mono">{{ detailModal.data.value.orderNo }}</span></div>
           <div><span class="text-muted-foreground">门店：</span>{{ detailModal.data.value.storeName }}</div>
@@ -160,7 +151,7 @@ function onReset() {
             <span class="text-muted-foreground">金额：</span>
             <span class="text-2xl font-semibold text-foreground">{{ formatCurrency(detailModal.data.value.amount) }}</span>
           </div>
-          <div><span class="text-muted-foreground">支付方式：</span>{{ PAYMENT_METHOD_LABEL[detailModal.data.value.method] }}</div>
+          <div><span class="text-muted-foreground">支付方式：</span>{{ methodLabel(detailModal.data.value.method) }}</div>
           <div v-if="detailModal.data.value.transactionNo">
             <span class="text-muted-foreground">流水号：</span><span class="font-mono text-xs">{{ detailModal.data.value.transactionNo }}</span>
           </div>
@@ -188,26 +179,9 @@ function onReset() {
           </a>
         </div>
 
-        <div v-if="detailModal.data.value.status === 'PENDING_CONFIRM'" v-auth="'b2b:payment:confirm'" class="flex justify-end gap-2 pt-3 border-t border-border">
-          <Button variant="outline" :disabled="submitting" @click="openReject(detailModal.data.value)">驳回</Button>
+        <div v-if="detailModal.data.value.status === 'PENDING_CONFIRM'" v-auth="'b2b:payment:manualConfirm'" class="flex justify-end gap-2 pt-3 border-t border-border">
           <Button :disabled="submitting" @click="confirm(detailModal.data.value)">确认收款</Button>
         </div>
-      </div>
-    </BasicModal>
-
-    <BasicModal
-      v-model:open="rejectModal.visible.value"
-      title="驳回支付"
-      :description="rejectModal.data.value ? `${rejectModal.data.value.storeName} - ${formatCurrency(rejectModal.data.value.amount)}` : ''"
-      confirm-text="确认驳回"
-      confirm-variant="destructive"
-      :confirm-loading="submitting"
-      :confirm-disabled="!rejectReason.trim()"
-      @confirm="confirmReject"
-    >
-      <div class="space-y-2">
-        <Label>驳回原因 <span class="text-destructive">*</span></Label>
-        <Input v-model="rejectReason" placeholder="如：金额不符、凭证不清晰、流水号有误..." />
       </div>
     </BasicModal>
   </PageWrapper>
