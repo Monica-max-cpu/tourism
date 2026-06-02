@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TrendingUp, AlertCircle, FileCheck, CreditCard, GitMerge, Truck, Wallet } from 'lucide-vue-next';
+import { TrendingUp, AlertCircle, FileCheck, CreditCard, GitMerge } from 'lucide-vue-next';
 import { Card, CardContent, Badge, Button } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { useAuth } from '/@/composables/useAuth';

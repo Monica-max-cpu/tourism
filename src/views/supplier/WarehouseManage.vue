@@ -6,11 +6,10 @@
  * update-end--author:claude---date:2026-05-26---for:【阶段7】供应商仓库 CRUD
  */
 import { reactive, ref, computed } from 'vue';
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next';
+import { Plus } from 'lucide-vue-next';
 import {
-  Badge, Button, Input, Label,
+  Button, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-  Card, CardContent,
 } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
@@ -45,7 +44,7 @@ const form = reactive({
   province: '',
   city: '',
   address: '',
-  isDefault: 0 as 0 | 1,
+  isDefault: '0',
 });
 const formSubmitting = ref(false);
 const isEdit = computed(() => !!formModal.data.value);
@@ -53,7 +52,7 @@ const isEdit = computed(() => !!formModal.data.value);
 function openCreate() {
   Object.assign(form, {
     warehouseName: '', contactPerson: '', contactPhone: '',
-    province: '', city: '', address: '', isDefault: 0 as 0 | 1,
+    province: '', city: '', address: '', isDefault: '0',
   });
   formModal.open(null);
 }
@@ -64,7 +63,7 @@ function openEdit(row: SupplierWarehouse) {
   form.province = row.province || '';
   form.city = row.city || '';
   form.address = row.address || '';
-  form.isDefault = row.isDefault;
+  form.isDefault = String(row.isDefault);
   formModal.open(row);
 }
 
@@ -74,9 +73,9 @@ async function submitForm() {
   try {
     const target = formModal.data.value;
     if (target) {
-      await editWarehouseApi({ id: target.id, ...form });
+      await editWarehouseApi({ id: target.id, ...form, isDefault: Number(form.isDefault) as 0 | 1 });
     } else {
-      await addWarehouseApi({ ...form });
+      await addWarehouseApi({ ...form, isDefault: Number(form.isDefault) as 0 | 1 });
     }
     formModal.close();
     reload();
@@ -148,10 +147,10 @@ async function onDelete(row: SupplierWarehouse) {
         <div class="flex items-center gap-2 col-span-2">
           <Label>设为默认仓库</Label>
           <Select v-model="form.isDefault">
-            <SelectTrigger class="w-32"><SelectValue :placeholder="form.isDefault === 1 ? '是' : '否'" /></SelectTrigger>
+            <SelectTrigger class="w-32"><SelectValue :placeholder="form.isDefault === '1' ? '是' : '否'" /></SelectTrigger>
             <SelectContent>
-              <SelectItem :value="1">是</SelectItem>
-              <SelectItem :value="0">否</SelectItem>
+              <SelectItem value="1">是</SelectItem>
+              <SelectItem value="0">否</SelectItem>
             </SelectContent>
           </Select>
         </div>

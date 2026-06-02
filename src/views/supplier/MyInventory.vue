@@ -7,7 +7,6 @@
 import { reactive, ref, computed } from 'vue';
 import {
   Badge, Input, Label,
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
@@ -17,9 +16,8 @@ import { SearchBar } from '/@/components/SearchBar';
 import { listSupplierStocksApi, replenishStockApi } from '/@/api/supplier/inventory';
 import { listSupplierProductsApi } from '/@/api/supplier/quote';
 import {
-  SUPPLIER_STOCK_HEALTH_LABEL, SUPPLIER_STOCK_HEALTH_VARIANT, SUPPLIER_STOCK_HEALTH_OPTIONS,
+  SUPPLIER_STOCK_HEALTH_LABEL, SUPPLIER_STOCK_HEALTH_VARIANT,
 } from '/@/constants/supplierStatus';
-import { formatDateTime } from '/@/utils/format';
 import type { SupplierStock } from '/#/b2b-supplier';
 
 

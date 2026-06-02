@@ -52,6 +52,7 @@ function buildMonths(n = 12): string[] {
 }
 
 function mockSupplierDashboard(supplierId: string): Promise<SupplierDashboardData> {
+  void supplierId;
   // 12 周接单趋势
   const acceptTrend: SupplierAcceptPoint[] = Array.from({ length: 12 }, (_, i) => ({
     week: `W${i + 1}`,

@@ -6,7 +6,7 @@
  * 认领成功后跳登录页，用户登录即获取新角色
  */
 import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { Shield, Phone, ChevronLeft } from 'lucide-vue-next';
 import {
   Badge,
@@ -24,6 +24,7 @@ import { getCaptchaApi } from '/@/api/login/api';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 
 const router = useRouter();
+const route = useRoute();
 
 const form = reactive({ phone: '', smsCode: '' });
 const submitting = ref(false);
@@ -34,6 +35,17 @@ const successMsg = ref('');
 const smsCountdown = ref(0);
 const smsSending = ref(false);
 let smsTimer: ReturnType<typeof setInterval> | null = null;
+
+function getMerchantType() {
+  const raw = String(route.query.merchantType || route.query.type || '').toUpperCase();
+  if (raw === 'SUPPLIER') return 'SUPPLIER';
+  if (raw === 'STORE') return 'STORE';
+  return '';
+}
+
+function getMerchantId() {
+  return String(route.query.merchantId || route.query.id || '');
+}
 
 function startSmsCountdown() {
   smsCountdown.value = 60;
@@ -72,6 +84,7 @@ function validate(): boolean {
   if (!form.phone) { errorMsg.value = '请输入手机号'; return false; }
   if (!/^1[3-9]\d{9}$/.test(form.phone)) { errorMsg.value = '请输入正确的手机号'; return false; }
   if (!form.smsCode) { errorMsg.value = '请输入短信验证码'; return false; }
+  if (!getMerchantType() || !getMerchantId()) { errorMsg.value = '认领链接缺少主体信息'; return false; }
   return true;
 }
 
@@ -82,7 +95,12 @@ async function handleSubmit(e: Event) {
   if (!validate()) return;
   submitting.value = true;
   try {
-    const res = await claimOnboardingApi({ phone: form.phone, smsCode: form.smsCode });
+    const res = await claimOnboardingApi({
+      merchantType: getMerchantType() as 'SUPPLIER' | 'STORE',
+      merchantId: getMerchantId(),
+      phone: form.phone,
+      smsCode: form.smsCode,
+    });
     if (res.success) {
       successMsg.value = '认领成功！请登录以获取角色，即将跳转...';
       setTimeout(() => {

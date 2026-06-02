@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { cn } from '/@/utils/cn';
-defineProps<{ class?: string }>();
+import type { ClassValue } from 'clsx';
+defineProps<{ class?: ClassValue }>();
 </script>
 
 <template>

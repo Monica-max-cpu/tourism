@@ -60,7 +60,7 @@ async function save() {
       contactPhone: form.contactPhone,
       contactEmail: form.contactEmail,
       address: form.address,
-      businessLicense: form.businessLicenseUrl,
+      businessLicenseUrl: form.businessLicenseUrl,
     });
     editing.value = false;
     await loadProfile();

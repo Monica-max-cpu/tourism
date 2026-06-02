@@ -17,14 +17,13 @@ import {
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
 import { TableAction } from '/@/components/TableAction';
-import { SearchBar } from '/@/components/SearchBar';
 import { BasicModal, useModal } from '/@/components/BasicModal';
 import { listStoreOrdersApi, cancelStoreOrderApi, confirmReceiveApi } from '/@/api/store/order';
 import {
   STORE_ORDER_STATUS_LABEL, STORE_ORDER_STATUS_VARIANT,
 } from '/@/constants/storeStatus';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
-import { formatCurrency, formatDateTime, formatNumber } from '/@/utils/format';
+import { formatCurrency, formatDateTime } from '/@/utils/format';
 import { useUserStore } from '/@/stores/modules/user';
 import type { StoreViewOrder } from '/#/b2b-store';
 

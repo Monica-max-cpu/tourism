@@ -23,7 +23,6 @@ import {
   toggleStoreStatusApi,
 } from '/@/api/admin';
 import {
-  AUTH_TYPE_LABEL,
   OPERATION_STATUS_LABEL,
   OPERATION_STATUS_VARIANT,
   REVIEW_STATUS_LABEL,

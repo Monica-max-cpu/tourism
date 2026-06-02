@@ -2,12 +2,11 @@
 import { reactive, ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Package, Coins, Clock, Plus, X, Info, Headphones } from 'lucide-vue-next'
-import { Button, Card, CardContent, Input, Label } from '/@/components/ui'
+import { Button, Input, Label } from '/@/components/ui'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '/@/components/ui'
 import { PageWrapper } from '/@/components/PageWrapper'
 import { ROUTE_PATHS } from '/@/constants/routePaths'
-import { formatCurrency } from '/@/utils/format'
-import type { SupplierQuoteRecord, SupplierProduct, QuoteTier } from '/#/b2b-supplier'
+import type { SupplierProduct, QuoteTier } from '/#/b2b-supplier'
 import {
   listSupplierQuotesApi, createSupplierQuoteApi, updateSupplierQuoteApi, listSupplierProductsApi,
 } from '/@/api/supplier/quote'

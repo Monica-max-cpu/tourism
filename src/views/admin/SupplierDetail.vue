@@ -89,9 +89,6 @@ async function confirmToggle() {
   } finally { submitting.value = false }
 }
 
-function field(label: string, value: any) {
-  return { label, value: value ?? '-' }
-}
 </script>
 
 <template>

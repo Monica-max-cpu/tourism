@@ -5,7 +5,6 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段1】登录接口（Mock+真接口双轨）
  */
 import { defHttp } from '/@/api/http';
-import { mockLogin, mockUsers, mockRegister, mockCheckOnlyUser, mockPhoneVerify, mockPasswordChange, mockGetCaptcha } from '/@/mocks/login.mock';
 import type { LoginParams, LoginResult, UserInfo } from './model';
 
 enum Api {
@@ -19,10 +18,7 @@ enum Api {
   GetCaptcha = '/sys/sms',
 }
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-
 export async function loginApi(params: LoginParams): Promise<LoginResult> {
-  if (USE_MOCK) return mockLogin(params);
   // update-begin--author:phase7---date:2026-05-25---for:【阶段7】适配 JeecgBoot 返回结构
   const res = await defHttp.post<any>({ url: Api.Login, data: params });
   const raw = res.userInfo ?? res.user ?? {};
@@ -82,7 +78,6 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
 }
 
 export function logoutApi(): Promise<void> {
-  if (USE_MOCK) return Promise.resolve();
   return defHttp.post<void>({ url: Api.Logout });
 }
 
@@ -96,41 +91,30 @@ export interface RegisterParams {
 
 /** 注册 */
 export function registerApi(params: RegisterParams): Promise<{ success: boolean; message?: string }> {
-  if (USE_MOCK) return mockRegister(params);
   return defHttp.post({ url: Api.Register, data: params }, { isTransformResponse: false });
 }
 
 /** 校验用户名/手机号是否已存在 */
 export function checkOnlyUserApi(params: { username?: string; phone?: string }): Promise<{ success: boolean; message?: string }> {
-  if (USE_MOCK) return mockCheckOnlyUser(params);
   return defHttp.get({ url: Api.CheckOnlyUser, params }, { isTransformResponse: false });
 }
 
 /** 手机号验证（忘记密码第一步） */
 export function phoneVerifyApi(params: { phone: string; smscode: string }): Promise<{ success: boolean; message?: string }> {
-  if (USE_MOCK) return mockPhoneVerify(params);
   return defHttp.post({ url: Api.PhoneVerify, data: params }, { isTransformResponse: false });
 }
 
 /** 修改密码（忘记密码第二步） */
 export function passwordChangeApi(params: { username: string; password: string; phone: string; smscode: string }): Promise<{ success: boolean; message?: string }> {
-  if (USE_MOCK) return mockPasswordChange(params);
   return defHttp.get({ url: Api.PasswordChange, params }, { isTransformResponse: false });
 }
 
 /** 发送短信验证码 */
 export function getCaptchaApi(params: { mobile: string; smsmode: string }): Promise<{ success: boolean; message?: string; code?: number }> {
-  if (USE_MOCK) return mockGetCaptcha(params);
   return defHttp.post({ url: Api.GetCaptcha, data: params }, { isTransformResponse: false });
 }
 
 export async function getUserInfoApi(): Promise<UserInfo> {
-  if (USE_MOCK) {
-    const token = localStorage.getItem('b2b:token') || '';
-    const m = token.match(/mock-token-(ADMIN|SUPPLIER|STORE|BASIC_USER)/);
-    if (m) return Promise.resolve(mockUsers[m[1] as keyof typeof mockUsers]);
-    return Promise.reject(new Error('未登录'));
-  }
   const raw = await defHttp.get<any>({ url: Api.GetUserInfo });
   const roleCode: string = raw.roleCode || '';
   // 提取权限，兜底同 loginApi

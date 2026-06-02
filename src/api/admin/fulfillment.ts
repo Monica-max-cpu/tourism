@@ -4,11 +4,7 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段2C】admin 业务接口
  */
 import { defHttp } from '/@/api/http';
-import * as collectiveMock from '/@/mocks/admin/collective.mock';
-import * as fulfillmentMock from '/@/mocks/admin/fulfillment.mock';
 import type { CollectiveConfig } from '/#/b2b-2c';
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
   // 集采
@@ -124,37 +120,34 @@ function normalizeProfitSummary(summary: any) {
 
 // ===== 集采 =====
 export function listPendingCollectiveApi() {
-  return USE_MOCK ? collectiveMock.mockListPendingCollective() : defHttp.get({ url: Api.ListPendingCollective });
+  return defHttp.get({ url: Api.ListPendingCollective });
 }
 export function triggerCollectiveApi(ids: string[]) {
-  return USE_MOCK ? collectiveMock.mockTriggerCollective(ids) : defHttp.post({ url: Api.TriggerCollective, data: { ids } });
+  return defHttp.post({ url: Api.TriggerCollective, data: { ids } });
 }
 export function listCollectiveOrdersApi(params: any) {
-  return USE_MOCK ? collectiveMock.mockListCollectiveOrders(params) : defHttp.get({ url: Api.ListCollectiveOrders, params });
+  return defHttp.get({ url: Api.ListCollectiveOrders, params });
 }
 export function getCollectiveOrderApi(id: string) {
-  return USE_MOCK ? collectiveMock.mockGetCollectiveOrder(id) : defHttp.get({ url: `/b2b/collective/detail/${id}` });
+  return defHttp.get({ url: `/b2b/collective/detail/${id}` });
 }
 export function getCollectiveConfigApi() {
-  return USE_MOCK ? collectiveMock.mockGetCollectiveConfig() : defHttp.get({ url: Api.GetCollectiveConfig });
+  return defHttp.get({ url: Api.GetCollectiveConfig });
 }
 export function updateCollectiveConfigApi(patch: Partial<CollectiveConfig>) {
-  return USE_MOCK ? collectiveMock.mockUpdateCollectiveConfig(patch) : defHttp.put({ url: Api.UpdateCollectiveConfig, data: patch });
+  return defHttp.put({ url: Api.UpdateCollectiveConfig, data: patch });
 }
 
 // ===== 履约 =====
 export function listDeliveriesApi(params: any) {
-  return USE_MOCK ? fulfillmentMock.mockListDeliveries(params) : defHttp.get({ url: Api.ListDeliveries, params });
+  return defHttp.get({ url: Api.ListDeliveries, params });
 }
 export function handleDeliveryExceptionApi(id: string, action: 'retry' | 'cancel', remark: string) {
-  return USE_MOCK
-    ? fulfillmentMock.mockHandleDeliveryException(id, action, remark)
-    : defHttp.put({ url: `/b2b/delivery/exception/${id}`, data: { action, remark } });
+  return defHttp.put({ url: `/b2b/delivery/exception/${id}`, data: { action, remark } });
 }
 
 // ===== 结算 =====
 export async function listStoreSettlementsApi(params: any) {
-  if (USE_MOCK) return fulfillmentMock.mockListStoreSettlements(params);
   const flat = flattenSearchParams(params);
   const status = fromSettlementStatus(flat.status);
   if (status === undefined) delete flat.status;
@@ -163,7 +156,6 @@ export async function listStoreSettlementsApi(params: any) {
   return normalizePage(res, normalizeStoreSettlement);
 }
 export async function listSupplierSettlementsApi(params: any) {
-  if (USE_MOCK) return fulfillmentMock.mockListSupplierSettlements(params);
   const flat = flattenSearchParams(params);
   const status = fromSettlementStatus(flat.status);
   if (status === undefined) delete flat.status;
@@ -174,17 +166,15 @@ export async function listSupplierSettlementsApi(params: any) {
 export function paySettlementApi(id: string, actualPaidAmount: number, remark = '') {
   const query = new URLSearchParams({ actualPaidAmount: String(actualPaidAmount) });
   if (remark) query.set('remark', remark);
-  return USE_MOCK ? fulfillmentMock.mockPaySettlement(id) : defHttp.put({ url: `/b2b/settlement/supplier/pay/${id}?${query.toString()}` });
+  return defHttp.put({ url: `/b2b/settlement/supplier/pay/${id}?${query.toString()}` });
 }
 
 // ===== 利润 =====
 export async function listProfitsApi(params: any) {
-  if (USE_MOCK) return fulfillmentMock.mockListProfits(params);
   const res = await defHttp.get({ url: Api.ListProfits, params: flattenSearchParams(params, 'collectiveOrderId') });
   return normalizePage(res, normalizeProfit);
 }
 export async function getProfitSummaryApi() {
-  if (USE_MOCK) return fulfillmentMock.mockGetProfitSummary();
   const res = await defHttp.get({ url: Api.GetProfitSummary });
   return normalizeProfitSummary(res);
 }

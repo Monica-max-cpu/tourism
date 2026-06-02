@@ -1,6 +1,7 @@
-import type { RouteRecordRaw, RouteMeta } from 'vue-router';
+import type { RouteMeta, RouteRecordRedirectOption } from 'vue-router';
 
-export interface AppRouteRecordRaw extends Omit<RouteRecordRaw, 'meta'> {
+export interface AppRouteRecordRaw {
+  path: string;
   name: string;
   meta: RouteMeta & Recordable;
   component?: any;
@@ -9,7 +10,7 @@ export interface AppRouteRecordRaw extends Omit<RouteRecordRaw, 'meta'> {
   alwaysShow?: boolean;
   hidden?: boolean;
   route?: number;
-  redirect?: string;
+  redirect?: RouteRecordRedirectOption;
 }
 
 export interface Menu {

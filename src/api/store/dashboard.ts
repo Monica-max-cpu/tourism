@@ -56,6 +56,7 @@ function buildDays(n = 30): string[] {
 }
 
 function mockStoreDashboard(storeId: string): Promise<StoreDashboardData> {
+  void storeId;
   const months = buildMonths();
   const purchaseMonthly: PurchaseMonth[] = months.map((m, i) => ({
     month: m,

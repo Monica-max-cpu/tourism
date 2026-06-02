@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft, Package, Tag, Coins, Image, Upload, Plus, X, Info, Headphones, Trash2 } from 'lucide-vue-next'
-import { Button, Card, CardContent, Input, Label } from '/@/components/ui'
+import { ArrowLeft, Package, Coins, Image, Upload, Plus, X, Info, Headphones, Trash2 } from 'lucide-vue-next'
+import { Button, Input, Label } from '/@/components/ui'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '/@/components/ui'
 import { Switch } from '/@/components/ui'
 import { PageWrapper } from '/@/components/PageWrapper'

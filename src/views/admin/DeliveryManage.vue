@@ -4,7 +4,7 @@
  */
 import { reactive, ref } from 'vue';
 import {
-  Badge, Button, Input, Label,
+  Badge, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';

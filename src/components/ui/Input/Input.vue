@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { useVModel } from '@vueuse/core';
 import { cn } from '/@/utils/cn';
+import type { ClassValue } from 'clsx';
 
 interface Props {
-  defaultValue?: string | number;
-  modelValue?: string | number;
-  class?: string;
+  defaultValue?: string | number | null;
+  modelValue?: string | number | null;
+  class?: ClassValue;
   type?: string;
   placeholder?: string;
   disabled?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), { type: 'text' });
-const emits = defineEmits<{ 'update:modelValue': [v: string | number] }>();
+const emits = defineEmits<{ 'update:modelValue': [v: string | number | null] }>();
 const modelValue = useVModel(props, 'modelValue', emits, { passive: true, defaultValue: props.defaultValue });
 </script>
 

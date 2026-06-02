@@ -101,17 +101,17 @@ async function onSubmit(e: Event) {
       router.push(ROUTE_PATHS.ENTRY_B2B);
     } else {
       // 公开入驻 — 字段名用 name，加 merchantType
-      const { storeName, ...rest } = form as Record<string, unknown>;
+      const { storeName, ...rest } = form;
       const res = await publicOnboardingApplyApi({
         ...rest,
         merchantType: 'STORE',
-        name: storeName,
+        name: String(storeName),
         storeType: Number(form.storeType),
         creditLimit: form.creditLimit ? Number(form.creditLimit) : undefined,
       });
       router.push({
         path: ROUTE_PATHS.APPLY_RESULT,
-        query: { type: 'store', id: res.id, name: form.storeName },
+        query: { type: 'store', id: res.merchantId || res.id, name: form.storeName },
       });
     }
   } catch (err) {
@@ -169,14 +169,14 @@ async function onSubmit(e: Event) {
                   <Label class="text-foreground/80">主营类别 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
                   <Input v-model="form.mainCategory" placeholder="如：文创零售、餐饮、特产" />
                 </div>
-
+<!-- 
                 <div class="space-y-2">
                   <Label class="text-foreground/80">经营品类 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.categoryIds" placeholder="多个品类用逗号分隔" />
-                </div>
+                </div> -->
 
                 <div class="space-y-2">
-                  <Label class="text-foreground/80">负责人 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
+                  <Label class="text-foreground/80">联系人 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
                   <Input v-model="form.contactPerson" placeholder="请输入负责人姓名" />
                 </div>
 
@@ -220,10 +220,10 @@ async function onSubmit(e: Event) {
                   <Input v-model="form.supplySourceId" placeholder="cm_supply_supplier.id（如有）" />
                 </div>
 
-                <div class="space-y-2">
+                <!-- <div class="space-y-2">
                   <Label class="text-foreground/80">信用额度 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.creditLimit" type="number" min="0" step="0.01" placeholder="预留字段，可不填" />
-                </div>
+                </div> -->
 
                 <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">门店简介 <Badge variant="outline" class="ml-1">选填</Badge></Label>

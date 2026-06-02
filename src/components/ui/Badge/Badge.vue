@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { cn } from '/@/utils/cn';
 import { badgeVariants, type BadgeVariants } from './index';
+import type { ClassValue } from 'clsx';
 
 interface Props {
   variant?: BadgeVariants['variant'];
-  class?: string;
+  class?: ClassValue;
 }
 const props = defineProps<Props>();
 </script>

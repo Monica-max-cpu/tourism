@@ -4,13 +4,11 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】门店端状态映射
  */
 import type {
-  StoreOrderStatus,
-  StoreViewPaymentStatus,
   StorePaymentMethod,
 } from '/#/b2b-store';
 
 // ===== 门店订单状态 =====
-export const STORE_ORDER_STATUS_LABEL: Record<StoreOrderStatus, string> = {
+export const STORE_ORDER_STATUS_LABEL: Record<number, string> = {
   0: '待支付',
   1: '已支付，待集采',
   2: '集采中',
@@ -23,7 +21,7 @@ export const STORE_ORDER_STATUS_LABEL: Record<StoreOrderStatus, string> = {
 };
 
 export const STORE_ORDER_STATUS_VARIANT: Record<
-  StoreOrderStatus,
+  number,
   'warning' | 'info' | 'success' | 'destructive' | 'muted'
 > = {
   0: 'warning',
@@ -51,14 +49,14 @@ export const STORE_ORDER_STATUS_OPTIONS = [
 ];
 
 // ===== 门店付款状态 =====
-export const STORE_PAYMENT_STATUS_LABEL: Record<StoreViewPaymentStatus, string> = {
+export const STORE_PAYMENT_STATUS_LABEL: Record<number, string> = {
   0: '待支付',
   1: '支付成功',
   2: '支付失败',
   3: '已退款',
 };
 
-export const STORE_PAYMENT_STATUS_VARIANT: Record<StoreViewPaymentStatus, 'warning' | 'success' | 'destructive'> = {
+export const STORE_PAYMENT_STATUS_VARIANT: Record<number, 'warning' | 'success' | 'destructive' | 'info'> = {
   0: 'warning',
   1: 'success',
   2: 'destructive',

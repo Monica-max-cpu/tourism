@@ -54,8 +54,8 @@ async function save() {
   }
 }
 
-function onCheck(_checked: unknown, info: { checked: boolean; node: PermissionTreeNode }) {
-  checkedKeys.value = mergeCheckedTreeKeys(checkedKeys.value, info.node, info.checked);
+function onCheck(_checked: unknown, info: any) {
+  checkedKeys.value = mergeCheckedTreeKeys(checkedKeys.value, info.node as PermissionTreeNode, Boolean(info.checked));
 }
 
 defineExpose({ open });

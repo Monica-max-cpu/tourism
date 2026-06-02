@@ -64,6 +64,7 @@ export interface StoreViewOrderItem {
   subtotal: number;
   receivedQty?: number;
   collectiveItemId?: string;
+  imageUrl?: string;
 }
 
 export interface DeliveryInfo {

@@ -6,13 +6,7 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段2A】管理员审核与目录接口
  */
 import { defHttp } from '/@/api/http';
-import * as supplierApplyMock from '/@/mocks/admin/supplierApply.mock';
-import * as storeApplyMock from '/@/mocks/admin/storeApply.mock';
-import * as quoteMock from '/@/mocks/admin/quote.mock';
-import * as catalogMock from '/@/mocks/admin/catalog.mock';
-import type { SupplierApply, StoreApply, PlatformCatalog, CatalogStatus, OperationStatus } from '/#/b2b';
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+import type { SupplierApply, StoreApply, PlatformCatalog, CatalogStatus, ApplyStatus } from '/#/b2b';
 
 enum Api {
   // 供应商审核
@@ -37,36 +31,36 @@ enum Api {
 
 // ===== 供应商审核 =====
 export function listSupplierApplyApi(params: any) {
-  return USE_MOCK ? supplierApplyMock.mockListSupplierApply(params) : defHttp.get({ url: Api.ListSupplierApply, params });
+  return defHttp.get({ url: Api.ListSupplierApply, params });
 }
 export function getSupplierApplyApi(id: string): Promise<SupplierApply | null> {
-  return USE_MOCK ? supplierApplyMock.mockGetSupplierApply(id) : defHttp.get({ url: `${Api.GetSupplierApply}/${id}` });
+  return defHttp.get({ url: `${Api.GetSupplierApply}/${id}` });
 }
 export function approveSupplierApplyApi(id: string) {
-  return USE_MOCK ? supplierApplyMock.mockApproveSupplierApply(id) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, status: 1 } });
+  return defHttp.put({ url: Api.ReviewSupplierApply, data: { id, status: 1 } });
 }
 export function rejectSupplierApplyApi(id: string, reviewRemark: string) {
-  return USE_MOCK ? supplierApplyMock.mockRejectSupplierApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewSupplierApply, data: { id, status: 2, reviewRemark } });
+  return defHttp.put({ url: Api.ReviewSupplierApply, data: { id, status: 2, reviewRemark } });
 }
-export function toggleSupplierStatusApi(id: string, status: OperationStatus) {
-  return USE_MOCK ? supplierApplyMock.mockToggleSupplierStatus(id, status) : defHttp.put({ url: `${Api.ToggleSupplierStatus}?id=${id}&status=${status}` });
+export function toggleSupplierStatusApi(id: string, status: ApplyStatus) {
+  return defHttp.put({ url: `${Api.ToggleSupplierStatus}?id=${id}&status=${status}` });
 }
 
 // ===== 门店审核 =====
 export function listStoreApplyApi(params: any) {
-  return USE_MOCK ? storeApplyMock.mockListStoreApply(params) : defHttp.get({ url: Api.ListStoreApply, params });
+  return defHttp.get({ url: Api.ListStoreApply, params });
 }
 export function getStoreApplyApi(id: string): Promise<StoreApply | null> {
-  return USE_MOCK ? storeApplyMock.mockGetStoreApply(id) : defHttp.get({ url: `${Api.GetStoreApply}/${id}` });
+  return defHttp.get({ url: `${Api.GetStoreApply}/${id}` });
 }
 export function approveStoreApplyApi(id: string) {
-  return USE_MOCK ? storeApplyMock.mockApproveStoreApply(id) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, status: 1 } });
+  return defHttp.put({ url: Api.ReviewStoreApply, data: { id, status: 1 } });
 }
 export function rejectStoreApplyApi(id: string, reviewRemark: string) {
-  return USE_MOCK ? storeApplyMock.mockRejectStoreApply(id, reviewRemark) : defHttp.put({ url: Api.ReviewStoreApply, data: { id, status: 2, reviewRemark } });
+  return defHttp.put({ url: Api.ReviewStoreApply, data: { id, status: 2, reviewRemark } });
 }
-export function toggleStoreStatusApi(id: string, status: OperationStatus) {
-  return USE_MOCK ? storeApplyMock.mockToggleStoreStatus(id, status) : defHttp.put({ url: `${Api.ToggleStoreStatus}?id=${id}&status=${status}` });
+export function toggleStoreStatusApi(id: string, status: ApplyStatus) {
+  return defHttp.put({ url: `${Api.ToggleStoreStatus}?id=${id}&status=${status}` });
 }
 
 // ===== 报价审核 =====
@@ -78,40 +72,37 @@ function buildQuoteReviewUrl(params: Record<string, string | number>) {
 }
 
 export function listQuotesApi(params: any) {
-  return USE_MOCK ? quoteMock.mockListQuotes(params) : defHttp.get({ url: Api.ListQuotes, params });
+  return defHttp.get({ url: Api.ListQuotes, params });
 }
 export function approveQuoteApi(id: string) {
-  return USE_MOCK ? quoteMock.mockApproveQuote(id) : defHttp.put({ url: buildQuoteReviewUrl({ id, status: 1 }) });
+  return defHttp.put({ url: buildQuoteReviewUrl({ id, status: 1 }) });
 }
 export async function batchApproveQuotesApi(ids: string[]) {
-  if (USE_MOCK) return quoteMock.mockBatchApproveQuotes(ids);
   await Promise.all(ids.map((id) => approveQuoteApi(id)));
   return { success: true, count: ids.length };
 }
 export function rejectQuoteApi(id: string, reviewRemark: string) {
-  return USE_MOCK
-    ? quoteMock.mockRejectQuote(id, reviewRemark)
-    : defHttp.put({ url: buildQuoteReviewUrl({ id, status: 2, reviewRemark }) });
+  return defHttp.put({ url: buildQuoteReviewUrl({ id, status: 2, reviewRemark }) });
 }
 export function withdrawApprovedQuoteApi(id: string) {
-  return USE_MOCK ? quoteMock.mockOffQuote(id) : defHttp.put({ url: `${Api.AdminWithdrawQuote}/${id}` });
+  return defHttp.put({ url: `${Api.AdminWithdrawQuote}/${id}` });
 }
 
 /** 获取所有已生效报价列表，供目录商品优选报价下拉选择 */
 export function listApprovedQuotesForSelectApi() {
-  return USE_MOCK ? quoteMock.mockListApprovedQuotesForSelect() : defHttp.get({ url: Api.ListQuotes, params: { status: 1 } });
+  return defHttp.get({ url: Api.ListQuotes, params: { status: 1 } });
 }
 
 // ===== 商品目录 =====
 export function listCatalogsApi(params: any) {
-  return USE_MOCK ? catalogMock.mockListCatalogs(params) : defHttp.get({ url: Api.ListCatalogs, params });
+  return defHttp.get({ url: Api.ListCatalogs, params });
 }
 export function updateCatalogApi(id: string, patch: Partial<PlatformCatalog>) {
-  return USE_MOCK ? catalogMock.mockUpdateCatalog(id, patch) : defHttp.put({ url: Api.UpdateCatalog, data: { id, ...patch } });
+  return defHttp.put({ url: Api.UpdateCatalog, data: { id, ...patch } });
 }
 export function addCatalogApi(data: Partial<PlatformCatalog>) {
-  return USE_MOCK ? catalogMock.mockAddCatalog(data) : defHttp.post({ url: Api.AddCatalog, data });
+  return defHttp.post({ url: Api.AddCatalog, data });
 }
 export function toggleShelfApi(id: string, status: CatalogStatus) {
-  return USE_MOCK ? catalogMock.mockToggleShelf(id, status) : defHttp.put({ url: `/b2b/catalog/shelf/${id}`, data: { status } });
+  return defHttp.put({ url: `/b2b/catalog/shelf/${id}`, data: { status } });
 }

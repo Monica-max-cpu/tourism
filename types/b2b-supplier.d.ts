@@ -68,7 +68,7 @@ export interface QuoteTier {
 }
 
 export interface SupplierQuoteCreateParams {
-  supplierId: string;
+  supplierId?: string;
   productId: string;
   minOrderQty: number;
   basePrice: number;

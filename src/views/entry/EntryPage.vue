@@ -11,7 +11,7 @@ import { getUserApplicationStatusApi } from '/@/api/b2b/entry';
 import { claimOnboardingApi } from '/@/api/b2b/apply';
 import { getCaptchaApi } from '/@/api/login/api';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
-import { BIND_STATUS_LABEL, normalizeReviewStatus } from '/@/constants/b2bStatus';
+import { BIND_STATUS_LABEL } from '/@/constants/b2bStatus';
 import type { MerchantApplicationStatus, UserApplicationStatus, MerchantType } from '/#/b2b';
 
 const router = useRouter();
@@ -200,14 +200,6 @@ function actionDisabled(item?: MerchantApplicationStatus) {
   return item?.bindStatus === 0;
 }
 
-function goApply(path: string) {
-  router.push(path);
-}
-
-function goWorkbench(path: string) {
-  router.push(path);
-}
-
 function handleAction(item: MerchantApplicationStatus | undefined, path: string, workbenchPath: string, type: MerchantType) {
   if (!item?.applied) {
     router.push(path);
@@ -259,7 +251,7 @@ onMounted(loadStatus);
         </CardHeader>
         <CardContent class="space-y-6">
           <div class="grid grid-cols-4 gap-2">
-            <div v-for="(label, index) in [0, 1, 2, 3]" :key="index" class="space-y-2">
+            <div v-for="index in [0, 1, 2, 3]" :key="index" class="space-y-2">
               <div class="h-2 rounded-full" :class="stepTone(index, card.data)" />
               <div class="flex items-center gap-1 text-xs text-muted-foreground">
                 <CheckCircle2 v-if="index < progressIndex(card.data)" class="h-3.5 w-3.5 text-emerald-500" />

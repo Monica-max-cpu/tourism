@@ -7,7 +7,7 @@
  */
 import { reactive, ref, onMounted } from 'vue';
 import {
-  Badge, Input, Label, Card, CardContent,
+  Badge, Label, Card, CardContent,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '/@/components/ui';
 import { Wallet, CheckCircle2, CreditCard } from 'lucide-vue-next';

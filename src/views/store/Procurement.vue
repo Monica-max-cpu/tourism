@@ -8,7 +8,7 @@ import { reactive, ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ShoppingCart, Plus, Minus, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import {
-  Badge, Button, Input, Label,
+  Button, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';

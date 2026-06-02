@@ -5,7 +5,7 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商待确认订 */
 import { reactive, ref } from 'vue';
 import {
-  Badge, Button, Input, Label,
+  Badge, Input, Label,
   Card, CardContent,
 } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';

@@ -4,7 +4,7 @@
  * update-begin--author:claude---date:2026-05-26---for:【阶段7】门店商品详情页
  * update-end--author:claude---date:2026-05-26---for:【阶段7】门店商品详情页
  */
-import { ref, reactive, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ShoppingCart, Plus, Minus, ArrowLeft } from 'lucide-vue-next';
 import { Badge, Button } from '/@/components/ui';
@@ -53,14 +53,6 @@ async function load() {
   }
 }
 onMounted(load);
-
-const images = ref<string[]>([]);
-
-function refreshImages() {
-  if (item.value) {
-    images.value = parseImages(item.value.productImages);
-  }
-}
 
 function inc() { qty.value++; }
 function dec() { qty.value = Math.max(qty.value - 1, item.value?.minOrderQty ?? 1); }

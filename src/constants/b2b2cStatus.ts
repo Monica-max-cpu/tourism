@@ -1,10 +1,10 @@
 /**
  * 阶段 2C 状态字典
  */
-import type { CollectiveStatus, DeliveryStatus, SettlementStatus } from '/#/b2b-2c';
+import type { SettlementStatus } from '/#/b2b-2c';
 
 // 集采
-export const COLLECTIVE_STATUS_LABEL: Record<CollectiveStatus, string> = {
+export const COLLECTIVE_STATUS_LABEL: Record<string, string> = {
   PENDING: '待触发',
   TRIGGERED: '已触发',
   CONFIRMED: '已确认',
@@ -12,7 +12,7 @@ export const COLLECTIVE_STATUS_LABEL: Record<CollectiveStatus, string> = {
   COMPLETED: '已完成',
   CANCELLED: '已取消',
 };
-export const COLLECTIVE_STATUS_VARIANT: Record<CollectiveStatus, 'warning' | 'info' | 'success' | 'destructive' | 'muted'> = {
+export const COLLECTIVE_STATUS_VARIANT: Record<string, 'warning' | 'info' | 'success' | 'destructive' | 'muted'> = {
   PENDING: 'warning',
   TRIGGERED: 'info',
   CONFIRMED: 'info',
@@ -30,14 +30,14 @@ export const COLLECTIVE_STATUS_OPTIONS = [
 ];
 
 // 履约
-export const DELIVERY_STATUS_LABEL: Record<DeliveryStatus, string> = {
+export const DELIVERY_STATUS_LABEL: Record<string, string> = {
   PENDING: '待发货',
   SHIPPED: '已发货',
   IN_TRANSIT: '运输中',
   DELIVERED: '已送达',
   EXCEPTION: '异常',
 };
-export const DELIVERY_STATUS_VARIANT: Record<DeliveryStatus, 'warning' | 'info' | 'success' | 'destructive'> = {
+export const DELIVERY_STATUS_VARIANT: Record<string, 'warning' | 'info' | 'success' | 'destructive'> = {
   PENDING: 'warning',
   SHIPPED: 'info',
   IN_TRANSIT: 'info',

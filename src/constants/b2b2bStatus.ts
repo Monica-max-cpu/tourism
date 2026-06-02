@@ -1,7 +1,7 @@
 /**
  * 阶段 2B 状态字典
  */
-import type { OrderStatus, PaymentStatus, PaymentMethod, StockHealthLevel, StockOwnerType } from '/#/b2b-2b';
+import type { OrderStatus, PaymentStatus, PaymentMethod, StockOwnerType } from '/#/b2b-2b';
 
 // ===== 订单状态 =====
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
@@ -68,13 +68,13 @@ export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
 };
 
 // ===== 库存 =====
-export const STOCK_HEALTH_LABEL: Record<StockHealthLevel, string> = {
+export const STOCK_HEALTH_LABEL: Record<string, string> = {
   NORMAL: '正常',
   LOW: '不足',
   OUT: '缺货',
 };
 
-export const STOCK_HEALTH_VARIANT: Record<StockHealthLevel, 'success' | 'warning' | 'destructive'> = {
+export const STOCK_HEALTH_VARIANT: Record<string, 'success' | 'warning' | 'destructive'> = {
   NORMAL: 'success',
   LOW: 'warning',
   OUT: 'destructive',

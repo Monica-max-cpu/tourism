@@ -5,10 +5,7 @@
  * update-end--author:claude---date:2026-05-26---for:【阶段7】供应商仓库 CRUD
  */
 import { defHttp } from '/@/api/http';
-import * as mock from '/@/mocks/supplier/warehouse.mock';
 import type { SupplierWarehouse } from '/#/b2b-supplier';
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
   Add = '/b2b/supplier/warehouse/add',
@@ -17,14 +14,14 @@ enum Api {
 }
 
 export function listWarehousesApi(params: { supplierId?: string; pageNo?: number; pageSize?: number }) {
-  return USE_MOCK ? mock.mockListWarehouses(params) : defHttp.get({ url: Api.List, params });
+  return defHttp.get({ url: Api.List, params });
 }
 export function addWarehouseApi(data: Partial<SupplierWarehouse>) {
-  return USE_MOCK ? mock.mockAddWarehouse(data) : defHttp.post({ url: Api.Add, data });
+  return defHttp.post({ url: Api.Add, data });
 }
 export function editWarehouseApi(data: Partial<SupplierWarehouse> & { id: string }) {
-  return USE_MOCK ? mock.mockEditWarehouse(data) : defHttp.put({ url: Api.Edit, data });
+  return defHttp.put({ url: Api.Edit, data });
 }
 export function deleteWarehouseApi(id: string) {
-  return USE_MOCK ? mock.mockDeleteWarehouse(id) : defHttp.delete({ url: `/b2b/supplier/warehouse/${id}` });
+  return defHttp.delete({ url: `/b2b/supplier/warehouse/${id}` });
 }

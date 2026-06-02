@@ -4,7 +4,7 @@
  * 顶部搜索框 + 状态 Select + 重置/查询按钮
  */
 import { Search, RotateCcw } from 'lucide-vue-next';
-import { Button, Input } from '/@/components/ui';
+import { Button } from '/@/components/ui';
 
 defineProps<{
   loading?: boolean;

@@ -93,17 +93,17 @@ async function onSubmit(e: Event) {
       router.push(ROUTE_PATHS.ENTRY_B2B);
     } else {
       // 公开入驻 — 字段名用 name，加 merchantType
-      const { supplierName, ...rest } = form as Record<string, unknown>;
+      const { supplierName, ...rest } = form;
       const res = await publicOnboardingApplyApi({
         ...rest,
         merchantType: 'SUPPLIER',
-        name: supplierName,
+        name: String(supplierName),
         storeType: Number(form.storeType),
         creditLimit: form.creditLimit ? Number(form.creditLimit) : undefined,
       });
       router.push({
         path: ROUTE_PATHS.APPLY_RESULT,
-        query: { type: 'supplier', id: res.id, name: form.supplierName },
+        query: { type: 'supplier', id: res.merchantId || res.id, name: form.supplierName },
       });
     }
   } catch (err) {
@@ -161,10 +161,10 @@ async function onSubmit(e: Event) {
                   <Input v-model="form.mainCategory" placeholder="如：生鲜类、粮油类、快消类" />
                 </div>
 
-                <div class="space-y-2">
+                <!-- <div class="space-y-2">
                   <Label class="text-foreground/80">经营品类 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.categoryIds" placeholder="多个品类用逗号分隔" />
-                </div>
+                </div> -->
 
                 <div class="space-y-2">
                   <Label class="text-foreground/80">业务联系人 <Badge variant="secondary" class="ml-1">必填</Badge></Label>
@@ -210,11 +210,11 @@ async function onSubmit(e: Event) {
                   <Label class="text-foreground/80">关联供应商来源 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.supplySourceId" placeholder="cm_supply_supplier.id（如有）" />
                 </div>
-
+<!-- 
                 <div class="space-y-2">
                   <Label class="text-foreground/80">信用额度 <Badge variant="outline" class="ml-1">选填</Badge></Label>
                   <Input v-model="form.creditLimit" type="number" min="0" step="0.01" placeholder="预留字段，可不填" />
-                </div>
+                </div> -->
 
                 <div class="space-y-2 md:col-span-2">
                   <Label class="text-foreground/80">企业简介 <Badge variant="outline" class="ml-1">选填</Badge></Label>
@@ -282,7 +282,7 @@ async function onSubmit(e: Event) {
                       class="border-2 border-dashed border-border rounded-xl p-3 w-24 h-24 flex flex-col items-center justify-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
                       @click="addStorePhoto()"
                     >
-                      <Image class="h-6 w-6 text-muted-foreground mb-1" />
+                      <Image class="h-8 w-8 text-muted-foreground mb-1" />
                       <p class="text-xs text-muted-foreground">添加照片</p>
                     </div>
                   </div>

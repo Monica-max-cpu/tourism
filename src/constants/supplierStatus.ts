@@ -3,22 +3,13 @@
  * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商端状态映射
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商端状态映射
  */
-import type {
-  SupplierProductStatus,
-  SupplierQuoteStatus,
-  SupplierOrderStatus,
-  ShipmentStatus,
-  SupplierStockHealth,
-  SupplierSettlementStatus,
-} from '/#/b2b-supplier';
-
 // ===== 自营商品 =====
-export const SUPPLIER_PRODUCT_STATUS_LABEL: Record<SupplierProductStatus, string> = {
+export const SUPPLIER_PRODUCT_STATUS_LABEL: Record<number, string> = {
   0: '停用',
   1: '启用',
 };
 
-export const SUPPLIER_PRODUCT_STATUS_VARIANT: Record<SupplierProductStatus, 'muted' | 'success'> = {
+export const SUPPLIER_PRODUCT_STATUS_VARIANT: Record<number, 'muted' | 'success'> = {
   0: 'muted',
   1: 'success',
 };
@@ -30,14 +21,14 @@ export const SUPPLIER_PRODUCT_STATUS_OPTIONS = [
 ];
 
 // ===== 报价状态 =====
-export const SUPPLIER_QUOTE_STATUS_LABEL: Record<SupplierQuoteStatus, string> = {
+export const SUPPLIER_QUOTE_STATUS_LABEL: Record<number, string> = {
   0: '待审核',
   1: '已通过',
   2: '已驳回',
   3: '已下架',
 };
 
-export const SUPPLIER_QUOTE_STATUS_VARIANT: Record<SupplierQuoteStatus, 'warning' | 'success' | 'destructive' | 'info'> = {
+export const SUPPLIER_QUOTE_STATUS_VARIANT: Record<number, 'warning' | 'success' | 'destructive' | 'info'> = {
   0: 'warning',
   1: 'success',
   2: 'destructive',
@@ -53,7 +44,7 @@ export const SUPPLIER_QUOTE_STATUS_OPTIONS = [
 ];
 
 // ===== 供应商集采单 =====
-export const SUPPLIER_ORDER_STATUS_LABEL: Record<SupplierOrderStatus, string> = {
+export const SUPPLIER_ORDER_STATUS_LABEL: Record<string, string> = {
   TRIGGERED: '待确认',
   CONFIRMED: '待发货',
   SHIPPING: '配送中',
@@ -61,7 +52,7 @@ export const SUPPLIER_ORDER_STATUS_LABEL: Record<SupplierOrderStatus, string> = 
   CANCELLED: '已取消',
 };
 
-export const SUPPLIER_ORDER_STATUS_VARIANT: Record<SupplierOrderStatus, 'warning' | 'info' | 'success' | 'destructive' | 'muted'> = {
+export const SUPPLIER_ORDER_STATUS_VARIANT: Record<string, 'warning' | 'info' | 'success' | 'destructive' | 'muted'> = {
   TRIGGERED: 'warning',
   CONFIRMED: 'info',
   SHIPPING: 'info',
@@ -79,7 +70,7 @@ export const SUPPLIER_ORDER_STATUS_OPTIONS = [
 ];
 
 // ===== 发货状态 =====
-export const SHIPMENT_STATUS_LABEL: Record<ShipmentStatus, string> = {
+export const SHIPMENT_STATUS_LABEL: Record<string, string> = {
   PENDING: '待发货',
   SHIPPED: '已发货',
   IN_TRANSIT: '运输中',
@@ -87,7 +78,7 @@ export const SHIPMENT_STATUS_LABEL: Record<ShipmentStatus, string> = {
   EXCEPTION: '异常',
 };
 
-export const SHIPMENT_STATUS_VARIANT: Record<ShipmentStatus, 'warning' | 'info' | 'success' | 'destructive'> = {
+export const SHIPMENT_STATUS_VARIANT: Record<string, 'warning' | 'info' | 'success' | 'destructive'> = {
   PENDING: 'warning',
   SHIPPED: 'info',
   IN_TRANSIT: 'info',
@@ -105,13 +96,13 @@ export const SHIPMENT_STATUS_OPTIONS = [
 ];
 
 // ===== 库存健康度 =====
-export const SUPPLIER_STOCK_HEALTH_LABEL: Record<SupplierStockHealth, string> = {
+export const SUPPLIER_STOCK_HEALTH_LABEL: Record<string, string> = {
   NORMAL: '正常',
   LOW: '不足',
   OUT: '缺货',
 };
 
-export const SUPPLIER_STOCK_HEALTH_VARIANT: Record<SupplierStockHealth, 'success' | 'warning' | 'destructive'> = {
+export const SUPPLIER_STOCK_HEALTH_VARIANT: Record<string, 'success' | 'warning' | 'destructive'> = {
   NORMAL: 'success',
   LOW: 'warning',
   OUT: 'destructive',
@@ -125,13 +116,13 @@ export const SUPPLIER_STOCK_HEALTH_OPTIONS = [
 ];
 
 // ===== 供应商结算 =====
-export const SUPPLIER_SETTLEMENT_STATUS_LABEL: Record<SupplierSettlementStatus, string> = {
+export const SUPPLIER_SETTLEMENT_STATUS_LABEL: Record<string, string> = {
   PENDING: '待确认',
   CONFIRMED: '已确认',
   PAID: '已收款',
 };
 
-export const SUPPLIER_SETTLEMENT_STATUS_VARIANT: Record<SupplierSettlementStatus, 'warning' | 'info' | 'success'> = {
+export const SUPPLIER_SETTLEMENT_STATUS_VARIANT: Record<string, 'warning' | 'info' | 'success'> = {
   PENDING: 'warning',
   CONFIRMED: 'info',
   PAID: 'success',

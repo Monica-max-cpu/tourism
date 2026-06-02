@@ -4,6 +4,8 @@ interface TreeHelperConfig {
   pid: string;
 }
 
+type Fn<T = any, R = any> = (arg: T) => R;
+
 const DEFAULT_CONFIG: TreeHelperConfig = {
   id: 'id',
   children: 'children',

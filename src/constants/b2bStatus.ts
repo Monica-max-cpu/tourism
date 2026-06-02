@@ -2,7 +2,7 @@
  * B2B 状态字典 + Badge variant 映射 — 对齐 b2b-api-contract.md v1.0
  * status: 0=待审核 1=已通过 2=已拒绝 3=已停用
  */
-import type { ApplyStatus, QuoteStatus, CatalogStatus, StoreType, ReviewStatus, OperationStatus, SupplierStoreType, BindStatus } from '/#/b2b';
+import type { ApplyStatus, QuoteStatus, StoreType, ReviewStatus, OperationStatus, SupplierStoreType, BindStatus } from '/#/b2b';
 
 export const REVIEW_STATUS_LABEL: Record<ReviewStatus, string> = {
   0: '待审核',
@@ -23,13 +23,13 @@ export const REVIEW_STATUS_OPTIONS = [
   { value: '2', label: '审核拒绝' },
 ];
 
-export const OPERATION_STATUS_LABEL: Record<OperationStatus, string> = {
+export const OPERATION_STATUS_LABEL: Record<number, string> = {
   0: '待启用',
   1: '启用',
   2: '停用',
 };
 
-export const OPERATION_STATUS_VARIANT: Record<OperationStatus, 'warning' | 'success' | 'muted'> = {
+export const OPERATION_STATUS_VARIANT: Record<number, 'warning' | 'success' | 'muted'> = {
   0: 'warning',
   1: 'success',
   2: 'muted',
@@ -152,13 +152,13 @@ export const QUOTE_STATUS_OPTIONS = [
 ];
 
 // ===== 目录状态 =====
-export const CATALOG_STATUS_LABEL: Record<CatalogStatus, string> = {
+export const CATALOG_STATUS_LABEL: Record<number, string> = {
   0: '已下架',
   1: '已上架',
   2: '已售罄',
 };
 
-export const CATALOG_STATUS_VARIANT: Record<CatalogStatus, 'success' | 'warning' | 'muted'> = {
+export const CATALOG_STATUS_VARIANT: Record<number, 'success' | 'warning' | 'muted'> = {
   0: 'muted',
   1: 'success',
   2: 'warning',

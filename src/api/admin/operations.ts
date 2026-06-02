@@ -4,11 +4,6 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段2B】admin 业务接口
  */
 import { defHttp } from '/@/api/http';
-import * as stockMock from '/@/mocks/admin/stock.mock';
-import * as storeOrderMock from '/@/mocks/admin/storeOrder.mock';
-import * as paymentMock from '/@/mocks/admin/payment.mock';
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 enum Api {
   // 库存
@@ -89,31 +84,28 @@ function normalizePayment(row: any) {
 
 // ===== 库存 =====
 export function listStocksApi(params: any) {
-  return USE_MOCK ? stockMock.mockListStocks(params) : defHttp.get({ url: Api.ListStocks, params });
+  return defHttp.get({ url: Api.ListStocks, params });
 }
 export function updateStockThresholdApi(id: string, threshold: number) {
-  return USE_MOCK ? stockMock.mockUpdateStockThreshold(id, threshold) : defHttp.put({ url: Api.UpdateStockAlertQty, data: { id, alertQty: threshold } });
+  return defHttp.put({ url: Api.UpdateStockAlertQty, data: { id, alertQty: threshold } });
 }
 
 // ===== 门店订单 =====
 export async function listStoreOrdersApi(params: any) {
-  if (USE_MOCK) return storeOrderMock.mockListStoreOrders(params);
   const res = await defHttp.get({ url: Api.ListStoreOrders, params: flattenSearchParams(params, 'orderNo') });
   return normalizePage(res, normalizeStoreOrder);
 }
 export async function getStoreOrderApi(id: string) {
-  if (USE_MOCK) return storeOrderMock.mockGetStoreOrder(id);
   const res = await defHttp.get({ url: `/b2b/store/order/detail/${id}` });
   return normalizeStoreOrder(res);
 }
 export function cancelStoreOrderApi(id: string, reason: string) {
   const query = new URLSearchParams({ cancelReason: reason }).toString();
-  return USE_MOCK ? storeOrderMock.mockCancelStoreOrder(id, reason) : defHttp.put({ url: `/b2b/store/order/cancel/${id}?${query}` });
+  return defHttp.put({ url: `/b2b/store/order/cancel/${id}?${query}` });
 }
 
 // ===== 支付 =====
 export async function listPaymentsApi(params: any) {
-  if (USE_MOCK) return paymentMock.mockListPayments(params);
   const search = params?.searchInfo || {};
   const status = search.status;
   if (status && status !== 'PENDING_CONFIRM') return { records: [], total: 0 };
@@ -138,9 +130,10 @@ export async function listPaymentsApi(params: any) {
   return { ...page, records, total: records.length };
 }
 export function confirmPaymentApi(id: string, actualAmount = 0) {
-  return USE_MOCK ? paymentMock.mockConfirmPayment(id) : defHttp.put({ url: Api.ConfirmPayment, data: { paymentId: id, actualAmount } });
+  return defHttp.put({ url: Api.ConfirmPayment, data: { paymentId: id, actualAmount } });
 }
 export function rejectPaymentApi(id: string, reason: string) {
-  // 后端无拒付接口，使用 mock
-  return paymentMock.mockRejectPayment(id, reason);
+  void id;
+  void reason;
+  return Promise.reject(new Error('后端暂无拒付接口'));
 }
