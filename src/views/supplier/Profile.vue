@@ -91,73 +91,72 @@ async function save() {
       </template>
     </template>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in-up">
-      <Card>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-in-up">
+      <Card class="lg:col-span-2">
         <CardHeader>
           <CardTitle class="text-base">基础信息</CardTitle>
         </CardHeader>
         <CardContent class="space-y-4">
           <div class="flex items-center gap-2">
-            <Label>企业名称 <span class="text-destructive">*</span></Label>
+            <Label class="w-20 shrink-0">供应商名称 <span class="text-destructive">*</span></Label>
             <Input v-model="form.supplierName" :disabled="!editing" />
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div class="flex items-center gap-2">
-              <Label>联系人<span class="text-destructive">*</span></Label>
+              <Label class="w-20 shrink-0">联系人<span class="text-destructive">*</span></Label>
               <Input v-model="form.contactPerson" :disabled="!editing" />
             </div>
             <div class="flex items-center gap-2">
-              <Label>联系电话 <span class="text-destructive">*</span></Label>
+              <Label class="w-20 shrink-0">联系电话 <span class="text-destructive">*</span></Label>
               <Input v-model="form.contactPhone" :disabled="!editing" />
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Label>联系邮箱</Label>
+            <Label class="w-20 shrink-0">联系邮箱</Label>
             <Input v-model="form.contactEmail" :disabled="!editing" />
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <div class="flex items-center gap-2">
+            <!-- <div class="flex items-center gap-2">
               <Label>省份</Label>
               <Input v-model="form.province" :disabled="!editing" />
             </div>
             <div class="flex items-center gap-2">
               <Label>城市</Label>
               <Input v-model="form.city" :disabled="!editing" />
-            </div>
+            </div> -->
           </div>
           <div class="flex items-center gap-2">
-            <Label>详细地址</Label>
+            <Label class="w-18 shrink-0">详细地址</Label>
             <Input v-model="form.address" :disabled="!editing" />
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle class="text-base">收款与资质</CardTitle>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="flex items-center gap-2">
-            <Label>开户行</Label>
-            <Input v-model="form.bankName" :disabled="!editing" placeholder="如：招商银行上海分行" />
-          </div>
-          <div class="flex items-center gap-2">
-            <Label>对公账号</Label>
-            <Input v-model="form.bankAccount" :disabled="!editing" placeholder="对公收款账号" />
-          </div>
-          <div class="flex items-center gap-2">
-            <Label>纳税人识别号</Label>
-            <Input v-model="form.taxNo" :disabled="!editing" />
-          </div>
-          <div class="flex items-center gap-2">
-            <Label>营业执照</Label>
+           <div class="flex items-center gap-2">
+            <Label class="w-18 shrink-0">营业执照</Label>
             <div class="text-sm text-muted-foreground">
               {{ form.businessLicenseUrl ? form.businessLicenseUrl : '未上传（阶段 4 接入文件上传）' }}
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Label>企业简介</Label>
-            <Input v-model="form.description" :disabled="!editing" placeholder="选填" />
+            <Label class="w-18 shrink-0">企业简介</Label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="lg:col-span-1">
+        <CardHeader>
+          <CardTitle class="text-base">收款与资质</CardTitle>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <div class="flex items-center gap-2">
+            <Label class="w-14 shrink-0" >开户行</Label>
+            <Input v-model="form.bankName" :disabled="!editing" placeholder="如：招商银行上海分行" />
+          </div>
+          <div class="flex items-center gap-2">
+            <Label class="w-14 shrink-0">对公账号</Label>
+            <Input v-model="form.bankAccount" :disabled="!editing" placeholder="对公收款账号" />
+          </div>
+          <div class="flex items-center gap-2">
+            <Label class="w-14 shrink-0">纳税人识别号</Label>
+            <Input v-model="form.taxNo" :disabled="!editing" />
           </div>
         </CardContent>
       </Card>

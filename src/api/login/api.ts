@@ -22,6 +22,7 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
   // update-begin--author:phase7---date:2026-05-25---for:【阶段7】适配 JeecgBoot 返回结构
   const res = await defHttp.post<any>({ url: Api.Login, data: params });
   const raw = res.userInfo ?? res.user ?? {};
+  const b2bMerchantInfo = raw.b2bMerchantInfo || res.b2bMerchantInfo || {};
   // 角色码（逗号分隔的字符串），优先从 userInfo.roleCode 取
   const roleCode: string = raw.roleCode || res.roleCode || '';
   // 基于 roleCode 判定角色
@@ -69,8 +70,9 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
       avatar: raw.avatar || '',
       role: resolveRole(),
       roleCode: roleCode || undefined,
-      supplierId: raw.supplierId || raw.supplier_id || undefined,
-      storeId: raw.storeId || raw.store_id || undefined,
+      supplierId: raw.supplierId || raw.supplier_id || b2bMerchantInfo.supplierId || undefined,
+      storeId: raw.storeId || raw.store_id || b2bMerchantInfo.storeId || undefined,
+      b2bMerchantInfo,
       permissions: resolvePermissions(),
     },
   };
@@ -116,10 +118,21 @@ export function getCaptchaApi(params: { mobile: string; smsmode: string }): Prom
 
 export async function getUserInfoApi(): Promise<UserInfo> {
   const raw = await defHttp.get<any>({ url: Api.GetUserInfo });
-  const roleCode: string = raw.roleCode || '';
+  const userRaw = raw?.userInfo || raw?.user || raw || {};
+  const b2bMerchantInfo = userRaw.b2bMerchantInfo || raw?.b2bMerchantInfo || {};
+  const roleCode: string = userRaw.roleCode || raw?.roleCode || '';
   // 提取权限，兜底同 loginApi
   const resolvePerms = (): string[] => {
-    const candidates = [raw.permissionList, raw.permissions, raw.perms, raw.authList];
+    const candidates = [
+      userRaw.permissionList,
+      userRaw.permissions,
+      userRaw.perms,
+      userRaw.authList,
+      raw?.permissionList,
+      raw?.permissions,
+      raw?.perms,
+      raw?.authList,
+    ];
     for (const c of candidates) {
       if (Array.isArray(c) && c.length > 0) return c;
     }
@@ -150,15 +163,16 @@ export async function getUserInfoApi(): Promise<UserInfo> {
     return 'BASIC_USER';
   };
   return {
-    id: raw.id || '',
-    username: raw.username || '',
-    realName: raw.realname || raw.realName || '',
-    email: raw.email || '',
-    avatar: raw.avatar || '',
+    id: userRaw.id || '',
+    username: userRaw.username || '',
+    realName: userRaw.realname || userRaw.realName || '',
+    email: userRaw.email || '',
+    avatar: userRaw.avatar || '',
     role: resolveRole(),
     roleCode: roleCode || undefined,
-    supplierId: raw.supplierId || raw.supplier_id || undefined,
-    storeId: raw.storeId || raw.store_id || undefined,
+    supplierId: userRaw.supplierId || userRaw.supplier_id || raw?.supplierId || raw?.supplier_id || b2bMerchantInfo.supplierId || undefined,
+    storeId: userRaw.storeId || userRaw.store_id || raw?.storeId || raw?.store_id || b2bMerchantInfo.storeId || undefined,
+    b2bMerchantInfo,
     permissions: resolvePerms(),
   };
 }

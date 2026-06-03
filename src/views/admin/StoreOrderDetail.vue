@@ -1,39 +1,35 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import {
-  AlertCircle, ArrowLeft, CheckCircle2, Clock3, CreditCard,
-  MapPin, Package, Receipt, ShoppingCart, Smartphone, Truck, Wallet, XCircle,
-} from 'lucide-vue-next';
-import {
-  Badge, Button, Input, Label,
-  Tabs, TabsContent, TabsList, TabsTrigger,
-} from '/@/components/ui';
+import { ArrowLeft, CheckCircle2, Clock3, CreditCard, MapPin, Package, ShoppingCart, Truck, XCircle } from 'lucide-vue-next';
+import { Badge, Button, Input, Label } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicModal, useModal } from '/@/components/BasicModal';
-import { getStoreOrderApi, cancelStoreOrderApi } from '/@/api/store/order';
-import { getPaymentByOrderApi, submitPaymentApi } from '/@/api/store/payment';
-import {
-  PLATFORM_BANK_INFO,
-  STORE_ORDER_STATUS_LABEL,
-  STORE_ORDER_STATUS_VARIANT,
-  STORE_PAYMENT_METHOD_LABEL,
-  STORE_PAYMENT_STATUS_LABEL,
-  STORE_PAYMENT_STATUS_VARIANT,
-} from '/@/constants/storeStatus';
+import { getStoreOrderApi, cancelStoreOrderApi } from '/@/api/admin/operations';
+import { ORDER_STATUS_LABEL, ORDER_STATUS_VARIANT } from '/@/constants/b2b2bStatus';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
-import type { StorePaymentMethod, StorePaymentRecord, StoreViewOrder } from '/#/b2b-store';
+import type { OrderStatus, StoreOrder } from '/#/b2b-2b';
 
 const route = useRoute();
 const router = useRouter();
 const orderId = computed(() => route.params.id as string);
 
-const order = ref<StoreViewOrder | null>(null);
-const payment = ref<StorePaymentRecord | null>(null);
+const order = ref<StoreOrder | null>(null);
 const loading = ref(false);
+const submitting = ref(false);
+const cancelReason = ref('');
+const cancelModal = useModal();
 
-function parseAddress(value: any) {
+function orderStatusLabel(status: OrderStatus, fallback?: string) {
+  return fallback || ORDER_STATUS_LABEL[status] || '-';
+}
+
+function orderStatusVariant(status: OrderStatus) {
+  return ORDER_STATUS_VARIANT[status] || 'warning';
+}
+
+function parseAddress(value?: string) {
   if (!value) return null;
   if (typeof value === 'object') return value;
   try {
@@ -44,13 +40,9 @@ function parseAddress(value: any) {
 }
 
 const address = computed(() => parseAddress(order.value?.deliveryAddress));
-const orderCreateTime = computed(() => order.value?.createTime || String(route.query.createTime || ''));
-const paidTime = computed(() => payment.value?.confirmedAt || order.value?.paymentTime || '');
-const shippedTime = computed(() => order.value?.deliveries?.find((it) => it.shippedTime)?.shippedTime || '');
-const receivedTime = computed(() => {
-  const delivery = (order.value?.deliveries || []).find((it: any) => it.receivedTime) as any;
-  return delivery?.receivedTime || '';
-});
+const canCancel = computed(() => order.value?.orderStatus === 0);
+const createTime = computed(() => order.value?.createdAt || (order.value as any)?.createTime || '');
+const paidTime = computed(() => order.value?.paidAt || order.value?.paymentTime || '');
 
 type LogisticsStepState = 'done' | 'current' | 'pending' | 'cancelled';
 
@@ -74,8 +66,8 @@ const logisticsSteps = computed<LogisticsStep[]>(() => {
     return [
       {
         title: '已下单',
-        description: '采购订单已提交',
-        time: orderCreateTime.value,
+        description: '门店已提交采购订单',
+        time: createTime.value,
         state: 'done',
       },
       {
@@ -92,20 +84,20 @@ const logisticsSteps = computed<LogisticsStep[]>(() => {
   return [
     {
       title: '已下单',
-      description: '采购订单已提交',
-      time: orderCreateTime.value,
+      description: '门店已提交采购订单',
+      time: createTime.value,
       state: 'done',
     },
     {
       title: '待收货',
       description: isReceiving || isSigned ? '商品已进入履约配送，等待门店收货确认' : '订单完成支付和集采后进入收货阶段',
-      time: shippedTime.value || paidTime.value,
+      time: order.value.shippedAt || paidTime.value,
       state: stepState(isReceiving || isSigned, status === 1 || status === 2),
     },
     {
       title: '已签收',
-      description: isSigned ? '订单已完成签收' : '确认全部收货后完成签收',
-      time: receivedTime.value || (order.value as any).completedAt,
+      description: isSigned ? '门店已确认签收，订单履约完成' : '门店确认全部收货后完成签收',
+      time: order.value.completedAt,
       state: stepState(isSigned, isReceiving),
     },
   ];
@@ -124,81 +116,38 @@ function logisticsTextClass(state: LogisticsStepState) {
   return 'text-muted-foreground';
 }
 
-async function loadAll() {
+async function loadOrder() {
   loading.value = true;
   try {
-    const data = await getStoreOrderApi(orderId.value);
-    order.value = data;
-    if (data?.orderNo) {
-      try {
-        payment.value = await getPaymentByOrderApi(data.orderNo);
-      } catch {
-        payment.value = null;
-      }
-    }
+    order.value = await getStoreOrderApi(orderId.value);
   } finally {
     loading.value = false;
   }
 }
 
-onMounted(loadAll);
-watch(orderId, loadAll);
-
-const method = ref<StorePaymentMethod>('OFFLINE');
-const form = reactive({ voucherUrl: '', transactionNo: '', remark: '' });
-const submitting = ref(false);
-const payModal = useModal();
-const canSubmit = computed(() => method.value === 'OFFLINE' ? !!form.voucherUrl : !!form.transactionNo);
-
-function pickMockVoucher() {
-  form.voucherUrl = `https://placehold.co/600x400/eef2ff/4f46e5?text=Voucher+${Date.now() % 1000}`;
-}
-
 function goBack() {
-  router.push(ROUTE_PATHS.STORE_ORDERS);
+  router.push(ROUTE_PATHS.ADMIN_STORE_ORDERS);
 }
 
-async function submitPay() {
-  if (!order.value || !canSubmit.value) return;
-  submitting.value = true;
-  try {
-    await submitPaymentApi({
-      orderId: order.value.id,
-      orderNo: order.value.orderNo,
-      amount: order.value.totalAmount,
-      method: method.value,
-      voucherUrl: method.value === 'OFFLINE' ? form.voucherUrl : undefined,
-      transactionNo: method.value !== 'OFFLINE' ? form.transactionNo : undefined,
-      remark: form.remark,
-    });
-    payModal.close();
-    Object.assign(form, { voucherUrl: '', transactionNo: '', remark: '' });
-    await loadAll();
-  } finally {
-    submitting.value = false;
-  }
-}
-
-const cancelModal = useModal();
-const cancelReason = ref('');
-const cancelSubmitting = ref(false);
-
-function onCancel() {
+function openCancel() {
   cancelReason.value = '';
   cancelModal.open();
 }
 
 async function confirmCancel() {
-  if (!order.value) return;
-  cancelSubmitting.value = true;
+  if (!order.value || !cancelReason.value.trim()) return;
+  submitting.value = true;
   try {
-    await cancelStoreOrderApi(order.value.id, cancelReason.value || '门店主动取消');
+    await cancelStoreOrderApi(order.value.id, cancelReason.value.trim());
     cancelModal.close();
-    router.replace(ROUTE_PATHS.STORE_ORDERS);
+    await loadOrder();
   } finally {
-    cancelSubmitting.value = false;
+    submitting.value = false;
   }
 }
+
+onMounted(loadOrder);
+watch(orderId, loadOrder);
 </script>
 
 <template>
@@ -218,7 +167,10 @@ async function confirmCancel() {
       <div class="h-6 w-6 animate-spin rounded-full border-2 border-[#1A2C54] border-t-transparent" />
       <span class="ml-3 text-sm text-muted-foreground">加载订单信息...</span>
     </div>
-    <div v-else-if="!order" class="text-center text-muted-foreground py-24">订单不存在或无访问权限</div>
+
+    <div v-else-if="!order" class="text-center text-muted-foreground py-24">
+      订单不存在或无访问权限
+    </div>
 
     <div v-else class="pt-4 pb-16">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -260,7 +212,7 @@ async function confirmCancel() {
                       <thead class="bg-[#f4f8fc] text-muted-foreground">
                         <tr class="text-left">
                           <th class="px-4 py-3 font-medium">商品</th>
-                          <th class="px-4 py-3 font-medium text-right">目录价</th>
+                          <th class="px-4 py-3 font-medium text-right">售价</th>
                           <th class="px-4 py-3 font-medium text-right">成交价</th>
                           <th class="px-4 py-3 font-medium text-right">数量</th>
                           <!-- <th class="px-4 py-3 font-medium text-right">已收货</th> -->
@@ -275,7 +227,7 @@ async function confirmCancel() {
                           </td>
                           <td class="px-4 py-3 text-right">{{ formatCurrency(it.catalogPrice) }}</td>
                           <td class="px-4 py-3 text-right">{{ formatCurrency(it.actualPrice) }}</td>
-                          <td class="px-4 py-3 text-right">{{ it.quantity }} {{ it.unit }}</td>
+                          <td class="px-4 py-3 text-right">{{ it.quantity ?? it.qty ?? 0 }} {{ it.unit }}</td>
                           <!-- <td class="px-4 py-3 text-right">{{ it.receivedQty ?? 0 }} {{ it.unit }}</td> -->
                           <td class="px-4 py-3 text-right font-semibold text-[#1A2C54]">{{ formatCurrency(it.subtotal) }}</td>
                         </tr>
@@ -308,8 +260,8 @@ async function confirmCancel() {
                   <div class="flex items-start justify-between gap-4 pb-5 mb-5 border-b border-[#e8edf3]">
                     <div class="min-w-0">
                       <div class="text-xs text-muted-foreground mb-1">当前状态</div>
-                      <Badge :variant="STORE_ORDER_STATUS_VARIANT[order.orderStatus] || 'info'">
-                        {{ order.statusLabel || STORE_ORDER_STATUS_LABEL[order.orderStatus] }}
+                      <Badge :variant="orderStatusVariant(order.orderStatus)">
+                        {{ orderStatusLabel(order.orderStatus, order.statusLabel) }}
                       </Badge>
                     </div>
                     <div class="text-right text-sm min-w-0">
@@ -358,7 +310,7 @@ async function confirmCancel() {
         <div class="space-y-5 lg:sticky lg:top-20 h-fit">
           <div class="bg-[#1A2C54] text-white rounded-2xl p-6 overflow-hidden relative">
             <div class="relative z-10">
-              <div class="text-sm text-white/70">应付金额</div>
+              <div class="text-sm text-white/70">订单金额</div>
               <div class="text-3xl font-bold mt-1 tabular-nums">{{ formatCurrency(order.totalAmount) }}</div>
               <div class="grid grid-cols-2 gap-3 mt-5 text-sm">
                 <div>
@@ -370,130 +322,58 @@ async function confirmCancel() {
                   <div class="font-semibold">{{ order.itemCount ?? order.items?.length ?? 0 }}</div>
                 </div>
               </div>
-
-            <div v-if="order.orderStatus === 0 && (!payment || payment.status !== 2)" class="mt-5 space-y-2">
-              <Button class="w-full" @click="payModal.open()">
-                <CreditCard class="w-4 h-4 mr-1.5" />立即支付
+              <Button v-if="canCancel" variant="destructive" class="w-full mt-5" :disabled="submitting" @click="openCancel">
+                取消订单
               </Button>
-              <Button variant="outline" class="w-full" @click="onCancel">取消订单</Button>
-            </div>
-            <div v-else-if="order.orderStatus === 0 && payment?.status === 2" class="mt-5 space-y-2">
-              <div class="flex items-center gap-1.5 text-sm text-destructive mb-2">
-                <AlertCircle class="w-4 h-4" />
-                支付凭证被驳回
-              </div>
-              <Button class="w-full" @click="payModal.open()">重新提交凭证</Button>
-              <Button variant="outline" class="w-full" @click="onCancel">取消订单</Button>
-            </div>
-            <div v-else-if="order.orderStatus === 5" class="mt-5">
-              <Badge variant="success" class="w-full justify-center py-2 text-sm">订单已完成</Badge>
-            </div>
-            <div v-else-if="order.orderStatus === 6" class="mt-5">
-              <Badge variant="muted" class="w-full justify-center py-2 text-sm">订单已取消</Badge>
-            </div>
-            <div v-else class="mt-5">
-              <Badge variant="secondary" class="w-full justify-center py-2 text-sm">订单进行中</Badge>
-            </div>
             </div>
             <ShoppingCart class="absolute -bottom-5 -right-5 w-28 h-28 text-white/10" />
           </div>
 
-          <div v-if="payment" class="bg-white border border-[#edf1f5] rounded-2xl p-5 space-y-2">
-            <div class="flex items-center justify-between">
-              <div class="font-bold text-[#1A2C54] flex items-center gap-2">
-                <Receipt class="w-3.5 h-3.5" />付款记录
+          <div class="bg-white border border-[#edf1f5] rounded-2xl p-5">
+            <h4 class="font-bold text-[#1A2C54] mb-4 flex items-center gap-2">
+              <CreditCard class="w-4 h-4" />
+              付款信息
+            </h4>
+            <div v-if="order.paymentInfo" class="space-y-3 text-sm">
+              <div>
+                <div class="text-xs text-muted-foreground">支付记录ID</div>
+                <div class="font-mono break-all">{{ order.paymentInfo.paymentId }}</div>
               </div>
-              <Badge :variant="STORE_PAYMENT_STATUS_VARIANT[payment.status]">
-                {{ STORE_PAYMENT_STATUS_LABEL[payment.status] }}
-              </Badge>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="text-xs text-muted-foreground">支付金额</div>
+                  <div class="font-medium">{{ formatCurrency(order.paymentInfo.paymentAmount) }}</div>
+                </div>
+                <div>
+                  <div class="text-xs text-muted-foreground">支付状态</div>
+                  <div>{{ order.paymentInfo.paymentStatus }}</div>
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground">支付方式</div>
+                <div>{{ order.paymentInfo.paymentMethod || order.paymentMethod || '-' }}</div>
+              </div>
             </div>
-            <div class="text-xs text-muted-foreground">{{ payment.paymentNo }}</div>
-            <div class="text-xs">支付方式：{{ STORE_PAYMENT_METHOD_LABEL[payment.method] }}</div>
-            <div class="text-xs text-muted-foreground">提交时间：{{ formatDateTime(payment.submittedAt) }}</div>
-            <div v-if="payment.transactionNo" class="text-xs">
-              流水号：<span class="font-mono">{{ payment.transactionNo }}</span>
+            <div v-else class="text-sm text-muted-foreground">
+              暂无付款记录
             </div>
-            <div v-if="payment.status === 2 && payment.rejectReason" class="text-xs text-destructive bg-destructive/5 rounded-lg p-2.5">
-              驳回原因：{{ payment.rejectReason }}
-            </div>
-            <img
-              v-if="payment.voucherUrl"
-              :src="payment.voucherUrl"
-              alt="支付凭证"
-              class="rounded-lg border border-border w-full mt-2 cursor-pointer hover:opacity-90 transition-opacity"
-            />
           </div>
+        </div>
       </div>
     </div>
-    </div>
-
-    <BasicModal
-      v-model:open="payModal.visible.value"
-      title="提交支付凭证"
-      description="支付成功后请上传凭证或填写流水号，平台核对后完成订单"
-      :confirm-loading="submitting"
-      :confirm-disabled="!canSubmit"
-      width="640px"
-      confirm-text="提交"
-      @confirm="submitPay"
-    >
-      <Tabs :model-value="method" @update:model-value="(v: any) => method = v as StorePaymentMethod" class="w-full">
-        <TabsList class="grid grid-cols-3">
-          <TabsTrigger value="OFFLINE"><Wallet class="w-3.5 h-3.5 mr-1" />线下转账</TabsTrigger>
-          <TabsTrigger value="ONLINE_WECHAT"><Smartphone class="w-3.5 h-3.5 mr-1" />微信</TabsTrigger>
-          <TabsTrigger value="ONLINE_ALIPAY"><Smartphone class="w-3.5 h-3.5 mr-1" />支付宝</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="OFFLINE" class="space-y-3">
-          <div class="bg-muted/40 border border-border rounded-lg p-4 text-sm space-y-1">
-            <div class="font-medium mb-1">平台收款账户</div>
-            <div>开户行：{{ PLATFORM_BANK_INFO.bankName }}</div>
-            <div>户名：{{ PLATFORM_BANK_INFO.accountName }}</div>
-            <div>账号：<span class="tabular-nums font-mono">{{ PLATFORM_BANK_INFO.accountNo }}</span></div>
-            <div class="text-xs text-muted-foreground mt-2">{{ PLATFORM_BANK_INFO.notice }}</div>
-          </div>
-          <div class="space-y-2">
-            <Label>转账凭证 <span class="text-destructive">*</span></Label>
-            <div class="flex items-center gap-2">
-              <Input v-model="form.voucherUrl" placeholder="粘贴凭证图片 URL" class="flex-1" />
-              <Button variant="outline" size="sm" @click="pickMockVoucher">模拟上传</Button>
-            </div>
-            <img v-if="form.voucherUrl" :src="form.voucherUrl" alt="凭证预览" class="rounded border border-border max-h-40" />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="ONLINE_WECHAT" class="space-y-3">
-          <div class="space-y-2">
-            <Label>微信交易流水号 <span class="text-destructive">*</span></Label>
-            <Input v-model="form.transactionNo" placeholder="例如 4200001234202605xxxxxx" />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="ONLINE_ALIPAY" class="space-y-3">
-          <div class="space-y-2">
-            <Label>支付宝交易流水号 <span class="text-destructive">*</span></Label>
-            <Input v-model="form.transactionNo" placeholder="例如 2026052422001234567890" />
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <div class="space-y-1.5 mt-3">
-        <Label>备注</Label>
-        <Input v-model="form.remark" placeholder="选填" />
-      </div>
-    </BasicModal>
 
     <BasicModal
       v-model:open="cancelModal.visible.value"
-      title="确认取消订单"
-      description="取消后不可恢复，请填写取消原因"
+      title="取消订单"
+      :description="`将取消订单 ${order?.orderNo || ''}`"
       confirm-text="确认取消"
       confirm-variant="destructive"
-      :confirm-loading="cancelSubmitting"
+      :confirm-loading="submitting"
+      :confirm-disabled="!cancelReason.trim()"
       @confirm="confirmCancel"
     >
       <div class="space-y-2">
-        <Label>取消原因</Label>
+        <Label>取消原因 <span class="text-destructive">*</span></Label>
         <Input v-model="cancelReason" placeholder="请输入取消原因" />
       </div>
     </BasicModal>

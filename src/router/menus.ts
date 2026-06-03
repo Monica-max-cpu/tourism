@@ -27,7 +27,16 @@ export const adminMenus: MenuItem[] = [
       { name: 'AdminCatalogs', path: ROUTE_PATHS.ADMIN_CATALOGS, title: '平台商品目录' },
     ],
   },
-  { name: 'AdminStocks', path: ROUTE_PATHS.ADMIN_STOCKS, title: '库存管理', icon: 'Boxes' },
+  {
+    name: 'AdminStockManage',
+    path: '/b2b/admin/stocks',
+    title: '库存管理',
+    icon: 'Boxes',
+    children: [
+      { name: 'AdminStocks', path: ROUTE_PATHS.ADMIN_STOCKS, title: '库存列表' },
+      { name: 'AdminStockLogs', path: ROUTE_PATHS.ADMIN_STOCK_LOGS, title: '库存流水' },
+    ],
+  },
   { name: 'AdminStoreOrders', path: ROUTE_PATHS.ADMIN_STORE_ORDERS, title: '门店采购订单', icon: 'ShoppingCart' },
   { name: 'AdminPayments', path: ROUTE_PATHS.ADMIN_PAYMENTS_PENDING, title: '支付管理', icon: 'CreditCard' },
   {

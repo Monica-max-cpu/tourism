@@ -31,31 +31,62 @@ export interface StockRecord {
   updateTime?: string;
 }
 
+export interface StockLogRecord {
+  id: string;
+  stockId?: string;
+  supplierId?: string;
+  supplierName?: string;
+  productId?: string;
+  productName?: string;
+  warehouseId?: string;
+  warehouseName?: string;
+  changeType?: string;
+  changeQty?: number;
+  beforeAvailableQty?: number;
+  afterAvailableQty?: number;
+  relatedNo?: string;
+  relatedType?: string;
+  remark?: string;
+  createTime?: string;
+  time?: string;
+}
+
 // ===== 门店采购订单 =====
 export type OrderStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export interface StoreOrderItem {
-  productSku: string;
+  id?: string;
+  catalogId?: string;
+  productSku?: string;
   productName: string;
+  spec?: string;
   unit: string;
-  qty: number;
+  qty?: number;
+  quantity?: number;
   /** 销售价（门店看到的价格） */
-  unitPrice: number;
+  unitPrice?: number;
+  catalogPrice?: number;
+  actualPrice?: number;
   /** 行小计 */
   subtotal: number;
+  receivedQty?: number;
 }
 
 export interface StoreOrder {
   id: string;
   orderNo: string;
   storeId: string;
-  storeName: string;
+  storeName?: string;
   orderStatus: OrderStatus;
   statusLabel?: string;
   items: StoreOrderItem[];
   /** 订单总金额（按销售价） */
   totalAmount: number;
-  itemCount: number;
+  paidAmount?: number;
+  paymentMethod?: string;
+  paymentTime?: string;
+  deliveryAddress?: string;
+  itemCount?: number;
   createdAt: string;
   paidAt?: string;
   confirmedAt?: string;
@@ -66,6 +97,13 @@ export interface StoreOrder {
   collectiveNo?: string;
   supplierName?: string;
   remark?: string;
+  expiredTime?: string;
+  paymentInfo?: {
+    paymentId: string;
+    paymentAmount: number;
+    paymentStatus: number;
+    paymentMethod?: string;
+  };
 }
 
 // ===== 支付管理 =====

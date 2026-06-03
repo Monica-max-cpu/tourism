@@ -1,8 +1,6 @@
 <script setup lang="ts">
-/**
- * 平台管理员 - 履约管理
- */
 import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Badge, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -13,45 +11,61 @@ import { BasicModal, useModal } from '/@/components/BasicModal';
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import { listDeliveriesApi, handleDeliveryExceptionApi } from '/@/api/admin/fulfillment';
-import { DELIVERY_STATUS_LABEL, DELIVERY_STATUS_VARIANT, DELIVERY_STATUS_OPTIONS } from '/@/constants/b2b2cStatus';
+import {
+  DELIVERY_RECORD_STATUS_LABEL,
+  DELIVERY_RECORD_STATUS_VARIANT,
+  DELIVERY_RECORD_STATUS_OPTIONS,
+} from '/@/constants/b2b2cStatus';
 import { formatDateTime } from '/@/utils/format';
 import type { DeliveryRecord } from '/#/b2b-2c';
 
-const search = reactive({ keyword: '', status: '' });
+const router = useRouter();
+const search = reactive({ deliveryNo: '', collectiveOrderId: '', storeId: '', supplierId: '', status: '' });
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
-  return await listDeliveriesApi({ ...params, searchInfo: { ...search } });
+  const query: any = { ...params };
+  Object.entries(search).forEach(([key, value]) => {
+    if (value !== '') query[key] = key === 'status' ? Number(value) : value;
+  });
+  return await listDeliveriesApi(query);
 }
 
 const columns: BasicColumn[] = [
-  { field: 'deliveryNo', title: '配送单号', width: 160 },
-  { field: 'collectiveNo', title: '集采单号', width: 160 },
-  { field: 'supplierName', title: '供应商', minWidth: 180 },
-  { field: 'storeName', title: '收货门店', minWidth: 160 },
-  { field: 'carrier', title: '承运方', width: 110 },
-  { field: 'trackingNo', title: '物流单号', width: 160 },
+  { field: 'deliveryNo', title: '发货单号', width: 160 },
+  { field: 'collectiveOrderId', title: '集采单ID', width: 180, showOverflow: 'tooltip' },
+  // { field: 'collectiveItemId', title: '集采明细ID', width: 180, showOverflow: 'tooltip' },
+  { field: 'supplierName', title: '供应商', minWidth: 160, formatter: ({ row }) => row.supplierName || row.supplierId || '-' },
+  { field: 'storeName', title: '门店', width: 170, showOverflow: 'tooltip', formatter: ({ row }) => row.storeName || row.storeId || '-' },
+  { field: 'productName', title: '商品', minWidth: 160, formatter: ({ cellValue }) => cellValue || '-' },
+  { field: 'deliveryQty', title: '发货数量', width: 100, align: 'right' },
+  // { field: 'receivedQty', title: '收货数量', width: 100, align: 'right', formatter: ({ cellValue }) => cellValue ?? '-' },
+  { field: 'logisticsCompany', title: '物流公司', width: 120, formatter: ({ cellValue }) => cellValue || '-' },
+  { field: 'trackingNo', title: '物流单号', width: 160, formatter: ({ cellValue }) => cellValue || '-' },
   { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
-  { field: 'shippedAt', title: '发货时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'deliveredAt', title: '送达时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'action', title: '操作', width: 140, fixed: 'right', slots: { default: 'action' } },
+  { field: 'shippedTime', title: '发货时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'receivedTime', title: '收货时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'action', title: '操作', width: 150, fixed: 'right', slots: { default: 'action' } },
 ];
 
 const exceptionModal = useModal<DeliveryRecord>();
-const exceptionForm = reactive<{ action: 'retry' | 'cancel'; remark: string }>({ action: 'retry', remark: '' });
+const exceptionRemark = ref('');
 const submitting = ref(false);
 
+function openDetail(row: DeliveryRecord) {
+  router.push(`/b2b/admin/deliveries/${row.id}`);
+}
+
 function openException(row: DeliveryRecord) {
-  exceptionForm.action = 'retry';
-  exceptionForm.remark = '';
+  exceptionRemark.value = row.receiveRemark || '';
   exceptionModal.open(row);
 }
 
 async function confirmException() {
-  if (!exceptionForm.remark.trim() || !exceptionModal.data.value) return;
+  if (!exceptionModal.data.value || !exceptionRemark.value.trim()) return;
   submitting.value = true;
   try {
-    await handleDeliveryExceptionApi(exceptionModal.data.value.id, exceptionForm.action, exceptionForm.remark.trim());
+    await handleDeliveryExceptionApi(exceptionModal.data.value.id, exceptionRemark.value.trim());
     exceptionModal.close();
     reload();
   } finally {
@@ -61,25 +75,32 @@ async function confirmException() {
 
 function onSearch() { reload({ pageNo: 1 }); }
 function onReset() {
-  search.keyword = ''; search.status = '';
+  Object.assign(search, { deliveryNo: '', collectiveOrderId: '', storeId: '', supplierId: '', status: '' });
   reload({ pageNo: 1 });
 }
 </script>
 
 <template>
-  <PageWrapper title="履约管理" subtitle="集采单的发货与配送跟踪">
-
+  <PageWrapper title="履约管理" subtitle="按后端发货单记录跟踪供应商直发门店流程">
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
-        <Label class="text-xs text-muted-foreground">关键词</Label>
-        <Input v-model="search.keyword" placeholder="单号 / 门店 / 供应商" class="w-60" @keyup.enter="onSearch" />
+        <Label class="text-xs text-muted-foreground">发货单号</Label>
+        <Input v-model="search.deliveryNo" placeholder="发货单号" class="w-48" @keyup.enter="onSearch" />
+      </div>
+      <div class="flex items-center gap-2">
+        <Label class="text-xs text-muted-foreground">集采单ID</Label>
+        <Input v-model="search.collectiveOrderId" placeholder="集采单ID" class="w-52" @keyup.enter="onSearch" />
+      </div>
+      <div class="flex items-center gap-2">
+        <Label class="text-xs text-muted-foreground">门店ID</Label>
+        <Input v-model="search.storeId" placeholder="门店ID" class="w-48" @keyup.enter="onSearch" />
       </div>
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">状态</Label>
         <Select v-model="search.status">
-          <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
+          <SelectTrigger class="w-36"><SelectValue placeholder="全部" /></SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="o in DELIVERY_STATUS_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</SelectItem>
+            <SelectItem v-for="o in DELIVERY_RECORD_STATUS_OPTIONS" :key="String(o.value)" :value="String(o.value)">{{ o.label }}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -87,46 +108,33 @@ function onReset() {
 
     <BasicTable :columns="columns" :api="loadData" row-key="id" @register="registerTable">
       <template #status="{ row }">
-        <Badge :variant="DELIVERY_STATUS_VARIANT[row.status]">{{ DELIVERY_STATUS_LABEL[row.status] }}</Badge>
+        <Badge :variant="DELIVERY_RECORD_STATUS_VARIANT[row.status] || 'warning'">
+          {{ DELIVERY_RECORD_STATUS_LABEL[row.status] || '-' }}
+        </Badge>
       </template>
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '处理异常', authCode: 'b2b:delivery:exception', hidden: row.status !== 'EXCEPTION', onClick: () => openException(row) },
+            { label: '详情', onClick: () => openDetail(row) },
+            { label: '标记异常', authCode: 'b2b:delivery:exception', hidden: row.status === 2 || row.status === 3, onClick: () => openException(row) },
           ]"
         />
-        <span v-if="row.status !== 'EXCEPTION'" class="text-xs text-muted-foreground">-</span>
       </template>
     </BasicTable>
 
     <BasicModal
       v-model:open="exceptionModal.visible.value"
-      title="处理配送异常"
-      :description="exceptionModal.data.value ? `配送单 ${exceptionModal.data.value.deliveryNo}` : ''"
-      confirm-text="确认处理"
+      title="标记发货异常"
+      :description="exceptionModal.data.value ? `发货单 ${exceptionModal.data.value.deliveryNo}` : ''"
+      confirm-text="确认标记"
+      confirm-variant="destructive"
       :confirm-loading="submitting"
-      :confirm-disabled="!exceptionForm.remark.trim()"
+      :confirm-disabled="!exceptionRemark.trim()"
       @confirm="confirmException"
     >
-      <div class="space-y-4 text-sm">
-        <div v-if="exceptionModal.data.value?.exceptionReason" class="bg-destructive/5 border border-destructive/20 rounded-md p-3">
-          <div class="text-xs text-destructive font-medium mb-1">异常原因</div>
-          <div>{{ exceptionModal.data.value.exceptionReason }}</div>
-        </div>
-        <div class="space-y-2">
-          <Label>处理方式 <span class="text-destructive">*</span></Label>
-          <Select v-model="exceptionForm.action">
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="retry">重新派单</SelectItem>
-              <SelectItem value="cancel">取消配送</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div class="space-y-2">
-          <Label>处理说明 <span class="text-destructive">*</span></Label>
-          <Input v-model="exceptionForm.remark" placeholder="请输入处理说明" />
-        </div>
+      <div class="space-y-2">
+        <Label>异常说明 <span class="text-destructive">*</span></Label>
+        <Input v-model="exceptionRemark" placeholder="请输入异常说明" />
       </div>
     </BasicModal>
   </PageWrapper>

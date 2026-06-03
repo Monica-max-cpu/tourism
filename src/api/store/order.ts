@@ -6,6 +6,7 @@
  */
 import { defHttp } from '/@/api/http';
 import type { StoreOrderCreateParams } from '/#/b2b-store';
+import type { StoreViewOrder } from '/#/b2b-store';
 
 enum Api {
   ListOrders = '/b2b/store/order/list',
@@ -14,7 +15,17 @@ enum Api {
 }
 
 export function listStoreOrdersApi(params: any) {
-  return defHttp.get({ url: Api.ListOrders, params });
+  // storeId is optional; backend filters by the current login subject.
+  return defHttp.get<any>({ url: Api.ListOrders, params }).then(normalizeStoreOrderPage);
+}
+
+function normalizeStoreOrderPage(input: any): { records: StoreViewOrder[]; total: number } {
+  const page = input?.records || input?.list || input?.rows ? input : input?.result;
+  if (Array.isArray(input)) return { records: input, total: input.length };
+  if (Array.isArray(page?.records)) return { records: page.records, total: Number(page.total ?? page.records.length) };
+  if (Array.isArray(page?.list)) return { records: page.list, total: Number(page.total ?? page.list.length) };
+  if (Array.isArray(page?.rows)) return { records: page.rows, total: Number(page.total ?? page.rows.length) };
+  return { records: [], total: 0 };
 }
 export function getStoreOrderApi(id: string) {
   return defHttp.get({ url: `/b2b/store/order/detail/${id}` });
@@ -23,10 +34,10 @@ export function createStoreOrderApi(params: StoreOrderCreateParams) {
   return defHttp.post({ url: Api.CreateOrder, data: params });
 }
 export function cancelStoreOrderApi(id: string, cancelReason: string) {
-  return defHttp.put({ url: `/b2b/store/order/cancel/${id}`, data: { cancelReason } });
+  return defHttp.put({ url: `/b2b/store/order/cancel/${id}`, params: { cancelReason } });
 }
-export function confirmReceiveApi(id: string) {
-  return defHttp.put({ url: Api.ConfirmReceive, data: { id } });
+export function confirmReceiveApi(data: { deliveryId: string; receivedQty: number; receiveRemark?: string }) {
+  return defHttp.put({ url: Api.ConfirmReceive, data });
 }
 export function getStoreWorkbenchSummaryApi(storeId: string) {
   void storeId;

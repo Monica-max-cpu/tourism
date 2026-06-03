@@ -1,39 +1,44 @@
 <script setup lang="ts">
-/**
- * 平台管理员 - 待确认收款 */
 import { reactive, ref } from 'vue';
-import { CreditCard, Wallet, FileImage } from 'lucide-vue-next';
+import { CreditCard, FileImage, Wallet } from 'lucide-vue-next';
 import {
-  Badge, Button, Input, Label,
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  Badge,
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
 import { BasicModal, useModal } from '/@/components/BasicModal';
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
-import { listPaymentsApi, confirmPaymentApi } from '/@/api/admin/operations';
+import { confirmPaymentApi, listPaymentsApi } from '/@/api/admin/operations';
 import {
-  PAYMENT_STATUS_LABEL, PAYMENT_STATUS_VARIANT, PAYMENT_STATUS_OPTIONS,
-  PAYMENT_METHOD_LABEL,
+  PAYMENT_METHOD_OPTIONS,
+  PAYMENT_STATUS_LABEL,
+  PAYMENT_STATUS_OPTIONS,
+  PAYMENT_STATUS_VARIANT,
+  paymentMethodLabel,
 } from '/@/constants/b2b2bStatus';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
 import type { PaymentMethod, PaymentRecord, PaymentStatus } from '/#/b2b-2b';
 
-const search = reactive({ keyword: '', status: 'PENDING_CONFIRM', method: '' });
+const search = reactive({ keyword: '', status: '', method: '' });
 const [registerTable, { reload }] = useTable();
+const detailModal = useModal<PaymentRecord>();
+const submitting = ref(false);
 
 async function loadData(params: any) {
   return await listPaymentsApi({ ...params, searchInfo: { ...search } });
 }
 
-function methodIcon(m: string) {
-  if (m === 'OFFLINE_TRANSFER') return Wallet;
-  return CreditCard;
-}
-
-function methodLabel(method: PaymentMethod) {
-  return PAYMENT_METHOD_LABEL[method] || method || '-';
+function methodIcon(method: PaymentMethod) {
+  return method === 'OFFLINE_TRANSFER' ? Wallet : CreditCard;
 }
 
 function paymentStatusLabel(status: PaymentStatus) {
@@ -45,19 +50,16 @@ function paymentStatusVariant(status: PaymentStatus) {
 }
 
 const columns: BasicColumn[] = [
-  { field: 'paymentNo', title: '支付编号', minWidth: 160 },
-  { field: 'orderNo', title: '关联订单号', width: 160 },
-  { field: 'storeName', title: '门店',align: 'center', width: 190 },
-  { field: 'amount', title: '金额', width: 130, align: 'center', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'method', title: '支付方式',align: 'center', width: 180, slots: { default: 'method' } },
-  { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
+  { field: 'paymentNo', title: '支付编号', minWidth: 170 },
+  { field: 'orderNo', title: '关联订单号', width: 170 },
+  { field: 'storeName', title: '门店', width: 190, showOverflow: 'tooltip' },
+  { field: 'amount', title: '金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'method', title: '支付方式', width: 150, slots: { default: 'method' } },
+  { field: 'status', title: '状态', width: 110, slots: { default: 'status' } },
   { field: 'submittedAt', title: '提交时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'confirmedAt', title: '确认时间', align: 'center',width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'action', title: '操作', width: 200, fixed: 'right', slots: { default: 'action' } },
+  { field: 'confirmedAt', title: '确认时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'action', title: '操作', width: 190, fixed: 'right', slots: { default: 'action' } },
 ];
-
-const detailModal = useModal<PaymentRecord>();
-const submitting = ref(false);
 
 function openDetail(row: PaymentRecord) {
   detailModal.open(row);
@@ -74,16 +76,20 @@ async function confirm(row: PaymentRecord) {
   }
 }
 
-function onSearch() { reload({ pageNo: 1 }); }
+function onSearch() {
+  reload({ pageNo: 1 });
+}
+
 function onReset() {
-  search.keyword = ''; search.status = 'PENDING_CONFIRM'; search.method = '';
+  search.keyword = '';
+  search.status = '';
+  search.method = '';
   reload({ pageNo: 1 });
 }
 </script>
 
 <template>
-  <PageWrapper title="支付管理" subtitle="确认门店提交的支付记录">
-
+  <PageWrapper title="财务管理" subtitle="确认门店提交的付款记录，当前接口未完善时展示模拟数据">
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">关键词</Label>
@@ -94,7 +100,7 @@ function onReset() {
         <Select v-model="search.status">
           <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="o in PAYMENT_STATUS_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</SelectItem>
+            <SelectItem v-for="option in PAYMENT_STATUS_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -103,10 +109,7 @@ function onReset() {
         <Select v-model="search.method">
           <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">全部</SelectItem>
-            <SelectItem value="OFFLINE_TRANSFER">线下转账</SelectItem>
-            <SelectItem value="ONLINE_WECHAT">微信支付</SelectItem>
-            <SelectItem value="ONLINE_ALIPAY">支付宝</SelectItem>
+            <SelectItem v-for="option in PAYMENT_METHOD_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -116,7 +119,7 @@ function onReset() {
       <template #method="{ row }">
         <div class="flex items-center gap-1.5">
           <component :is="methodIcon(row.method)" class="w-3.5 h-3.5 text-muted-foreground" />
-          {{ methodLabel(row.method) }}
+          {{ paymentMethodLabel(row.method) }}
         </div>
       </template>
       <template #status="{ row }">
@@ -132,12 +135,7 @@ function onReset() {
       </template>
     </BasicTable>
 
-    <BasicModal
-      v-model:open="detailModal.visible.value"
-      title="支付记录详情"
-      width="640px"
-      hide-footer
-    >
+    <BasicModal v-model:open="detailModal.visible.value" title="支付记录详情" width="640px" hide-footer>
       <div v-if="detailModal.data.value" class="space-y-4 text-sm">
         <div class="grid grid-cols-2 gap-x-6 gap-y-3">
           <div><span class="text-muted-foreground">支付编号：</span><span class="font-mono">{{ detailModal.data.value.paymentNo }}</span></div>
@@ -151,7 +149,7 @@ function onReset() {
             <span class="text-muted-foreground">金额：</span>
             <span class="text-2xl font-semibold text-foreground">{{ formatCurrency(detailModal.data.value.amount) }}</span>
           </div>
-          <div><span class="text-muted-foreground">支付方式：</span>{{ methodLabel(detailModal.data.value.method) }}</div>
+          <div><span class="text-muted-foreground">支付方式：</span>{{ paymentMethodLabel(detailModal.data.value.method) }}</div>
           <div v-if="detailModal.data.value.transactionNo">
             <span class="text-muted-foreground">流水号：</span><span class="font-mono text-xs">{{ detailModal.data.value.transactionNo }}</span>
           </div>
@@ -170,12 +168,7 @@ function onReset() {
             <span class="font-medium">转账凭证</span>
           </div>
           <a :href="detailModal.data.value.voucherUrl" target="_blank" class="block">
-            <img
-              :src="detailModal.data.value.voucherUrl"
-              alt="凭证"
-              class="max-h-72 w-full object-contain rounded border border-border bg-muted/30"
-              loading="lazy"
-            />
+            <img :src="detailModal.data.value.voucherUrl" alt="凭证" class="max-h-72 w-full object-contain rounded border border-border bg-muted/30" loading="lazy" />
           </a>
         </div>
 

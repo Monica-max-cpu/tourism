@@ -122,8 +122,8 @@ function normalizeProfitSummary(summary: any) {
 export function listPendingCollectiveApi() {
   return defHttp.get({ url: Api.ListPendingCollective });
 }
-export function triggerCollectiveApi(ids: string[]) {
-  return defHttp.post({ url: Api.TriggerCollective, data: { ids } });
+export function triggerCollectiveApi(data: { triggerMode: 'BY_CATALOG' | 'BY_ORDERS'; catalogId?: string; orderIds?: string[]; supplierQuoteId?: string; remark?: string }) {
+  return defHttp.post({ url: Api.TriggerCollective, data });
 }
 export function listCollectiveOrdersApi(params: any) {
   return defHttp.get({ url: Api.ListCollectiveOrders, params });
@@ -142,8 +142,11 @@ export function updateCollectiveConfigApi(patch: Partial<CollectiveConfig>) {
 export function listDeliveriesApi(params: any) {
   return defHttp.get({ url: Api.ListDeliveries, params });
 }
-export function handleDeliveryExceptionApi(id: string, action: 'retry' | 'cancel', remark: string) {
-  return defHttp.put({ url: `/b2b/delivery/exception/${id}`, data: { action, remark } });
+export function getDeliveryApi(id: string) {
+  return defHttp.get({ url: `/b2b/delivery/detail/${id}` });
+}
+export function handleDeliveryExceptionApi(id: string, remark: string) {
+  return defHttp.put({ url: `/b2b/delivery/exception/${id}`, params: { remark } });
 }
 
 // ===== 结算 =====

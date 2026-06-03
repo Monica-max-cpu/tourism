@@ -122,29 +122,33 @@ export interface SupplierOrder {
 }
 
 // ===== 供应商发货任务 =====
-export type ShipmentStatus = 'PENDING' | 'SHIPPED' | 'IN_TRANSIT' | 'DELIVERED' | 'EXCEPTION';
+export type ShipmentStatus = 0 | 1 | 2 | 3;
 
 export interface ShipmentRecord {
   id: string;
-  shipmentNo: string;
+  deliveryNo: string;
   supplierId: string;
+  supplierName?: string;
   collectiveOrderId: string;
-  collectiveNo: string;
-  /** 商品信息（汇总） */
-  productSummary: string;
-  totalQty: number;
-  carrier?: string;
+  collectiveItemId: string;
+  storeId: string;
+  productName?: string;
+  warehouseId?: string;
+  deliveryMode: number;
+  deliveryQty: number;
+  receivedQty?: number;
+  logisticsCompany?: string;
   trackingNo?: string;
   status: ShipmentStatus;
-  shippedAt?: string;
-  deliveredAt?: string;
-  exceptionReason?: string;
-  remark?: string;
+  shippedTime?: string;
+  receivedTime?: string;
+  receiveRemark?: string;
+  createTime?: string;
 }
 
 export interface ShipParams {
-  collectiveOrderId: string;
-  carrier: string;
+  deliveryId: string;
+  logisticsCompany: string;
   trackingNo: string;
   remark?: string;
 }

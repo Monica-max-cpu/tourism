@@ -14,6 +14,9 @@ enum Api {
 export function listShipmentsApi(params: any) {
   return defHttp.get({ url: Api.ListShipments, params });
 }
+export function getShipmentApi(id: string) {
+  return defHttp.get({ url: `/b2b/delivery/detail/${id}` });
+}
 export function shipApi(params: ShipParams) {
   return defHttp.post({ url: Api.Ship, data: params });
 }

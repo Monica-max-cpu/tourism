@@ -17,6 +17,7 @@ import { useUserStore } from '/@/stores/modules/user';
 import { createStoreOrderApi } from '/@/api/store/order';
 import { getStoreProfileApi } from '/@/api/store/sales';
 import { formatCurrency } from '/@/utils/format';
+import { getProductCover } from '/@/utils/mockProductImages';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 
 const router = useRouter();
@@ -27,18 +28,15 @@ const storeId = computed(() => userStore.getUserInfo?.storeId || '');
 cartStore.init(storeId.value);
 
 function getCover(item: any): string {
-  if (!item.productImages) return '';
-  try {
-    const arr = JSON.parse(item.productImages);
-    return (Array.isArray(arr) && arr.length) ? arr[0] : '';
-  } catch {
-    return '';
-  }
+  return getProductCover({
+    ...item,
+    id: item.catalogId,
+  });
 }
 
 const deliveryAddress = reactive({
-  receiverName: '',
-  receiverPhone: '',
+  recipientName: '',
+  recipientPhone: '',
   address: '',
 });
 const submitting = ref(false);
@@ -49,8 +47,8 @@ onMounted(async () => {
   if (!storeId.value) return;
   const profile = await getStoreProfileApi(storeId.value);
   if (profile) {
-    deliveryAddress.receiverName = profile.receiver || profile.contactPerson || '';
-    deliveryAddress.receiverPhone = profile.receiverPhone || profile.contactPhone || '';
+    deliveryAddress.recipientName = profile.receiver || profile.contactPerson || '';
+    deliveryAddress.recipientPhone = profile.receiverPhone || profile.contactPhone || '';
     deliveryAddress.address = profile.receiveAddress || profile.address || '';
   }
 });
@@ -64,7 +62,16 @@ function dec(catalogId: string) {
   if (it) cartStore.updateQty(catalogId, it.qty - 1);
 }
 
-const canCheckout = computed(() => cartStore.getSelectedItems.length > 0 && !!deliveryAddress.address);
+function viewProduct(catalogId: string) {
+  router.push(`/b2b/store/catalog/${catalogId}`);
+}
+
+const canCheckout = computed(
+  () => cartStore.getSelectedItems.length > 0
+    && !!deliveryAddress.recipientName
+    && !!deliveryAddress.recipientPhone
+    && !!deliveryAddress.address,
+);
 
 async function confirmCheckout() {
   if (!canCheckout.value) return;
@@ -74,12 +81,12 @@ async function confirmCheckout() {
       catalogId: x.catalogId,
       quantity: x.qty,
     }));
-    const res: any = await createStoreOrderApi({
-      storeId: storeId.value,
+    const payload = {
       deliveryAddress: { ...deliveryAddress },
       remark: remark.value,
       items,
-    });
+    };
+    const res: any = await createStoreOrderApi(storeId.value ? { ...payload, storeId: storeId.value } : payload);
     // 移除已下单商品
     cartStore.removeBatch(items.map((x) => x.catalogId));
     checkout.close();
@@ -104,7 +111,7 @@ async function confirmCheckout() {
       </div>
     </div>
 
-    <div v-else class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
+    <div v-else class="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4">
       <!-- 左：列表 -->
       <div class="bg-card border border-border rounded-lg">
         <div class="px-4 py-3 border-b border-border flex items-center gap-3">
@@ -119,9 +126,21 @@ async function confirmCheckout() {
         <div v-for="it in cartStore.getItems" :key="it.catalogId" class="px-4 py-3 border-b border-border last:border-0 flex items-center gap-3">
           <input type="checkbox" :checked="cartStore.selectedIds.includes(it.catalogId)"
             @change="cartStore.toggleSelect(it.catalogId)" class="w-4 h-4" />
-          <img :src="getCover(it)" :alt="it.productName" class="w-14 h-14 object-cover rounded bg-muted" loading="lazy" />
+          <img
+            :src="getCover(it)"
+            :alt="it.productName"
+            class="w-14 h-14 object-cover rounded bg-muted cursor-pointer"
+            loading="lazy"
+            @click="viewProduct(it.catalogId)"
+          />
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium truncate">{{ it.productName }}</div>
+            <button
+              type="button"
+              class="text-sm font-medium truncate hover:text-primary text-left max-w-full"
+              @click="viewProduct(it.catalogId)"
+            >
+              {{ it.productName }}
+            </button>
             <div class="text-xs text-muted-foreground mt-0.5">{{ it.unit }}</div>
           </div>
           <div class="text-sm tabular-nums w-24 text-right">{{ formatCurrency(cartStore.getItemUnitPrice(it.catalogId)) }}</div>
@@ -151,16 +170,16 @@ async function confirmCheckout() {
 
         <div class="space-y-3">
           <div class="flex items-center gap-2">
-            <Label>收货人</Label>
-            <Input v-model="deliveryAddress.receiverName" placeholder="请输入收货人姓名" />
+            <Label class="w-17" text-right>收货人 <span class="text-destructive">*</span></Label>
+            <Input v-model="deliveryAddress.recipientName" placeholder="请输入收货人姓名" class="flex-1"/>
           </div>
           <div class="flex items-center gap-2">
-            <Label>联系电话</Label>
-            <Input v-model="deliveryAddress.receiverPhone" placeholder="请输入手机号" />
+            <Label class="w-17" >联系电话 <span class="text-destructive">*</span></Label>
+            <Input v-model="deliveryAddress.recipientPhone" placeholder="请输入手机号" class="flex-1"/>
           </div>
           <div class="flex items-center gap-2">
-            <Label>收货地址 <span class="text-destructive">*</span></Label>
-            <Input v-model="deliveryAddress.address" placeholder="请输入收货地址" />
+            <Label class="w-17">收货地址 <span class="text-destructive">*</span></Label>
+            <Input v-model="deliveryAddress.address" placeholder="请输入收货地址" class="flex-1"/>
           </div>
         </div>
 
@@ -190,7 +209,7 @@ async function confirmCheckout() {
         </div>
         <div class="flex justify-between">
           <span class="text-muted-foreground">收货</span>
-          <span>{{ deliveryAddress.receiverName }} {{ deliveryAddress.receiverPhone }}</span>
+          <span>{{ deliveryAddress.recipientName }} {{ deliveryAddress.recipientPhone }}</span>
         </div>
         <div class="text-muted-foreground">{{ deliveryAddress.address }}</div>
         <div class="space-y-1.5 pt-2">

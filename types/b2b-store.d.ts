@@ -93,9 +93,11 @@ export interface StoreViewOrder {
   paymentTime?: string;
   itemCount: number;
   /** 收货地址快照 */
-  deliveryAddress?: {
-    receiverName: string;
-    receiverPhone: string;
+  deliveryAddress?: string | {
+    recipientName?: string;
+    recipientPhone?: string;
+    receiverName?: string;
+    receiverPhone?: string;
     province?: string;
     city?: string;
     address: string;
@@ -110,10 +112,12 @@ export interface StoreViewOrder {
 }
 
 export interface StoreOrderCreateParams {
-  storeId: string;
+  storeId?: string;
   deliveryAddress: {
-    receiverName: string;
-    receiverPhone: string;
+    recipientName?: string;
+    recipientPhone?: string;
+    receiverName?: string;
+    receiverPhone?: string;
     province?: string;
     city?: string;
     address: string;

@@ -83,6 +83,76 @@ export const basicRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: ROUTE_PATHS.ADMIN_STORE_ORDER_DETAIL,
+    name: 'AdminStoreOrderDetail',
+    component: Layout,
+    meta: { roles: ['ADMIN'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'AdminStoreOrderDetailContent',
+        component: () => import('/@/views/admin/StoreOrderDetail.vue'),
+        meta: { title: '订单详情', hideInMenu: true },
+      },
+    ],
+  },
+  {
+    path: ROUTE_PATHS.ADMIN_COLLECTIVE_DETAIL,
+    name: 'AdminCollectiveDetail',
+    component: Layout,
+    meta: { roles: ['ADMIN'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'AdminCollectiveDetailContent',
+        component: () => import('/@/views/admin/CollectiveDetail.vue'),
+        meta: { title: '集采单详情', hideInMenu: true, authCode: 'b2b:collective:detail' },
+      },
+    ],
+  },
+  {
+    path: ROUTE_PATHS.ADMIN_DELIVERY_DETAIL,
+    name: 'AdminDeliveryDetail',
+    component: Layout,
+    meta: { roles: ['ADMIN'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'AdminDeliveryDetailContent',
+        component: () => import('/@/views/delivery/DeliveryDetail.vue'),
+        meta: { title: '发货单详情', hideInMenu: true, authCode: 'b2b:delivery:detail' },
+      },
+    ],
+  },
+  {
+    path: ROUTE_PATHS.SUPPLIER_ORDER_DETAIL,
+    name: 'SupplierOrderDetail',
+    component: Layout,
+    meta: { roles: ['SUPPLIER'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'SupplierOrderDetailContent',
+        component: () => import('/@/views/admin/CollectiveDetail.vue'),
+        meta: { title: '集采单详情', hideInMenu: true, authCode: 'b2b:collective:detail' },
+      },
+    ],
+  },
+  {
+    path: ROUTE_PATHS.SUPPLIER_SHIPMENT_DETAIL,
+    name: 'SupplierShipmentDetail',
+    component: Layout,
+    meta: { roles: ['SUPPLIER'], requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'SupplierShipmentDetailContent',
+        component: () => import('/@/views/delivery/DeliveryDetail.vue'),
+        meta: { title: '发货单详情', hideInMenu: true, authCode: 'b2b:supplier:delivery' },
+      },
+    ],
+  },
+  {
     path: '/b2b/store/orders/:id',
     name: 'StoreOrderDetail',
     component: Layout,

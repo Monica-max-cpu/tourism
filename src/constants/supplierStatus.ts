@@ -1,9 +1,3 @@
-/**
- * 阶段 3 - 供应商端状态字典 + Badge variant 映射
- * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商端状态映射
- * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商端状态映射
- */
-// ===== 自营商品 =====
 export const SUPPLIER_PRODUCT_STATUS_LABEL: Record<number, string> = {
   0: '停用',
   1: '启用',
@@ -20,7 +14,6 @@ export const SUPPLIER_PRODUCT_STATUS_OPTIONS = [
   { value: '0', label: '停用' },
 ];
 
-// ===== 报价状态 =====
 export const SUPPLIER_QUOTE_STATUS_LABEL: Record<number, string> = {
   0: '待审核',
   1: '已通过',
@@ -43,16 +36,29 @@ export const SUPPLIER_QUOTE_STATUS_OPTIONS = [
   { value: 3, label: '已下架' },
 ];
 
-// ===== 供应商集采单 =====
-export const SUPPLIER_ORDER_STATUS_LABEL: Record<string, string> = {
-  TRIGGERED: '待确认',
-  CONFIRMED: '待发货',
-  SHIPPING: '配送中',
+export const SUPPLIER_ORDER_STATUS_LABEL: Record<number | string, string> = {
+  0: '待接单',
+  1: '已接单',
+  2: '发货中',
+  3: '已完成',
+  4: '已取消',
+  5: '异常',
+  6: '超时',
+  TRIGGERED: '待接单',
+  CONFIRMED: '已接单',
+  SHIPPING: '发货中',
   COMPLETED: '已完成',
   CANCELLED: '已取消',
 };
 
-export const SUPPLIER_ORDER_STATUS_VARIANT: Record<string, 'warning' | 'info' | 'success' | 'destructive' | 'muted'> = {
+export const SUPPLIER_ORDER_STATUS_VARIANT: Record<number | string, 'warning' | 'info' | 'success' | 'destructive' | 'muted'> = {
+  0: 'warning',
+  1: 'info',
+  2: 'info',
+  3: 'success',
+  4: 'muted',
+  5: 'destructive',
+  6: 'destructive',
   TRIGGERED: 'warning',
   CONFIRMED: 'info',
   SHIPPING: 'info',
@@ -62,23 +68,32 @@ export const SUPPLIER_ORDER_STATUS_VARIANT: Record<string, 'warning' | 'info' | 
 
 export const SUPPLIER_ORDER_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'TRIGGERED', label: '待确认' },
-  { value: 'CONFIRMED', label: '待发货' },
-  { value: 'SHIPPING', label: '配送中' },
-  { value: 'COMPLETED', label: '已完成' },
-  { value: 'CANCELLED', label: '已取消' },
+  { value: 0, label: '待接单' },
+  { value: 1, label: '已接单' },
+  { value: 2, label: '发货中' },
+  { value: 3, label: '已完成' },
+  { value: 4, label: '已取消' },
+  { value: 5, label: '异常' },
+  { value: 6, label: '超时' },
 ];
 
-// ===== 发货状态 =====
-export const SHIPMENT_STATUS_LABEL: Record<string, string> = {
+export const SHIPMENT_STATUS_LABEL: Record<number | string, string> = {
+  0: '待发货',
+  1: '已发货',
+  2: '已收货',
+  3: '异常',
   PENDING: '待发货',
   SHIPPED: '已发货',
   IN_TRANSIT: '运输中',
-  DELIVERED: '已送达',
+  DELIVERED: '已收货',
   EXCEPTION: '异常',
 };
 
-export const SHIPMENT_STATUS_VARIANT: Record<string, 'warning' | 'info' | 'success' | 'destructive'> = {
+export const SHIPMENT_STATUS_VARIANT: Record<number | string, 'warning' | 'info' | 'success' | 'destructive'> = {
+  0: 'warning',
+  1: 'info',
+  2: 'success',
+  3: 'destructive',
   PENDING: 'warning',
   SHIPPED: 'info',
   IN_TRANSIT: 'info',
@@ -88,14 +103,12 @@ export const SHIPMENT_STATUS_VARIANT: Record<string, 'warning' | 'info' | 'succe
 
 export const SHIPMENT_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'PENDING', label: '待发货' },
-  { value: 'SHIPPED', label: '已发货' },
-  { value: 'IN_TRANSIT', label: '运输中' },
-  { value: 'DELIVERED', label: '已送达' },
-  { value: 'EXCEPTION', label: '异常' },
+  { value: 0, label: '待发货' },
+  { value: 1, label: '已发货' },
+  { value: 2, label: '已收货' },
+  { value: 3, label: '异常' },
 ];
 
-// ===== 库存健康度 =====
 export const SUPPLIER_STOCK_HEALTH_LABEL: Record<string, string> = {
   NORMAL: '正常',
   LOW: '不足',
@@ -115,7 +128,6 @@ export const SUPPLIER_STOCK_HEALTH_OPTIONS = [
   { value: 'OUT', label: '缺货' },
 ];
 
-// ===== 供应商结算 =====
 export const SUPPLIER_SETTLEMENT_STATUS_LABEL: Record<string, string> = {
   PENDING: '待确认',
   CONFIRMED: '已确认',
@@ -135,7 +147,6 @@ export const SUPPLIER_SETTLEMENT_STATUS_OPTIONS = [
   { value: 'PAID', label: '已收款' },
 ];
 
-// ===== 常用承运商（发货下拉）=====
 export const CARRIER_OPTIONS = [
   { value: '顺丰速运', label: '顺丰速运' },
   { value: '京东物流', label: '京东物流' },

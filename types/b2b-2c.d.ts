@@ -82,24 +82,29 @@ export interface CollectiveConfig {
 }
 
 // ===== 履约 =====
-export type DeliveryStatus = 'PENDING' | 'SHIPPED' | 'IN_TRANSIT' | 'DELIVERED' | 'EXCEPTION';
+export type DeliveryStatus = 0 | 1 | 2 | 3;
 
 export interface DeliveryRecord {
   id: string;
   deliveryNo: string;
   collectiveOrderId: string;
-  collectiveNo: string;
+  collectiveItemId: string;
+  storeId: string;
+  storeName?: string;
+  supplierId: string;
   supplierName: string;
-  storeOrderNo: string;
-  storeName: string;
-  carrier?: string;
+  productName?: string;
+  warehouseId?: string;
+  deliveryMode: number;
+  deliveryQty: number;
+  receivedQty?: number;
+  logisticsCompany?: string;
   trackingNo?: string;
   status: DeliveryStatus;
-  exceptionReason?: string;
-  shippedAt?: string;
-  deliveredAt?: string;
-  estimatedAt?: string;
-  remark?: string;
+  shippedTime?: string;
+  receivedTime?: string;
+  receiveRemark?: string;
+  createTime?: string;
 }
 
 // ===== 结算 =====

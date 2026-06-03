@@ -12,13 +12,23 @@ enum Api {
 }
 
 export function listSupplierOrdersApi(params: any) {
-  return defHttp.get({ url: Api.ListOrders, params });
+  const { searchInfo, ...rest } = params || {};
+  const flat = { ...rest, ...(searchInfo || {}) };
+  delete flat.bucket;
+  if (flat.status !== '' && flat.status !== undefined) {
+    flat.orderStatus = Number(flat.status);
+    delete flat.status;
+  }
+  Object.keys(flat).forEach((key) => {
+    if (flat[key] === '' || flat[key] === undefined || flat[key] === null || key === 'keyword') delete flat[key];
+  });
+  return defHttp.get({ url: Api.ListOrders, params: flat });
 }
 export function getSupplierOrderApi(id: string) {
   return defHttp.get({ url: `/b2b/collective/detail/${id}` });
 }
 export function confirmSupplierOrderApi(id: string) {
-  return defHttp.put({ url: `/b2b/collective/supplier/confirm/${id}` });
+  return defHttp.put({ url: `/b2b/collective/supplier/confirm/${id}`, data: {} });
 }
 export function rejectSupplierOrderApi(id: string, reason: string) {
   void id;

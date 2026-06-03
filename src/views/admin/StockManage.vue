@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /**
- * 平台管理员 - 库存管理
- * 全量视角：可平台+ 供应+ 门店 库存
+ * 平台管理员 - 库存列表
  */
 import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Badge, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -14,10 +14,10 @@ import { BasicModal, useModal } from '/@/components/BasicModal';
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import { listStocksApi, updateStockThresholdApi } from '/@/api/admin/operations';
+import { ROUTE_PATHS } from '/@/constants/routePaths';
 import {
   STOCK_HEALTH_LABEL, STOCK_HEALTH_VARIANT, STOCK_HEALTH_OPTIONS,
 } from '/@/constants/b2b2bStatus';
-import { formatDateTime } from '/@/utils/format';
 import type { StockRecord, StockHealthLevel } from '/#/b2b-2b';
 
 function calcHealth(available: number, alertQty: number): StockHealthLevel {
@@ -27,6 +27,7 @@ function calcHealth(available: number, alertQty: number): StockHealthLevel {
 }
 
 const search = reactive({ keyword: '', health: '' });
+const router = useRouter();
 const [registerTable, { reload }] = useTable();
 
 async function loadData(params: any) {
@@ -43,15 +44,14 @@ async function loadData(params: any) {
 }
 
 const columns: BasicColumn[] = [
-  { field: 'supplierName', title: '供应商', minWidth: 180 },
-  { field: 'productName', title: '商品名称', minWidth: 200 },
+  { field: 'supplierName', title: '供应商', minWidth: 180, showOverflow: 'tooltip' },
+  { field: 'productName', title: '商品', minWidth: 200, showOverflow: 'tooltip' },
+  { field: 'warehouseName', title: '仓库', minWidth: 160, showOverflow: 'tooltip', formatter: ({ row }) => row.warehouseName || row.warehouseId || '-' },
   { field: 'availableQty', title: '可用库存', width: 130, align: 'right' },
   { field: 'lockedQty', title: '锁定库存', width: 130, align: 'right' },
-  { field: 'totalQty', title: '总库存', width: 130, align: 'right' },
   { field: 'alertQty', title: '预警阈值', width: 130, align: 'right' },
-  { field: 'health', title: '状态', width: 130, slots: { default: 'health' } },
-  { field: 'updateTime', title: '更新时间', width: 250, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'action', title: '操作', width: 180, fixed: 'right', slots: { default: 'action' } },
+  { field: 'health', title: '库存状态', width: 130, slots: { default: 'health' } },
+  { field: 'action', title: '操作', width: 190, fixed: 'right', slots: { default: 'action' } },
 ];
 
 const editModal = useModal<StockRecord>();
@@ -61,6 +61,18 @@ const submitting = ref(false);
 function openEdit(row: StockRecord) {
   editModal.open(row);
   editForm.threshold = row.alertQty;
+}
+
+function viewLogs(row: StockRecord) {
+  router.push({
+    path: ROUTE_PATHS.ADMIN_STOCK_LOGS,
+    query: {
+      supplierId: row.supplierId,
+      productId: row.productId,
+      warehouseId: row.warehouseId || '',
+      keyword: row.productName,
+    },
+  });
 }
 
 async function saveEdit() {
@@ -83,11 +95,11 @@ function onReset() {
 </script>
 
 <template>
-  <PageWrapper title="库存管理" subtitle="平台/ 供应/ 门店 全量库存视图">
+  <PageWrapper title="库存列表" subtitle="平台库存、供应商库存与仓库维度库存状态">
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">关键词</Label>
-        <Input v-model="search.keyword" placeholder="商品名 / 供应商" class="w-60" @keyup.enter="onSearch" />
+        <Input v-model="search.keyword" placeholder="商品 / 供应商 / 仓库" class="w-64" @keyup.enter="onSearch" />
       </div>
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">健康状态</Label>
@@ -105,7 +117,12 @@ function onReset() {
         <Badge :variant="STOCK_HEALTH_VARIANT[row.health]">{{ STOCK_HEALTH_LABEL[row.health] }}</Badge>
       </template>
       <template #action="{ row }">
-        <TableAction :actions="[{ label: '编辑预警', onClick: () => openEdit(row) }]" />
+        <TableAction
+          :actions="[
+            { label: '查看流水', onClick: () => viewLogs(row) },
+            { label: '编辑预警', onClick: () => openEdit(row) },
+          ]"
+        />
       </template>
     </BasicTable>
 

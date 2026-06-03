@@ -13,6 +13,13 @@ export interface UserInfo {
   supplierId?: string;
   /** 门店 ID（角色为 STORE 时有效） */
   storeId?: string;
+  b2bMerchantInfo?: {
+    storeId?: string;
+    supplierId?: string;
+    merchantId?: string;
+    merchantType?: 'STORE' | 'SUPPLIER' | string;
+    [key: string]: any;
+  };
   /** 权限码集合（v-auth 指令 / usePermission 使用） */
   permissions: string[];
 }
