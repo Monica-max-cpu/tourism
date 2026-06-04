@@ -28,17 +28,17 @@ async function loadData(params: any) {
 }
 
 const columns: BasicColumn[] = [
-  { field: 'collectiveNo', title: '集采单号', width: 160 },
-  { field: 'productSku', title: 'SKU', width: 110 },
-  { field: 'productName', title: '商品', minWidth: 220 },
+  { field: 'collectiveNo', title: '集采单号', minWidth: 160 },
+  // { field: 'productSku', title: 'SKU', width: 110 },
+  { field: 'productName', title: '商品', width: 280 },
   { field: 'qty', title: '数量', width: 90, align: 'right', formatter: ({ cellValue, row }) => `${formatNumber(cellValue)} ${row.unit}` },
-  { field: 'salePrice', title: '销售价', width: 110, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'costPrice', title: '成本价', width: 110, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'salePrice', title: '销售价', width: 140, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'costPrice', title: '成本价', width: 140, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'saleAmount', title: '销售额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'costAmount', title: '采购额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'profit', title: '毛利', width: 130, align: 'right', slots: { default: 'profit' } },
-  { field: 'profitRate', title: '毛利率', width: 90, align: 'right', formatter: ({ cellValue }) => `${cellValue}%` },
-  { field: 'postedAt', title: '入账时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'profitRate', title: '毛利率', width: 130, align: 'right', formatter: ({ cellValue }) => `${cellValue}%` },
+  { field: 'postedAt', title: '入账时间', width: 200, formatter: ({ cellValue }) => formatDateTime(cellValue) },
 ];
 
 function onSearch() { reload({ pageNo: 1 }); }

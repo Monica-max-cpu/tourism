@@ -26,7 +26,7 @@ async function loadData(params: any) {
 const columns: BasicColumn[] = [
   { field: 'settlementNo', title: '结算单号', width: 170 },
   { field: 'partyName', title: '供应商', minWidth: 200 },
-  { field: 'periodFrom', title: '周期', width: 200, formatter: ({ row }) => `${formatDate(row.periodFrom)} ~ ${formatDate(row.periodTo)}` },
+  { field: 'periodFrom', title: '周期', width: 220, formatter: ({ row }) => `${formatDate(row.periodFrom)} ~ ${formatDate(row.periodTo)}` },
   { field: 'orderCount', title: '集采单数', width: 100, align: 'right', formatter: ({ cellValue }) => `${cellValue} 笔` },
   { field: 'amount', title: '应付金额', width: 140, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },

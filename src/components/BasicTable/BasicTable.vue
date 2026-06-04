@@ -37,7 +37,12 @@ const pageSize = ref(props.pageSize);
 const selectedRows = ref<any[]>([]);
 
 const visibleColumns = computed(() =>
-  props.columns.filter((c) => !c.authCode || permissionStore.getPermCodeList.includes(c.authCode)),
+  props.columns
+    .filter((c) => !c.authCode || permissionStore.getPermCodeList.includes(c.authCode))
+    .map((c) => {
+      if (c.field === 'action' || c.title === '操作') return c;
+      return { ...c, align: 'center' as const };
+    }),
 );
 
 async function fetchData(extraParams: Partial<FetchParams> = {}) {

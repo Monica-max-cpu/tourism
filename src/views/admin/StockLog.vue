@@ -25,6 +25,7 @@ const search = reactive({
 const CHANGE_TYPE_LABEL: Record<string, string> = {
   IN: '入库',
   OUT: '出库',
+  DEDUCT: '扣减',
   LOCK: '锁定',
   UNLOCK: '释放锁定',
   REPLENISH: '补货',
@@ -38,6 +39,7 @@ const CHANGE_TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'destructive
   IN: 'default',
   REPLENISH: 'default',
   OUT: 'destructive',
+  DEDUCT: 'destructive',
   SALE: 'destructive',
   LOCK: 'secondary',
   ORDER_LOCK: 'secondary',
@@ -79,15 +81,15 @@ async function loadData(params: any) {
 }
 
 const columns: BasicColumn[] = [
-  { field: 'time', title: '时间', width: 180, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'supplierName', title: '供应商', minWidth: 180, showOverflow: 'tooltip' },
   { field: 'productName', title: '商品', minWidth: 200, showOverflow: 'tooltip' },
   { field: 'warehouseName', title: '仓库', minWidth: 160, showOverflow: 'tooltip' },
-  { field: 'changeType', title: '变动类型', width: 130, slots: { default: 'changeType' } },
+  { field: 'changeType', title: '变动类型', width: 130, align: 'center', slots: { default: 'changeType' } },
   { field: 'changeQty', title: '变动数量', width: 120, align: 'right' },
   { field: 'beforeAvailableQty', title: '变动前可用', width: 130, align: 'right' },
   { field: 'afterAvailableQty', title: '变动后可用', width: 130, align: 'right' },
   { field: 'relatedNo', title: '关联单据', minWidth: 170, showOverflow: 'tooltip' },
+  { field: 'time', title: '时间', width: 180, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'remark', title: '备注', minWidth: 200, showOverflow: 'tooltip' },
 ];
 

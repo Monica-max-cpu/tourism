@@ -17,6 +17,7 @@ import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import { listCatalogsApi, toggleShelfApi } from '/@/api/admin';
 import { CATALOG_STATUS_LABEL, CATALOG_STATUS_VARIANT, CATALOG_STATUS_OPTIONS } from '/@/constants/b2bStatus';
+import { storeCategoryLabel } from '/@/constants/storeStatus';
 import { formatCurrency } from '/@/utils/format';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import type { PlatformCatalog } from '/#/b2b';
@@ -31,9 +32,9 @@ async function loadData(params: any) {
 
 const columns: BasicColumn[] = [
   { field: 'productName', title: '商品名称', minWidth: 200 },
-   { field: 'basePrice', title: '刊价', width: 120, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+   { field: 'basePrice', title: '售价', width: 120, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'minOrderQty', title: '起订量', width: 120, align: 'center' },
-  { field: 'categoryId', title: '分类', width: 120 },
+  { field: 'categoryId', title: '分类', width: 120, formatter: ({ cellValue }) => storeCategoryLabel(cellValue) },
   { field: 'unit', title: '单位', width: 100, align: 'center' },
   { field: 'catalogTiers', title: '档位', width: 100, align: 'center', formatter: ({ row }) => {
     return row.catalogTiers && row.catalogTiers.length > 0 ? `${row.catalogTiers.length} 档` : '-';
@@ -50,11 +51,11 @@ const columns: BasicColumn[] = [
     formatter: ({ cellValue }) => formatCurrency(cellValue),
     authCode: 'b2b:settlement:profitList',
   },
-  {
-    field: 'marginRate', title: '毛利率', width: 90, align: 'center',
-    formatter: ({ row }) => row.marginRate ? (row.marginRate * 100).toFixed(1) + '%' : '-',
-    authCode: 'b2b:settlement:profitList',
-  },
+  // {
+  //   field: 'marginRate', title: '毛利率', width: 90, align: 'center',
+  //   formatter: ({ row }) => row.marginRate ? (row.marginRate * 100).toFixed(1) + '%' : '-',
+  //   authCode: 'b2b:settlement:profitList',
+  // },
   { field: 'status', title: '状态', width: 180, align: 'center', slots: { default: 'status' } },
   { field: 'action', title: '操作', width: 260, fixed: 'right', slots: { default: 'action' } },
 ];

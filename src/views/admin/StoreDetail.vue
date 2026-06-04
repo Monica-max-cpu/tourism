@@ -141,14 +141,14 @@ async function confirmToggle() {
                   <h4 class="text-lg font-semibold text-[#1A2C54]">基本信息</h4>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[15px]">
-                  <div><span class="text-muted-foreground">门店ID：</span><span class="font-medium">{{ item.id }}</span></div>
+                  <!-- <div><span class="text-muted-foreground">门店ID：</span><span class="font-medium">{{ item.id }}</span></div> -->
                   <div><span class="text-muted-foreground">门店名称：</span><span class="font-medium">{{ item.storeName }}</span></div>
                   <div><span class="text-muted-foreground">门店类型：</span><span class="font-medium">{{ STORE_TYPE_LABEL[item.storeType as keyof typeof STORE_TYPE_LABEL] || item.storeTypeLabel || '-' }}</span></div>
                   <div><span class="text-muted-foreground">认证类型：</span><span class="font-medium">{{ AUTH_TYPE_LABEL[item.authType as keyof typeof AUTH_TYPE_LABEL] || item.authType || '-' }}</span></div>
                   <div><span class="text-muted-foreground">主营类别：</span><span class="font-medium">{{ item.mainCategory || '-' }}</span></div>
-                  <div><span class="text-muted-foreground">经营品类：</span><span class="font-medium">{{ item.categoryIds || '-' }}</span></div>
+                  <!-- <div><span class="text-muted-foreground">经营品类：</span><span class="font-medium">{{ item.categoryIds || '-' }}</span></div> -->
                   <div><span class="text-muted-foreground">信用额度：</span><span class="font-medium">{{ item.creditLimit != null ? `¥${item.creditLimit}` : '-' }}</span></div>
-                  <div><span class="text-muted-foreground">关联供应商来源：</span><span class="font-medium">{{ item.supplySourceId || '-' }}</span></div>
+                  <!-- <div><span class="text-muted-foreground">关联供应商来源：</span><span class="font-medium">{{ item.supplySourceId || '-' }}</span></div> -->
                 </div>
               </section>
 
@@ -178,8 +178,8 @@ async function confirmToggle() {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[15px]">
                   <div><span class="text-muted-foreground">所在地：</span><span class="font-medium">{{ item.province }} {{ item.city }}</span></div>
                   <div><span class="text-muted-foreground">详细地址：</span><span class="font-medium">{{ item.address || '-' }}</span></div>
-                  <div class="col-span-2"><span class="text-muted-foreground">地图地址：</span><span class="font-medium">{{ item.mapAddress || '-' }}</span></div>
-                  <div class="col-span-2"><span class="text-muted-foreground">地图坐标：</span><span class="font-medium">{{ item.coordinate || '-' }}</span></div>
+                  <!-- <div class="col-span-2"><span class="text-muted-foreground">地图地址：</span><span class="font-medium">{{ item.mapAddress || '-' }}</span></div> -->
+                  <!-- <div class="col-span-2"><span class="text-muted-foreground">地图坐标：</span><span class="font-medium">{{ item.coordinate || '-' }}</span></div> -->
                 </div>
               </section>
 

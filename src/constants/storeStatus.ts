@@ -97,6 +97,16 @@ export const PLATFORM_BANK_INFO = {
 /** 商品分类（采购目录筛选） */
 export const STORE_CATEGORY_OPTIONS = [
   { value: '', label: '全部分类' },
+  { value: 'cat_001', label: '生鲜' },
+  { value: 'cat_002', label: '乳制品' },
+  { value: 'cat_003', label: '调味料' },
+  { value: 'cat_004', label: '饮品' },
+  { value: 'cat_005', label: '海鲜' },
+  { value: 'cat_006', label: '菌菇' },
+  { value: 'cat_007', label: '水果' },
+  { value: 'cat_008', label: '冻品' },
+  { value: 'GIFT', label: '文创礼品' },
+  { value: 'FOOD', label: '食品' },
   { value: '生鲜', label: '生鲜' },
   { value: '乳制品', label: '乳制品' },
   { value: '调味品', label: '调味品' },
@@ -106,6 +116,10 @@ export const STORE_CATEGORY_OPTIONS = [
   { value: '水果', label: '水果' },
   { value: '冻品', label: '冻品' },
 ];
+
+export function storeCategoryLabel(categoryId?: string) {
+  return STORE_CATEGORY_OPTIONS.find((item) => item.value === categoryId)?.label || categoryId || '-';
+}
 
 // ===== 门店类型 =====
 export const STORE_TYPE_LABEL: Record<'SCENIC' | 'CHAIN' | 'INDEPENDENT', string> = {

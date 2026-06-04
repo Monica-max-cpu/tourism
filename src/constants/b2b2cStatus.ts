@@ -132,7 +132,9 @@ export const COLLECTIVE_TRIGGER_TYPE_LABEL: Record<string, string> = {
   MANUAL: '手动触发',
   BY_CATALOG: '按商品触发',
   BY_ORDERS: '按订单触发',
+  QTY_THRESHOLD: '数量阈值触发',
   THRESHOLD: '阈值触发',
+  TIME_THRESHOLD: '时间阈值触发',
   TIMEOUT: '超时触发',
 };
 
