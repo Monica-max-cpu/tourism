@@ -1,5 +1,15 @@
 # Agent 工作流规范
 
+## 跨端上下文来源
+
+本仓库的 Implementation PR 来自协调仓库：
+https://github.com/lucyyangruo/coordination-repo
+
+接收 Implementation PR 时，$harness 需要读取：
+1. 本 PR 描述中的 Implementation Plan（完整自洽）
+2. 协调仓库的 api-contracts（接口约定锚点）
+   → docs/specs/api-contracts/README.md
+
 ## 定位
 
 - 本项目采用 PR-first agent 工作流。GitHub PR 是任务上下文、审查和追踪的主要单元。
