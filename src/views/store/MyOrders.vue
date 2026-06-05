@@ -83,8 +83,8 @@ async function loadData(params: any) {
 }
 
 const columns: BasicColumn[] = [
-  { field: 'orderNo', title: '订单编号', minWidth: 180 },
-  { field: 'totalAmount', title: '订单金额', width: 280, align: 'center', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'orderNo', title: '订单编号', width: 200 },
+  { field: 'totalAmount', title: '订单金额', width: 180, align: 'center', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'orderStatus', title: '状态', align: 'center', width: 290, slots: { default: 'status' } },
   { field: 'createTime', title: '下单时间',align: 'center', width: 350, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'action', title: '操作', width: 280, fixed: 'right', slots: { default: 'action' } },

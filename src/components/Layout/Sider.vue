@@ -14,7 +14,7 @@ const permissionStore = usePermissionStore();
 const appStore = useAppStore();
 const userStore = useUserStore();
 const { menus } = storeToRefs(permissionStore);
-const { collapsed } = storeToRefs(appStore);
+const { collapsed, getLoggingOut } = storeToRefs(appStore);
 const route = useRoute();
 const router = useRouter();
 
@@ -38,6 +38,7 @@ function filterHidden(items: MenuItem[]): MenuItem[] {
 }
 
 const flatMenus = computed<MenuItem[]>(() => {
+  if (getLoggingOut.value) return [];
   if (userStore.isBasicUser) return entryMenus;
   if (menus.value.length > 0) return filterHidden(menus.value);
   return [];

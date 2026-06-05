@@ -3,7 +3,7 @@
 Use this file for navigation only. Verify implementation details by reading source files directly.
 
 - Source: `git ls-files --cached --others --exclude-standard`
-- Entries: 254
+- Entries: 262
 
 ```text
 ./
@@ -62,7 +62,8 @@ Use this file for navigation only. Verify implementation details by reading sour
 │   │   │   ├── apply.ts
 │   │   │   └── entry.ts
 │   │   ├── common/
-│   │   │   └── dict.ts
+│   │   │   ├── dict.ts
+│   │   │   └── upload.ts
 │   │   ├── login/
 │   │   │   ├── api.ts
 │   │   │   └── model.ts
@@ -219,14 +220,17 @@ Use this file for navigation only. Verify implementation details by reading sour
 │   │   │   └── treeHelper.ts
 │   │   ├── auth.ts
 │   │   ├── cn.ts
-│   │   └── format.ts
+│   │   ├── format.ts
+│   │   └── mockProductImages.ts
 │   ├── views/
 │   │   ├── _placeholder/
 │   │   │   └── Placeholder.vue
 │   │   ├── admin/
 │   │   │   ├── CatalogForm.vue
+│   │   │   ├── catalogHelpers.ts
 │   │   │   ├── CatalogManage.vue
 │   │   │   ├── CollectiveConfig.vue
+│   │   │   ├── CollectiveDetail.vue
 │   │   │   ├── CollectiveOrders.vue
 │   │   │   ├── CollectivePending.vue
 │   │   │   ├── DeliveryManage.vue
@@ -235,8 +239,10 @@ Use this file for navigation only. Verify implementation details by reading sour
 │   │   │   ├── QuoteReview.vue
 │   │   │   ├── SettlementStores.vue
 │   │   │   ├── SettlementSuppliers.vue
+│   │   │   ├── StockLog.vue
 │   │   │   ├── StockManage.vue
 │   │   │   ├── StoreDetail.vue
+│   │   │   ├── StoreOrderDetail.vue
 │   │   │   ├── StoreOrderManage.vue
 │   │   │   ├── StoreReview.vue
 │   │   │   ├── SupplierDetail.vue
@@ -247,6 +253,8 @@ Use this file for navigation only. Verify implementation details by reading sour
 │   │   │   ├── ClaimOnboarding.vue
 │   │   │   ├── StoreApply.vue
 │   │   │   └── SupplierApply.vue
+│   │   ├── delivery/
+│   │   │   └── DeliveryDetail.vue
 │   │   ├── entry/
 │   │   │   ├── B2CPage.vue
 │   │   │   └── EntryPage.vue
@@ -307,6 +315,7 @@ Use this file for navigation only. Verify implementation details by reading sour
 │   └── main.ts
 ├── tests/
 │   ├── __tests__/
+│   │   ├── catalog-helpers.spec.ts
 │   │   └── merchant-onboarding.spec.ts
 │   ├── api/
 │   │   └── system/

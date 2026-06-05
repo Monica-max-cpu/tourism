@@ -17,7 +17,7 @@ import { useUserStore } from '/@/stores/modules/user';
 import { createStoreOrderApi } from '/@/api/store/order';
 import { getStoreProfileApi } from '/@/api/store/sales';
 import { formatCurrency } from '/@/utils/format';
-import { getProductCover } from '/@/utils/mockProductImages';
+import { getProductCover } from '/@/utils/productImages';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 
 const router = useRouter();
@@ -126,13 +126,21 @@ async function confirmCheckout() {
         <div v-for="it in cartStore.getItems" :key="it.catalogId" class="px-4 py-3 border-b border-border last:border-0 flex items-center gap-3">
           <input type="checkbox" :checked="cartStore.selectedIds.includes(it.catalogId)"
             @change="cartStore.toggleSelect(it.catalogId)" class="w-4 h-4" />
-          <img
-            :src="getCover(it)"
-            :alt="it.productName"
-            class="w-14 h-14 object-cover rounded bg-muted cursor-pointer"
-            loading="lazy"
+          <div v-if="getCover(it)" class="w-14 h-14 overflow-hidden rounded bg-muted cursor-pointer" @click="viewProduct(it.catalogId)">
+            <img
+              :src="getCover(it)"
+              :alt="it.productName"
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div
+            v-else
+            class="w-14 h-14 flex items-center justify-center rounded bg-muted text-[10px] text-muted-foreground cursor-pointer"
             @click="viewProduct(it.catalogId)"
-          />
+          >
+            暂无图片
+          </div>
           <div class="flex-1 min-w-0">
             <button
               type="button"

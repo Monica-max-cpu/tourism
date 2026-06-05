@@ -29,3 +29,14 @@ export function buildRolePermissionPayload(roleId: string, permissionIds: string
     lastpermissionIds: lastPermissionIds.join(','),
   };
 }
+
+export function buildUserSavePayload(data: Record<string, any>) {
+  const payload = { ...data };
+  if (Array.isArray(payload.selectedroles)) {
+    payload.selectedroles = payload.selectedroles.join(',');
+  }
+  if (Array.isArray(payload.selecteddeparts)) {
+    payload.selecteddeparts = payload.selecteddeparts.join(',');
+  }
+  return payload;
+}

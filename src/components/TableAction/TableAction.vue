@@ -29,7 +29,7 @@ const visibleActions = computed(() =>
 </script>
 
 <template>
-  <div class="flex items-center gap-1">
+  <div class="table-action flex items-center gap-1">
     <template v-for="(a, idx) in visibleActions" :key="a.label">
       <Button :variant="a.variant || 'link'" size="sm" class="h-7 px-2" :disabled="a.disabled" @click.stop="a.onClick">
         {{ a.label }}

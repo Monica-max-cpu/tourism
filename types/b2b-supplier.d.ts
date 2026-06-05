@@ -22,8 +22,16 @@ export interface SupplierProduct {
   unit: string;
   barcode: string;
   categoryId: string;
+  warehouseId?: string;
+  warehouseName?: string;
   images: string;
   description?: string;
+  originPlace?: string;
+  packageSpec?: string;
+  storageCondition?: string;
+  shelfLife?: string;
+  applicableScene?: string;
+  afterSaleNote?: string;
   status: SupplierProductStatus;
   createTime: string;
 }
@@ -76,6 +84,7 @@ export interface SupplierQuoteCreateParams {
   validTo: string;
   currency?: string;
   leadTimeDays?: number;
+  warehouseId?: string;
   remark?: string;
   tiers?: QuoteTier[];
 }

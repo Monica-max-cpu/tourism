@@ -88,7 +88,7 @@ const MOCK_PAYMENTS = [
     storeId: 'store-001',
     amount: 3860,
     method: 'OFFLINE_TRANSFER',
-    voucherUrl: 'https://images.pexels.com/photos/4386431/pexels-photo-4386431.jpeg?auto=compress&cs=tinysrgb&w=900',
+    voucherUrl: '',
     transactionNo: 'BANK202606030001',
     status: 'PENDING_CONFIRM',
     submittedAt: '2026-06-03 09:18:00',

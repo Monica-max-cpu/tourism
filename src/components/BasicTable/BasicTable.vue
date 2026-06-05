@@ -118,7 +118,7 @@ defineExpose(tableAction);
 </script>
 
 <template>
-  <div class="basic-table backdrop-blur-sm rounded-lg border border-border">
+  <div class="basic-table">
     <vxe-grid
       ref="gridRef"
       :loading="loading"
@@ -160,26 +160,81 @@ defineExpose(tableAction);
 
 <style lang="less" scoped>
 .basic-table {
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.06);
+
   :deep(.vxe-table) {
-    --vxe-font-color: hsl(var(--foreground));
-    --vxe-table-border-color: hsl(var(--border));
-    --vxe-table-row-hover-background-color: hsl(var(--accent) / 0.3);
+    --vxe-font-color: #334155;
+    --vxe-table-border-color: #eef2f7;
+    --vxe-table-row-hover-background-color: #fbfdff;
+    border-radius: 14px;
+    background: #fff;
   }
+
   :deep(.vxe-header--column) {
-    background: hsl(var(--muted));
-    font-weight: 600;
+    height: 54px;
+    padding: 12px 18px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f8fafc;
+    color: #64748b;
     font-size: 13px;
-    color: hsl(var(--foreground));
+    font-weight: 700;
     text-align: center;
-    padding: 6px 12px;
-    border-bottom: 2px solid hsl(var(--border));
   }
+
   :deep(.vxe-body--column) {
-    padding: 6px 12px;
+    padding: 12px 18px;
+    border-bottom: 1px solid #eef2f7;
+    color: #334155;
     font-size: 14px;
   }
+
+  :deep(.vxe-body--row) {
+    background: #fff;
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  :deep(.vxe-body--row:hover) {
+    background: #fbfdff;
+  }
+
+  :deep(.vxe-cell) {
+    line-height: 1.55;
+  }
+
+  :deep(.vxe-table--body-wrapper),
+  :deep(.vxe-table--fixed-left-wrapper),
+  :deep(.vxe-table--fixed-right-wrapper) {
+    background: #fff;
+  }
+
+  :deep(.vxe-table--fixed-right-wrapper) {
+    box-shadow: -10px 0 24px rgba(15, 23, 42, 0.04);
+  }
+
+  :deep(.vxe-table--fixed-left-wrapper) {
+    box-shadow: 10px 0 24px rgba(15, 23, 42, 0.04);
+  }
+
+  :deep(.vxe-table--border-line) {
+    border: 0;
+  }
+
   :deep(.vxe-pager) {
-    border-top: 1px solid hsl(var(--border));
+    padding: 14px 18px;
+    border-top: 1px solid #eef2f7;
+    background: #fff;
+  }
+
+  :deep(.table-action) {
+    justify-content: center;
+  }
+
+  :deep(.table-action .text-border) {
+    color: #dbe3ee;
   }
 }
 </style>

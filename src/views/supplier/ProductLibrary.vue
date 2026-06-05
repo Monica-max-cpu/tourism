@@ -38,6 +38,7 @@ const columns: BasicColumn[] = [
   { field: 'brand', title: '品牌', align: 'center',width: 150 },
   { field: 'spec', title: '规格', align: 'center',width: 160 },
   { field: 'unit', title: '单位', align: 'center',width: 100 },
+  { field: 'warehouseName', title: '仓库', align: 'center', width: 160, formatter: ({ row }) => row.warehouseName || row.warehouseId || '-' },
   { field: 'barcode', title: '条码',align: 'center', width: 180 },
   { field: 'status', title: '状态',align: 'center', width: 100, slots: { default: 'status' } },
   { field: 'createTime', title: '创建时间', align: 'center',width: 240, formatter: ({ cellValue }) => formatDateTime(cellValue) },

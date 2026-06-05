@@ -12,12 +12,23 @@ import {
   Trash2,
   X,
 } from 'lucide-vue-next';
-import { Button, Input, Label } from '/@/components/ui';
+import {
+  Badge,
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '/@/components/ui';
 import { Switch } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
+import { storeCategoryLabel } from '/@/constants/storeStatus';
 import { formatCurrency } from '/@/utils/format';
-import { getProductCover } from '/@/utils/mockProductImages';
+import { getProductImages } from '/@/utils/productImages';
 import type { CatalogStatus, CatalogTier, PlatformCatalog } from '/#/b2b';
 import {
   addCatalogApi,
@@ -25,6 +36,12 @@ import {
   listCatalogsApi,
   updateCatalogApi,
 } from '/@/api/admin';
+import {
+  normalizeCatalogRecord,
+  normalizeCatalogStatus,
+  resolveCatalogSupplierName,
+  resolveCatalogUnit,
+} from './catalogHelpers';
 
 const router = useRouter();
 const route = useRoute();
@@ -50,6 +67,12 @@ interface QuoteOption {
   categoryId?: string;
   brand?: string;
   spec?: string;
+  originPlace?: string;
+  packageSpec?: string;
+  storageCondition?: string;
+  shelfLife?: string;
+  applicableScene?: string;
+  afterSaleNote?: string;
   unit: string;
   minOrderQty: number;
   costPrice: number;
@@ -68,6 +91,12 @@ interface SelectedCatalogItem {
   categoryId?: string;
   brand?: string;
   spec?: string;
+  originPlace?: string;
+  packageSpec?: string;
+  storageCondition?: string;
+  shelfLife?: string;
+  applicableScene?: string;
+  afterSaleNote?: string;
   unit: string;
   supplierBasePrice: number;
   basePrice: number;
@@ -75,6 +104,7 @@ interface SelectedCatalogItem {
   commissionRate: number;
   sortOrder: number;
   shelfNow: boolean;
+  pricingLevel: 'UNIFIED' | 'TIERED';
   catalogTiers: CatalogTier[];
 }
 
@@ -83,6 +113,12 @@ const submitting = ref(false);
 const quoteOptions = ref<QuoteOption[]>([]);
 const selectedItems = ref<SelectedCatalogItem[]>([]);
 const search = reactive({ keyword: '' });
+const pricingLevelOptions = [
+  { value: 'UNIFIED', label: '统一定价' },
+  { value: 'TIERED', label: '阶梯定价' },
+] as const;
+
+const currentItem = computed(() => selectedItems.value[0] || null);
 
 const filteredQuotes = computed(() => {
   const keyword = search.keyword.trim().toLowerCase();
@@ -125,6 +161,12 @@ function normalizeQuoteRecord(item: any): QuoteOption {
     categoryId: quote.categoryId || product.categoryId || item.categoryId || '',
     brand: quote.brand || product.brand || item.brand || '',
     spec: quote.spec || product.spec || item.spec || '',
+    originPlace: quote.originPlace || product.originPlace || item.originPlace || '',
+    packageSpec: quote.packageSpec || product.packageSpec || item.packageSpec || '',
+    storageCondition: quote.storageCondition || product.storageCondition || item.storageCondition || '',
+    shelfLife: quote.shelfLife || product.shelfLife || item.shelfLife || '',
+    applicableScene: quote.applicableScene || product.applicableScene || item.applicableScene || '',
+    afterSaleNote: quote.afterSaleNote || product.afterSaleNote || item.afterSaleNote || '',
     unit: quote.unit || product.unit || item.unit || '件',
     minOrderQty: quote.minOrderQty ?? quote.minQty ?? item.minOrderQty ?? 1,
     costPrice,
@@ -149,6 +191,12 @@ function createSelectedItem(quote: QuoteOption): SelectedCatalogItem {
     categoryId: quote.categoryId || '',
     brand: quote.brand,
     spec: quote.spec,
+    originPlace: quote.originPlace,
+    packageSpec: quote.packageSpec,
+    storageCondition: quote.storageCondition,
+    shelfLife: quote.shelfLife,
+    applicableScene: quote.applicableScene,
+    afterSaleNote: quote.afterSaleNote,
     unit: quote.unit || '件',
     supplierBasePrice: Number(quote.costPrice || 0),
     basePrice: Number(quote.costPrice || 0),
@@ -156,6 +204,7 @@ function createSelectedItem(quote: QuoteOption): SelectedCatalogItem {
     commissionRate: 0,
     sortOrder: selectedItems.value.length + 1,
     shelfNow: true,
+    pricingLevel: quote.tiers?.length ? 'TIERED' : 'UNIFIED',
     catalogTiers: quote.tiers?.length
       ? quote.tiers.map((tier) => ({ ...tier, unitPrice: Number(tier.unitPrice || quote.costPrice || 0) }))
       : [],
@@ -185,12 +234,6 @@ function removeTier(item: SelectedCatalogItem, index: number) {
   item.catalogTiers.splice(index, 1);
 }
 
-function calcGrossRate(item: SelectedCatalogItem) {
-  if (!item.basePrice) return '-';
-  const rate = ((Number(item.basePrice) - Number(item.supplierBasePrice)) / Number(item.basePrice)) * 100;
-  return `${rate.toFixed(1)}%`;
-}
-
 function buildPayload(item: SelectedCatalogItem) {
   return {
     productName: item.productName,
@@ -201,7 +244,16 @@ function buildPayload(item: SelectedCatalogItem) {
     minOrderQty: item.minOrderQty,
     commissionRate: item.commissionRate,
     preferredQuoteId: item.quoteId,
+    preferredSupplierName: item.supplierName,
+    supplierBasePrice: item.supplierBasePrice,
     description: item.description,
+    originPlace: item.originPlace,
+    packageSpec: item.packageSpec,
+    storageCondition: item.storageCondition,
+    shelfLife: item.shelfLife,
+    applicableScene: item.applicableScene,
+    afterSaleNote: item.afterSaleNote,
+    pricingLevel: item.pricingLevel,
     sortOrder: item.sortOrder,
     status: (item.shelfNow ? 1 : 0) as CatalogStatus,
     catalogTiers: item.catalogTiers.length ? item.catalogTiers : undefined,
@@ -223,7 +275,7 @@ async function loadCatalog() {
   loading.value = true;
   try {
     const result: any = await listCatalogsApi({ pageNo: 1, pageSize: 200 });
-    const catalog = result.records?.find((item: PlatformCatalog) => item.id === catalogId.value);
+    const catalog = (result.records || []).map(normalizeCatalogRecord).find((item: PlatformCatalog) => item.id === catalogId.value);
     if (!catalog) return;
 
     selectedItems.value = [{
@@ -233,6 +285,12 @@ async function loadCatalog() {
       productName: catalog.productName || '',
       productImages: catalog.productImages || '',
       description: catalog.description || '',
+      originPlace: (catalog as any).originPlace || '',
+      packageSpec: (catalog as any).packageSpec || '',
+      storageCondition: (catalog as any).storageCondition || '',
+      shelfLife: (catalog as any).shelfLife || '',
+      applicableScene: (catalog as any).applicableScene || '',
+      afterSaleNote: (catalog as any).afterSaleNote || '',
       categoryId: catalog.categoryId || '',
       unit: catalog.unit || '件',
       supplierBasePrice: Number(catalog.supplierBasePrice || 0),
@@ -240,9 +298,10 @@ async function loadCatalog() {
       minOrderQty: Number(catalog.minOrderQty || 1),
       commissionRate: Number(catalog.commissionRate || 0),
       sortOrder: Number(catalog.sortOrder || 1),
-      shelfNow: catalog.status === 1,
-      catalogTiers: catalog.catalogTiers ? [...catalog.catalogTiers] : [],
-    }];
+      shelfNow: normalizeCatalogStatus(catalog.status) === 1,
+    pricingLevel: catalog.catalogTiers && catalog.catalogTiers.length ? 'TIERED' : 'UNIFIED',
+    catalogTiers: catalog.catalogTiers ? [...catalog.catalogTiers] : [],
+  }];
   } finally {
     loading.value = false;
   }
@@ -271,6 +330,19 @@ onMounted(async () => {
 function goBack() {
   router.push(ROUTE_PATHS.ADMIN_CATALOGS);
 }
+
+function goToQuoteReview() {
+  router.push(ROUTE_PATHS.ADMIN_QUOTES);
+}
+
+function tierRangeText(tier: CatalogTier, unit: string) {
+  if (tier.maxQty != null) return `${tier.minQty}~${tier.maxQty}${unit}`;
+  return `≥${tier.minQty}${unit}`;
+}
+
+function firstProductImage(item: { productImages?: string }) {
+  return getProductImages(item)[0] || '';
+}
 </script>
 
 <template>
@@ -288,7 +360,209 @@ function goBack() {
     </div>
 
     <div v-else class="pt-4 pb-16">
-      <form class="grid grid-cols-1 xl:grid-cols-[minmax(360px,0.9fr)_minmax(520px,1.35fr)] gap-5" @submit.prevent="handleSubmit">
+      <form class="grid grid-cols-1 xl:grid-cols-[minmax(340px,0.88fr)_minmax(560px,1.32fr)] gap-5" @submit.prevent="handleSubmit">
+        <template v-if="isEdit && currentItem">
+          <div class="space-y-5">
+            <section class="rounded-[20px] border border-border bg-white p-6 shadow-[0_8px_32px_rgba(15,23,42,0.05)]">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-[20px] font-semibold text-[#1A2C54]">商品信息</h3>
+                </div>
+              </div>
+
+              <div class="mt-6 flex gap-5">
+                <div v-if="firstProductImage(currentItem)" class="h-40 w-40 shrink-0 overflow-hidden rounded-2xl ring-1 ring-border/60">
+                  <img
+                    :src="firstProductImage(currentItem)"
+                    :alt="currentItem.productName"
+                    class="h-full w-full object-cover"
+                  />
+                </div>
+                <div v-else class="flex h-40 w-40 shrink-0 items-center justify-center rounded-2xl bg-muted text-xs text-muted-foreground ring-1 ring-border/60">
+                  暂无图片
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-[26px] font-semibold leading-tight text-foreground">
+                    {{ currentItem.productName }}
+                  </div>
+                  <div class="mt-3 inline-flex max-w-full rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                    {{ resolveCatalogSupplierName(currentItem) || storeCategoryLabel(currentItem.categoryId) || '供应商商品' }}
+                  </div>
+
+                  <div class="mt-8 grid grid-cols-2 gap-5">
+                    <div>
+                      <div class="text-sm text-muted-foreground">供应价</div>
+                      <div class="mt-1 text-[28px] font-semibold leading-none text-foreground">
+                        {{ formatCurrency(currentItem.supplierBasePrice) }}
+                      </div>
+                    </div>
+                    <div class="border-l border-border pl-5">
+                      <div class="text-sm text-muted-foreground">单位</div>
+                      <div class="mt-1 text-[28px] font-semibold leading-none text-foreground">
+                        {{ resolveCatalogUnit(currentItem) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-8 flex items-center gap-3">
+                <span class="inline-flex items-center rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-500">
+                  <span class="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
+                  已上架
+                </span>
+              </div>
+
+              <div class="mt-8 border-t border-border pt-5">
+                <Button type="button" variant="ghost" class="h-auto px-0 text-[#5B67D8] hover:bg-transparent hover:text-[#4452d0]" @click="goToQuoteReview">
+                  查看供应商报价
+                  <ArrowRight class="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </section>
+
+            <section class="rounded-[20px] border border-border bg-white p-6 shadow-[0_8px_32px_rgba(15,23,42,0.05)]">
+              <div class="flex items-center gap-3">
+                <h3 class="text-[20px] font-semibold text-[#1A2C54]">档位定价预览</h3>
+                <span class="rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">档位定价</span>
+              </div>
+
+              <div class="mt-5 rounded-2xl border border-border bg-white">
+                <div v-if="!currentItem.catalogTiers.length" class="flex min-h-[260px] flex-col items-center justify-center px-6 text-center">
+                  <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted/50 text-muted-foreground">
+                    <Coins class="h-6 w-6" />
+                  </div>
+                  <div class="text-lg font-semibold text-foreground">暂未设置阶梯价</div>
+                  <div class="mt-2 text-sm text-muted-foreground">为不同采购量设置不同价格，提升门店下单效率。</div>
+                </div>
+                <div v-else class="divide-y divide-border">
+                  <div v-for="(tier, tierIndex) in currentItem.catalogTiers" :key="tierIndex" class="grid grid-cols-[auto_1fr_auto] items-center gap-4 px-5 py-4">
+                    <span
+                      class="inline-flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm font-semibold"
+                      :class="tierIndex === 0 ? 'bg-indigo-50 text-indigo-500' : tierIndex === 1 ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'"
+                    >
+                      {{ tierIndex + 1 }}档
+                    </span>
+                    <span class="text-sm text-muted-foreground">{{ tierRangeText(tier, resolveCatalogUnit(currentItem)) }}</span>
+                    <span class="text-lg font-semibold text-foreground">{{ formatCurrency(tier.unitPrice) }}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section class="flex min-h-[760px] flex-col rounded-[20px] border border-border bg-white shadow-[0_8px_32px_rgba(15,23,42,0.05)]">
+            <div class="flex items-center justify-between border-b border-border px-6 py-5">
+              <div>
+                <h3 class="text-[20px] font-semibold text-[#1A2C54]">定价配置</h3>
+                <p class="mt-1 text-xs text-muted-foreground">调整目录售价、起订量与阶梯价后保存即可生效。</p>
+              </div>
+            </div>
+
+            <div class="flex-1 px-6 py-6">
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div class="space-y-2">
+                  <Label class="text-[15px] font-medium text-foreground/80">目录售价 ￥</Label>
+                  <Input v-model.number="selectedItems[0].basePrice" type="number" min="0" step="0.01" class="h-12 rounded-xl text-[15px]" />
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-[15px] font-medium text-foreground/80">起订量</Label>
+                  <div class="flex h-12 overflow-hidden rounded-xl border border-input bg-background">
+                    <Input v-model.number="selectedItems[0].minOrderQty" type="number" min="1" class="h-full flex-1 rounded-none border-0 text-[15px] shadow-none focus-visible:ring-0" />
+                    <div class="flex items-center px-4 text-sm font-semibold text-foreground/80">
+                      {{ resolveCatalogUnit(currentItem) }}
+                    </div>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-[15px] font-medium text-foreground/80">展示排序</Label>
+                  <div class="flex h-12 overflow-hidden rounded-xl border border-input bg-background">
+                    <Input v-model.number="selectedItems[0].sortOrder" type="number" min="0" class="h-full flex-1 rounded-none border-0 text-[15px] shadow-none focus-visible:ring-0" />
+                    <div class="flex items-center px-4 text-sm text-muted-foreground">数字越小越靠前</div>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <Label class="text-[15px] font-medium text-foreground/80">定价层级</Label>
+                  <Select v-model="selectedItems[0].pricingLevel">
+                    <SelectTrigger class="h-12 w-full rounded-xl bg-background text-[#1A2C54] [&_svg]:text-[#1A2C54] [&_svg]:opacity-60">
+                      <SelectValue placeholder="请选择定价层级" />
+                    </SelectTrigger>
+                    <SelectContent side="bottom" class="w-[var(--radix-select-trigger-width)]">
+                      <SelectItem v-for="option in pricingLevelOptions" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div class="mt-6 flex items-center gap-4 rounded-2xl border border-border px-4 py-4">
+                <Switch v-model:checked="selectedItems[0].shelfNow" type="button" class="data-[state=checked]:bg-[#5B67D8]" />
+                <div>
+                  <div class="text-[15px] font-medium text-foreground">立即上架</div>
+                  <div class="mt-1 text-sm text-muted-foreground">开启后商品将对采购商可见</div>
+                </div>
+              </div>
+
+              <div class="mt-8 border-t border-border pt-7">
+                <div class="flex items-center gap-3">
+                  <h4 class="text-[20px] font-semibold text-foreground">阶梯定价</h4>
+                  <Badge :variant="selectedItems[0].catalogTiers.length ? 'success' : 'warning'" class="rounded-full px-3 py-1 text-sm font-medium">
+                    {{ selectedItems[0].catalogTiers.length ? '已配置' : '未配置' }}
+                  </Badge>
+                </div>
+
+                <div class="mt-5 rounded-[20px] border border-dashed border-border bg-[#fbfcfe] p-5">
+                  <div v-if="selectedItems[0].catalogTiers.length === 0" class="flex min-h-[220px] flex-col items-center justify-center text-center">
+                    <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+                      <Coins class="h-6 w-6" />
+                    </div>
+                    <div class="text-lg font-semibold text-foreground">暂未设置阶梯价</div>
+                    <div class="mt-2 text-sm text-muted-foreground">为不同采购量设置不同价格</div>
+                    <Button type="button" variant="outline" class="mt-6" @click="addTier(selectedItems[0])">
+                      <Plus class="mr-2 h-4 w-4" />
+                      添加价格阶梯
+                    </Button>
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div v-for="(tier, tierIndex) in selectedItems[0].catalogTiers" :key="tierIndex" class="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-white px-4 py-3">
+                      <span
+                        class="inline-flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm font-semibold"
+                        :class="tierIndex === 0 ? 'bg-indigo-50 text-indigo-500' : tierIndex === 1 ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'"
+                      >
+                        {{ tierIndex + 1 }}档
+                      </span>
+                      <Input v-model.number="tier.minQty" type="number" min="1" class="h-10 w-24 rounded-xl text-[15px]" />
+                      <span class="text-sm text-muted-foreground">至</span>
+                      <Input v-model.number="tier.maxQty" type="number" min="1" class="h-10 w-24 rounded-xl text-[15px]" />
+                      <span class="text-sm text-muted-foreground">单价</span>
+                      <Input v-model.number="tier.unitPrice" type="number" min="0" step="0.01" class="h-10 w-28 rounded-xl text-[15px]" />
+                      <button type="button" class="ml-auto rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600" @click="removeTier(selectedItems[0], tierIndex)">
+                        <X class="h-4 w-4" />
+                      </button>
+                    </div>
+                    <Button type="button" variant="outline" class="rounded-xl" @click="addTier(selectedItems[0])">
+                      <Plus class="mr-2 h-4 w-4" />
+                      添加价格阶梯
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between border-t border-border bg-[#fafbfc] px-6 py-5">
+              <Button type="button" variant="outline" class="rounded-xl px-6" @click="goBack">
+                <ArrowLeft class="mr-1.5 h-4 w-4" />
+                取消
+              </Button>
+              <Button type="submit" class="rounded-xl px-8" :disabled="submitting || !formValid">
+                <div v-if="submitting" class="mr-1.5 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                {{ submitting ? '保存中...' : '保存更改' }}
+              </Button>
+            </div>
+          </section>
+        </template>
+        <template v-else>
         <section v-if="!isEdit" class="min-h-[620px] rounded-lg border border-border bg-white">
           <div class="flex items-center justify-between border-b border-border px-5 py-4">
             <div>
@@ -319,11 +593,16 @@ function goBack() {
               class="rounded-lg border border-border bg-white p-3 transition-colors hover:border-[#1A2C54]/40 hover:bg-[#f8fafc]"
             >
               <div class="flex gap-3">
-                <img
-                  :src="getProductCover({ id: quote.productId || quote.id, productName: quote.productName, categoryId: quote.categoryId, productImages: quote.productImages || quote.images })"
-                  class="h-16 w-16 shrink-0 rounded-md object-cover"
-                  alt=""
-                />
+                <div v-if="firstProductImage({ productImages: quote.productImages || quote.images })" class="h-16 w-16 shrink-0 overflow-hidden rounded-md">
+                  <img
+                    :src="firstProductImage({ productImages: quote.productImages || quote.images })"
+                    class="h-full w-full object-cover"
+                    alt=""
+                  />
+                </div>
+                <div v-else class="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] text-muted-foreground">
+                  暂无
+                </div>
                 <div class="min-w-0 flex-1">
                   <div class="truncate text-sm font-semibold text-foreground">{{ quote.productName }}</div>
                   <div class="mt-1 truncate text-xs text-muted-foreground">{{ quote.supplierName }}</div>
@@ -370,11 +649,16 @@ function goBack() {
 
             <article v-for="(item, index) in selectedItems" :key="item.tempId" class="rounded-lg border border-border bg-[#fbfcfe]">
               <div class="flex items-start gap-4 border-b border-border bg-white p-4">
-                <img
-                  :src="getProductCover({ id: item.productId || item.quoteId, productName: item.productName, categoryId: item.categoryId, productImages: item.productImages })"
-                  class="h-20 w-20 shrink-0 rounded-md object-cover"
-                  alt=""
-                />
+                <div v-if="firstProductImage(item)" class="h-20 w-20 shrink-0 overflow-hidden rounded-md">
+                  <img
+                    :src="firstProductImage(item)"
+                    class="h-full w-full object-cover"
+                    alt=""
+                  />
+                </div>
+                <div v-else class="flex h-20 w-20 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] text-muted-foreground">
+                  暂无图片
+                </div>
                 <div class="min-w-0 flex-1">
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
@@ -393,7 +677,7 @@ function goBack() {
                   <div class="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span v-if="item.brand" class="rounded bg-muted px-2 py-1">{{ item.brand }}</span>
                     <span v-if="item.spec" class="rounded bg-muted px-2 py-1">{{ item.spec }}</span>
-                    <span class="rounded bg-muted px-2 py-1">单位：{{ item.unit }}</span>
+                    <span class="rounded bg-muted px-2 py-1">单位：{{ resolveCatalogUnit(item) }}</span>
                     <span class="rounded bg-muted px-2 py-1">供应商报价：{{ formatCurrency(item.supplierBasePrice) }}</span>
                   </div>
                   <p v-if="item.description" class="mt-3 line-clamp-2 text-xs leading-5 text-muted-foreground">
@@ -421,9 +705,9 @@ function goBack() {
                 </div>
               </div>
 
-              <div class="grid gap-4 px-4 pb-4 md:grid-cols-[1fr_auto]">
-                <div class="rounded-md border border-dashed border-border bg-white p-3">
-                  <div class="mb-3 flex items-center justify-between">
+              <div class="px-4 pb-4">
+                <div class="rounded-[20px] border border-dashed border-border bg-[#fbfcfe] p-5">
+                  <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-2 text-sm font-medium text-[#1A2C54]">
                       <Coins class="h-4 w-4" />
                       阶梯价
@@ -433,32 +717,29 @@ function goBack() {
                       添加
                     </Button>
                   </div>
-                  <div v-if="item.catalogTiers.length === 0" class="py-2 text-xs text-muted-foreground">
-                    未设置阶梯价，按目录销售价统一销售
-                  </div>
-                  <div v-else class="space-y-2">
-                    <div v-for="(tier, tierIndex) in item.catalogTiers" :key="tierIndex" class="flex flex-wrap items-center gap-2">
-                      <span class="w-10 text-xs text-muted-foreground">档{{ tierIndex + 1 }}</span>
-                      <Input v-model.number="tier.minQty" type="number" min="1" class="h-9 w-24 bg-white" />
-                      <span class="text-xs text-muted-foreground">至</span>
-                      <Input v-model.number="tier.maxQty" type="number" min="1" class="h-9 w-24 bg-white" />
-                      <span class="text-xs text-muted-foreground">单价</span>
-                      <Input v-model.number="tier.unitPrice" type="number" min="0" step="0.01" class="h-9 w-28 bg-white" />
-                      <button type="button" class="rounded-md p-1 text-muted-foreground hover:bg-red-50 hover:text-red-600" @click="removeTier(item, tierIndex)">
-                        <X class="h-4 w-4" />
-                      </button>
+
+                  <div class="mt-4">
+                    <div v-if="item.catalogTiers.length === 0" class="py-2 text-xs text-muted-foreground">
+                      未设置阶梯价，按目录销售价统一销售
+                    </div>
+                    <div v-else class="space-y-2">
+                      <div v-for="(tier, tierIndex) in item.catalogTiers" :key="tierIndex" class="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-white px-4 py-3">
+                        <span class="w-10 text-xs text-muted-foreground">档{{ tierIndex + 1 }}</span>
+                        <Input v-model.number="tier.minQty" type="number" min="1" class="h-9 w-24 bg-white" />
+                        <span class="text-xs text-muted-foreground">至</span>
+                        <Input v-model.number="tier.maxQty" type="number" min="1" class="h-9 w-24 bg-white" />
+                        <span class="text-xs text-muted-foreground">单价</span>
+                        <Input v-model.number="tier.unitPrice" type="number" min="0" step="0.01" class="h-9 w-28 bg-white" />
+                        <button type="button" class="ml-auto rounded-md p-1 text-muted-foreground hover:bg-red-50 hover:text-red-600" @click="removeTier(item, tierIndex)">
+                          <X class="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div class="flex min-w-[150px] flex-col justify-between rounded-md bg-white p-3">
-                  <!-- <div>
-                    <div class="text-xs text-muted-foreground">毛利率</div>
-                    <div class="mt-1 text-lg font-semibold text-[#1A2C54]">{{ calcGrossRate(item) }}</div>
-                  </div> -->
-                  <div class="mt-4 flex items-center gap-2">
-                    <Switch v-model:checked="item.shelfNow" class="data-[state=checked]:bg-[#1A2C54]" />
-                    <Label class="text-sm text-foreground">立即上架</Label>
+                  <div class="mt-5 flex items-center justify-end gap-3 border-t border-border pt-4">
+                    <Label class="text-sm text-foreground/80">立即上架</Label>
+                    <Switch v-model:checked="item.shelfNow" type="button" class="data-[state=checked]:bg-[#1A2C54]" />
                   </div>
                 </div>
               </div>
@@ -470,12 +751,13 @@ function goBack() {
               <ArrowLeft class="mr-1.5 h-4 w-4" />
               取消
             </Button>
-            <Button type="submit" :disabled="submitting || !formValid">
+              <Button type="submit" :disabled="submitting || !formValid">
               <div v-if="submitting" class="mr-1.5 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               {{ submitting ? '提交中...' : (isEdit ? '保存修改' : '提交到目录商品列表') }}
             </Button>
           </div>
         </section>
+        </template>
       </form>
     </div>
   </PageWrapper>

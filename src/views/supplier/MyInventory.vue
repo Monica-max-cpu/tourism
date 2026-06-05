@@ -2,12 +2,14 @@
 /**
  * 供应商 - 我的库存
  * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商库存
- * - 仅展示本供应商库 * - 支持调整可用库存与预警阈 * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商库存
+ * - 仅展示本供应商库
+ * - 当前仅支持补货入库；锁定库存待后端字段支持
+ * - 预警阈值仅平台端维护，不在供应商端展示
+ * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商库存
  */
 import { reactive, ref, computed } from 'vue';
-import {
-  Badge, Input, Label,
-} from '/@/components/ui';
+import { useUserStore } from '/@/stores/modules/user';
+import { Input, Label } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
 import { BasicModal, useModal } from '/@/components/BasicModal';
@@ -15,14 +17,13 @@ import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import { listSupplierStocksApi, replenishStockApi } from '/@/api/supplier/inventory';
 import { listSupplierProductsApi } from '/@/api/supplier/quote';
-import {
-  SUPPLIER_STOCK_HEALTH_LABEL, SUPPLIER_STOCK_HEALTH_VARIANT,
-} from '/@/constants/supplierStatus';
 import type { SupplierStock } from '/#/b2b-supplier';
 
 
-const search = reactive({ keyword: '', health: '' });
+const search = reactive({ keyword: '' });
 const [registerTable, { reload }] = useTable();
+const userStore = useUserStore();
+const currentSupplierId = computed(() => userStore.getUserInfo?.supplierId || userStore.getUserInfo?.b2bMerchantInfo?.supplierId || '');
 
 /** 从商品档案中补齐库存列表里不存在的商品（虚拟行，availableQty=0） */
 async function mergeProductsIntoStocks(stocks: SupplierStock[]): Promise<SupplierStock[]> {
@@ -59,7 +60,6 @@ async function mergeProductsIntoStocks(stocks: SupplierStock[]): Promise<Supplie
 async function loadData(params: any) {
   const query: any = { ...params };
   if (search.keyword) query.keyword = search.keyword;
-  if (search.health) query.health = search.health;
   const res: any = await listSupplierStocksApi(query);
   let stocks: SupplierStock[] = [];
   let total = 0;
@@ -104,6 +104,7 @@ async function confirmQty() {
   try {
     const row = qtyModal.data.value as any;
     await replenishStockApi({
+      supplierId: currentSupplierId.value || undefined,
       productId: row.productId,
       warehouseId: row.warehouseId || undefined,
       qty: qtyValue.value,
@@ -116,32 +117,20 @@ async function confirmQty() {
 }
 
 function onSearch() { reload({ pageNo: 1 }); }
-function onReset() { search.keyword = ''; search.health = ''; reload({ pageNo: 1 }); }
+function onReset() { search.keyword = ''; reload({ pageNo: 1 }); }
 </script>
 
 <template>
-  <PageWrapper title="我的库存" subtitle="维护可用库存；锁定库存由集采系统自动占用">
+  <PageWrapper title="我的库存" subtitle="当前仅支持补货入库；锁定库存字段待后端支持，预警阈值仅平台端维护">
 
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">关键词</Label>
         <Input v-model="search.keyword" placeholder="名称" class="w-60" @keyup.enter="onSearch" />
       </div>
-      <!-- <div class="flex items-center gap-2">
-        <Label class="text-xs text-muted-foreground">健康度</Label>
-        <Select v-model="search.health">
-          <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="o in SUPPLIER_STOCK_HEALTH_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div> -->
     </SearchBar>
 
     <BasicTable :columns="columns" :api="loadData" row-key="id" @register="registerTable">
-      <template #health="{ row }">
-        <Badge :variant="SUPPLIER_STOCK_HEALTH_VARIANT[row.health]">{{ SUPPLIER_STOCK_HEALTH_LABEL[row.health] }}</Badge>
-      </template>
       <template #action="{ row }">
         <TableAction
           :actions="[
@@ -153,15 +142,16 @@ function onReset() { search.keyword = ''; search.health = ''; reload({ pageNo: 1
 
     <BasicModal
       v-model:open="qtyModal.visible.value"
-      title="调整可用库存"
+      title="补货入库"
       :description="qtyModal.data.value ? `${qtyModal.data.value.productName}（${qtyModal.data.value.productSku}）` : ''"
       :confirm-loading="submitting"
       :confirm-disabled="!qtyValid"
       @confirm="confirmQty"
     >
       <div class="space-y-2">
-        <Label>新可用库存（{{ qtyModal.data.value?.unit || '-' }}）</Label>
+        <Label>补货后可用库存（{{ qtyModal.data.value?.unit || '-' }}）</Label>
         <Input :model-value="qtyValue" @update:model-value="onQtyInput" type="number" min="0" />
+        <p class="text-xs text-muted-foreground">这里只调整可用库存，锁定库存会在后端补齐字段后再展示。</p>
       </div>
     </BasicModal>
 

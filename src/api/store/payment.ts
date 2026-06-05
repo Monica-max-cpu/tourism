@@ -20,7 +20,7 @@ export function listStorePaymentsApi(params: any) {
       storeId: params?.storeId || 'mock-store',
       amount: 3860,
       method: 'OFFLINE',
-      voucherUrl: 'https://images.pexels.com/photos/4386431/pexels-photo-4386431.jpeg?auto=compress&cs=tinysrgb&w=900',
+      voucherUrl: '',
       transactionNo: 'BANK202606030001',
       status: 1,
       remark: '线下转账，平台已确认',

@@ -167,6 +167,13 @@ function normalizeBackendRoute(menus: any[]): any[] {
           }
           return c;
         });
+
+        // Vue Router 不喜欢“有 name 的父路由 + 未命名的空路径子路由”的组合。
+        // 后端菜单如果返回了默认子页，这里给默认子页补上名字，避免路由告警。
+        const defaultChild = normalized.children.find((child: any) => child.path === '' && !child.name);
+        if (defaultChild && normalized.name) {
+          defaultChild.name = `${normalized.name}Default`;
+        }
       }
       return normalized;
     });
@@ -179,6 +186,7 @@ interface PermissionState {
   permCodeList: string[];
   isDynamicAddedRoute: boolean;
   backMenuList: Menu[];
+  backMenuPermissionPayload: Record<string, any> | null;
 }
 
 export const usePermissionStore = defineStore({
@@ -188,6 +196,7 @@ export const usePermissionStore = defineStore({
     permCodeList: [],
     isDynamicAddedRoute: false,
     backMenuList: [],
+    backMenuPermissionPayload: null,
   }),
   getters: {
     getMenus(state): MenuItem[] {
@@ -212,6 +221,10 @@ export const usePermissionStore = defineStore({
       this.backMenuList = list;
     },
 
+    setBackMenuPermissionPayload(payload: Record<string, any> | null) {
+      this.backMenuPermissionPayload = payload;
+    },
+
     setDynamicAddedRoute(added: boolean) {
       this.isDynamicAddedRoute = added;
     },
@@ -221,11 +234,15 @@ export const usePermissionStore = defineStore({
       this.permCodeList = [];
       this.backMenuList = [];
       this.menus = [];
+      this.backMenuPermissionPayload = null;
     },
 
     /** 从接口获取权限码和菜单路由 */
     async changePermissionCode() {
-      const systemPermission = await getBackMenuAndPerms();
+      const systemPermission = this.backMenuPermissionPayload || await getBackMenuAndPerms();
+      if (!this.backMenuPermissionPayload) {
+        this.backMenuPermissionPayload = systemPermission;
+      }
       // 兼容 JeecgBoot 返回的多种字段名
       const codeList = systemPermission.codeList
         || systemPermission.auth

@@ -6,7 +6,8 @@ import { Button, Input, Label } from '/@/components/ui'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '/@/components/ui'
 import { PageWrapper } from '/@/components/PageWrapper'
 import { ROUTE_PATHS } from '/@/constants/routePaths'
-import type { SupplierProduct, QuoteTier } from '/#/b2b-supplier'
+import { listWarehousesApi } from '/@/api/supplier/warehouse'
+import type { SupplierProduct, QuoteTier, SupplierWarehouse } from '/#/b2b-supplier'
 import {
   listSupplierQuotesApi, createSupplierQuoteApi, updateSupplierQuoteApi, listSupplierProductsApi,
 } from '/@/api/supplier/quote'
@@ -19,9 +20,16 @@ const pageTitle = computed(() => isEdit.value ? '编辑报价' : '新建报价')
 
 const submitting = ref(false)
 const loading = ref(false)
+const productOptionsLoading = ref(false)
+const productOptionsReady = ref(false)
+const warehouseOptionsLoading = ref(false)
+const warehouseOptionsReady = ref(false)
 const productNameInput = ref<HTMLInputElement | null>(null)
 
 const productOptions = ref<SupplierProduct[]>([])
+const warehouseOptions = ref<SupplierWarehouse[]>([])
+const visibleProductOptions = computed(() => productOptions.value)
+const visibleWarehouseOptions = computed(() => warehouseOptions.value)
 
 const form = reactive({
   productId: '',
@@ -33,6 +41,7 @@ const form = reactive({
   validFrom: '2026-05-24',
   validTo: '2026-12-31',
   currency: 'CNY',
+  warehouseId: '',
   remark: '',
   tiers: [] as QuoteTier[],
 })
@@ -43,6 +52,21 @@ const CURRENCY_OPTIONS = [
   { value: 'CNY', label: 'CNY 人民币' },
   { value: 'USD', label: 'USD 美元' },
 ]
+
+const currentWarehouseName = computed(() => warehouseOptions.value.find(w => w.id === form.warehouseId)?.warehouseName || '')
+
+function toMoney(value: number | string | null | undefined) {
+  const num = Number(value)
+  if (!Number.isFinite(num)) return 0
+  return Math.round((num + Number.EPSILON) * 100) / 100
+}
+
+function normalizePriceFields() {
+  form.basePrice = toMoney(form.basePrice)
+  form.tiers.forEach((tier) => {
+    tier.unitPrice = toMoney(tier.unitPrice)
+  })
+}
 
 function addTier() {
   const last = form.tiers[form.tiers.length - 1]
@@ -60,16 +84,38 @@ function onProductChange(v: string) {
     form.productId = p.id
     form.productName = p.productName
     form.unit = p.unit
+    form.warehouseId = (p as any).warehouseId || form.warehouseId
   }
 }
 
 async function loadProductOptions() {
+  productOptionsLoading.value = true
   try {
-    const { records } = await listSupplierProductsApi({
+    const res: any = await listSupplierProductsApi({
       pageNo: 1, pageSize: 200, status: '1',
     })
-    productOptions.value = records || []
-  } catch { productOptions.value = [] }
+    productOptions.value = Array.isArray(res) ? res : (res?.records ?? res ?? [])
+  } catch {
+    productOptions.value = []
+  } finally {
+    productOptionsLoading.value = false
+    productOptionsReady.value = true
+  }
+}
+
+async function loadWarehouseOptions() {
+  warehouseOptionsLoading.value = true
+  try {
+    const result: any = await listWarehousesApi({ pageNo: 1, pageSize: 200 })
+    warehouseOptions.value = Array.isArray(result) ? result : (result?.records ?? result ?? [])
+    const defaultWarehouse = warehouseOptions.value.find((w) => w.isDefault === 1)
+    if (!form.warehouseId && defaultWarehouse) form.warehouseId = defaultWarehouse.id
+  } catch {
+    warehouseOptions.value = []
+  } finally {
+    warehouseOptionsLoading.value = false
+    warehouseOptionsReady.value = true
+  }
 }
 
 async function loadQuote() {
@@ -94,6 +140,7 @@ async function loadQuote() {
         validFrom: (q.validFrom || '').slice(0, 10),
         validTo: (q.validTo || '').slice(0, 10),
         currency: q.currency || 'CNY',
+        warehouseId: q.warehouseId || '',
         remark: q.remark || '',
         tiers: (record.tiers || q.tiers || []).map((t: any) => ({
           minQty: t.minQty ?? t.minOrderQty ?? 0,
@@ -106,6 +153,7 @@ async function loadQuote() {
 }
 
 onMounted(async () => {
+  await loadWarehouseOptions()
   await loadProductOptions()
   await loadQuote()
   if (!isEdit.value) {
@@ -116,22 +164,23 @@ onMounted(async () => {
 
 async function handleSubmit() {
   if (!formValid.value) return
+  normalizePriceFields()
   submitting.value = true
   try {
     if (isEdit.value) {
       await updateSupplierQuoteApi(quoteId.value, {
         basePrice: form.basePrice, validFrom: form.validFrom + ' 00:00:00', validTo: form.validTo + ' 00:00:00',
         minOrderQty: form.minOrderQty, leadTimeDays: form.leadTimeDays,
-        remark: form.remark, tiers: form.tiers.length ? form.tiers : undefined,
+        warehouseId: form.warehouseId || undefined, remark: form.remark, tiers: form.tiers.length ? form.tiers : undefined,
       } as any)
     } else {
       await createSupplierQuoteApi({
         productId: form.productId,
         minOrderQty: form.minOrderQty, basePrice: form.basePrice,
         validFrom: form.validFrom + ' 00:00:00', validTo: form.validTo + ' 00:00:00',
-        currency: form.currency, leadTimeDays: form.leadTimeDays,
+        currency: form.currency, leadTimeDays: form.leadTimeDays, warehouseId: form.warehouseId || undefined,
         remark: form.remark, tiers: form.tiers.length ? form.tiers : undefined,
-      })
+      } as any)
     }
     router.push(ROUTE_PATHS.SUPPLIER_QUOTES_MANAGE)
   } finally { submitting.value = false }
@@ -186,8 +235,24 @@ function goBack() {
                           <SelectValue :placeholder="form.productName || '请选择商品'" />
                         </SelectTrigger>
                         <SelectContent side="bottom" class="max-h-60 w-[var(--radix-select-trigger-width)]">
-                          <SelectItem v-for="p in productOptions" :key="p.id" :value="p.id">
+                          <SelectItem v-for="p in visibleProductOptions" :key="p.id" :value="p.id">
                             {{ p.productName }}（{{ p.unit || '-' }}）
+                          </SelectItem>
+                          <SelectItem
+                            v-if="productOptionsReady && !productOptionsLoading && visibleProductOptions.length === 0"
+                            value="__empty_product__"
+                            disabled
+                            class="justify-center pl-2 text-muted-foreground"
+                          >
+                            暂无数据
+                          </SelectItem>
+                          <SelectItem
+                            v-else-if="productOptionsLoading && visibleProductOptions.length === 0"
+                            value="__loading_product__"
+                            disabled
+                            class="justify-center pl-2 text-muted-foreground"
+                          >
+                            加载中...
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -198,7 +263,7 @@ function goBack() {
                         <Label class="text-[15px] font-medium text-foreground/80">
                           基础单价（{{ form.unit || '单位' }}）<span class="text-red-400">*</span>
                         </Label>
-                        <Input v-model.number="form.basePrice" type="number" min="0" step="0.01" placeholder="0.00" class="h-11 rounded-lg text-[15px]" />
+                        <Input v-model.number="form.basePrice" type="number" min="0" step="0.01" placeholder="0.00" class="h-11 rounded-lg text-[15px]" @blur="normalizePriceFields" />
                       </div>
                       <div class="space-y-1.5">
                         <Label class="text-[15px] font-medium text-foreground/80">币种</Label>
@@ -248,7 +313,7 @@ function goBack() {
                             <span class="text-xs text-muted-foreground">~</span>
                             <Input v-model.number="t.maxQty" type="number" min="1" placeholder="止" class="w-24 h-9 rounded-lg text-[15px]" />
                             <span class="text-xs text-muted-foreground shrink-0">¥</span>
-                            <Input v-model.number="t.unitPrice" type="number" min="0" step="0.01" placeholder="单价" class="w-28 h-9 rounded-lg text-[15px]" />
+                            <Input v-model.number="t.unitPrice" type="number" min="0" step="0.01" placeholder="单价" class="w-28 h-9 rounded-lg text-[15px]" @blur="normalizePriceFields" />
                             <button type="button" class="shrink-0 p-1 rounded-full text-muted-foreground/40 hover:text-red-400 hover:bg-red-50 transition-colors" @click="removeTier(i)">
                               <X class="w-4 h-4" />
                             </button>
@@ -275,9 +340,41 @@ function goBack() {
                     <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
                       <Clock class="w-3.5 h-3.5 text-[#1A2C54]" />
                     </div>
-                    <h4 class="text-lg font-semibold text-[#1A2C54]">履约配置</h4>
+                    <div>
+                      <h4 class="text-lg font-semibold text-[#1A2C54]">履约配置</h4>
+                      <p class="mt-1 text-xs text-muted-foreground">用于控制报价生效期、备货周期和发货仓库，后续集采履约会按这些信息排期。</p>
+                    </div>
                   </div>
                   <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                      <Label class="text-[15px] font-medium text-foreground/80">发货仓库</Label>
+                      <Select v-model="form.warehouseId">
+                        <SelectTrigger class="h-11 w-full rounded-lg bg-[#f8f9fb] border-[#e8ecf1] text-[#1A2C54] hover:bg-[#f3f5f8] transition-colors [&_svg]:text-[#1A2C54] [&_svg]:opacity-60">
+                          <SelectValue :placeholder="currentWarehouseName || '请选择仓库（非必填）'" />
+                        </SelectTrigger>
+                        <SelectContent side="bottom" class="w-[var(--radix-select-trigger-width)]">
+                          <SelectItem v-for="w in visibleWarehouseOptions" :key="w.id" :value="w.id">
+                            {{ w.warehouseName }}{{ w.isDefault === 1 ? '（默认）' : '' }}
+                          </SelectItem>
+                          <SelectItem
+                            v-if="warehouseOptionsReady && !warehouseOptionsLoading && visibleWarehouseOptions.length === 0"
+                            value="__empty_warehouse__"
+                            disabled
+                            class="justify-center pl-2 text-muted-foreground"
+                          >
+                            暂无数据
+                          </SelectItem>
+                          <SelectItem
+                            v-else-if="warehouseOptionsLoading && visibleWarehouseOptions.length === 0"
+                            value="__loading_warehouse__"
+                            disabled
+                            class="justify-center pl-2 text-muted-foreground"
+                          >
+                            加载中...
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div class="space-y-1.5">
                       <Label class="text-[15px] font-medium text-foreground/80">生效日期</Label>
                       <Input v-model="form.validFrom" type="date" class="h-11 rounded-lg text-[15px]" />

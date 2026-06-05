@@ -7,6 +7,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '/@/components/ui';
 import { supplierApplyApi, publicOnboardingApplyApi } from '/@/api/b2b/apply';
+import { uploadFilesApi, uploadImageApi } from '/@/api/common/upload';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { SUPPLIER_STORE_TYPE_OPTIONS } from '/@/constants/b2bStatus';
 import { useUserStore } from '/@/stores/modules/user';
@@ -17,6 +18,9 @@ const router = useRouter();
 const userStore = useUserStore();
 const submitting = ref(false);
 const errorMsg = ref('');
+const uploadingLogo = ref(false);
+const uploadingLicense = ref(false);
+const uploadingStorePhotos = ref(false);
 
 const form = reactive({
   supplierName: '',
@@ -43,17 +47,67 @@ const form = reactive({
   creditLimit: '',
 });
 
-function simulateUpload(field: string) {
-  (form as Record<string, string>)[field] = `/mock/upload/${field}_${Date.now()}.jpg`;
-}
-
 function removeUpload(field: string) {
   (form as Record<string, string>)[field] = '';
 }
 
-function addStorePhoto() {
-  const url = `/mock/upload/store_${Date.now()}.jpg`;
-  form.storePhotos = form.storePhotos ? `${form.storePhotos},${url}` : url;
+async function uploadSingleImage(field: 'logoId' | 'businessLicense', file: File) {
+  errorMsg.value = '';
+  if (field === 'logoId') uploadingLogo.value = true;
+  if (field === 'businessLicense') uploadingLicense.value = true;
+  try {
+    const result = await uploadImageApi(file);
+    const url = result.singleUrl || result.urls[0] || '';
+    if (!url) throw new Error('未获取到上传地址');
+    (form as Record<string, string>)[field] = url;
+  } catch (err) {
+    errorMsg.value = (err as Error).message || '图片上传失败';
+  } finally {
+    if (field === 'logoId') uploadingLogo.value = false;
+    if (field === 'businessLicense') uploadingLicense.value = false;
+  }
+}
+
+async function addStorePhoto(files: FileList | File[]) {
+  const list = Array.from(files);
+  if (!list.length) return;
+  uploadingStorePhotos.value = true;
+  errorMsg.value = '';
+  try {
+    const result = await uploadFilesApi(list);
+    const uploaded = result.urls.length ? result.urls : (result.singleUrl ? [result.singleUrl] : []);
+    if (!uploaded.length) throw new Error('未获取到上传地址');
+    form.storePhotos = form.storePhotos ? `${form.storePhotos},${uploaded.join(',')}` : uploaded.join(',');
+  } catch (err) {
+    errorMsg.value = (err as Error).message || '图片上传失败';
+  } finally {
+    uploadingStorePhotos.value = false;
+  }
+}
+
+function pickSingleImage(field: 'logoId' | 'businessLicense') {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    await uploadSingleImage(field, file);
+  };
+  input.click();
+}
+
+function pickStorePhotos() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = true;
+  input.onchange = async () => {
+    const files = input.files;
+    if (!files?.length) return;
+    await addStorePhoto(files);
+  };
+  input.click();
 }
 
 function removeStorePhoto(index: number) {
@@ -235,7 +289,7 @@ async function onSubmit(e: Event) {
                   <div
                     v-else
                     class="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                    @click="simulateUpload('logoId')"
+                    @click="pickSingleImage('logoId')"
                   >
                     <Image class="h-6 w-6 text-muted-foreground mx-auto mb-1" />
                     <p class="text-sm font-medium">点击上传</p>
@@ -257,7 +311,7 @@ async function onSubmit(e: Event) {
                   <div
                     v-else
                     class="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                    @click="simulateUpload('businessLicense')"
+                    @click="pickSingleImage('businessLicense')"
                   >
                     <Image class="h-6 w-6 text-muted-foreground mx-auto mb-1" />
                     <p class="text-sm font-medium">点击上传</p>
@@ -280,7 +334,7 @@ async function onSubmit(e: Event) {
                     </div>
                     <div
                       class="border-2 border-dashed border-border rounded-xl p-3 w-24 h-24 flex flex-col items-center justify-center cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                      @click="addStorePhoto()"
+                      @click="pickStorePhotos()"
                     >
                       <Image class="h-8 w-8 text-muted-foreground mb-1" />
                       <p class="text-xs text-muted-foreground">添加照片</p>

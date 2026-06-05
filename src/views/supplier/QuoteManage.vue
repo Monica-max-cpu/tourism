@@ -35,15 +35,22 @@ async function loadData(params: any) {
   const list = Array.isArray(res) ? res : (res.records || []);
   const records = list.map((item: any) => {
     const q = item.quote || item;
-    return { ...q, tiers: item.tiers, status: q.status, productName: q.productName || '' };
+    return {
+      ...q,
+      tiers: item.tiers || q.tiers || [],
+      status: q.status,
+      productName: q.productName || '',
+      basePrice: q.basePrice ?? q.costPrice ?? q.price ?? 0,
+      minOrderQty: q.minOrderQty ?? q.minQty ?? 1,
+    };
   });
   return { records, total: records.length };
 }
 
 const columns: BasicColumn[] = [
-  { field: 'productName', title: '商品名称', minWidth: 180 },
-  { field: 'basePrice', title: '报价', width: 90, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
-  { field: 'minOrderQty', title: '起订量', width: 90, align: 'center' },
+  { field: 'productName', title: '商品名称', minWidth: 120 },
+  { field: 'basePrice', title: '报价', width: 120, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'minOrderQty', title: '起订量', width: 120, align: 'center' },
   { field: 'tierSummary', title: '档位', width: 90, align: 'center', formatter: ({ row }) => {
     return row.tiers && row.tiers.length > 0 ? `${row.tiers.length} 档` : '-';
   } },
@@ -54,19 +61,15 @@ const columns: BasicColumn[] = [
       return `${qty}：${formatCurrency(t.unitPrice)}`;
     }).join('，');
   } },
-  { field: 'leadTimeDays', title: '备货周期', width: 100, align: 'center' },
+  { field: 'leadTimeDays', title: '备货周期', width: 120, align: 'center' },
   { field: 'validFrom', title: '生效日期', width: 180, align: 'center', formatter: ({ cellValue }) => formatDate(cellValue) },
   { field: 'validTo', title: '截止日期', width: 180, align: 'center', formatter: ({ cellValue }) => formatDate(cellValue) },
   { field: 'status', title: '状态', width: 180, align: 'center', slots: { default: 'status' } },
-  { field: 'action', title: '操作', width: 240, fixed: 'right', slots: { default: 'action' } },
+  { field: 'action', title: '操作', width: 200, fixed: 'right', slots: { default: 'action' } },
 ];
 
 function openCreate() {
   router.push(ROUTE_PATHS.SUPPLIER_QUOTE_CREATE);
-}
-
-function openEdit(row: SupplierQuoteRecord) {
-  router.push({ path: ROUTE_PATHS.SUPPLIER_QUOTE_EDIT.replace(':id', row.id) });
 }
 
 async function offShelf(row: SupplierQuoteRecord) {
@@ -116,7 +119,6 @@ function onReset() { search.keyword = ''; search.status = ''; reload({ pageNo: 1
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '编辑', authCode: 'b2b:supplier:quote', hidden: row.status !== 2 && row.status !== 3, onClick: () => openEdit(row) },
             { label: '撤回', authCode: 'b2b:supplier:quote', hidden: row.status !== 0, onClick: () => offShelf(row) },
             { label: '重新提交', authCode: 'b2b:supplier:quote', hidden: row.status !== 3 && row.status !== 2, onClick: () => resubmit(row) },
           ]"

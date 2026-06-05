@@ -1,19 +1,27 @@
 <script setup lang="ts">
+import { computed, useAttrs } from 'vue';
 import { DialogContent, DialogOverlay, DialogPortal, DialogClose, type DialogContentProps, type DialogContentEmits, useForwardPropsEmits } from 'radix-vue';
 import { X } from 'lucide-vue-next';
 import { cn } from '/@/utils/cn';
+
+defineOptions({ inheritAttrs: false });
 
 interface Props extends DialogContentProps { class?: string }
 const props = defineProps<Props>();
 const emits = defineEmits<DialogContentEmits>();
 const forwarded = useForwardPropsEmits(props, emits);
+const attrs = useAttrs();
+const contentAttrs = computed(() => ({
+  ...forwarded,
+  ...attrs,
+}));
 </script>
 
 <template>
   <DialogPortal>
     <DialogOverlay class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
     <DialogContent
-      v-bind="forwarded"
+      v-bind="contentAttrs"
       :class="
         cn(
           'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg',

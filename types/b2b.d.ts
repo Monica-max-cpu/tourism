@@ -121,7 +121,11 @@ export interface PlatformCatalog {
   productName: string;
   productImages?: string;
   categoryId?: string;
+  categoryName?: string;
+  categoryLabel?: string;
   unit: string;
+  unitName?: string;
+  unitLabel?: string;
   basePrice: number;
   minOrderQty?: number;
   commissionRate?: number;
@@ -129,9 +133,17 @@ export interface PlatformCatalog {
   statusLabel?: string;
   sortOrder?: number;
   description?: string;
+  originPlace?: string;
+  packageSpec?: string;
+  storageCondition?: string;
+  shelfLife?: string;
+  applicableScene?: string;
+  afterSaleNote?: string;
+  pricingLevel?: 'UNIFIED' | 'TIERED';
   /** 管理端额外字段 */
   preferredQuoteId?: string;
   preferredSupplierName?: string;
+  supplierName?: string;
   supplierBasePrice?: number;
   margin?: number;
   marginRate?: number;

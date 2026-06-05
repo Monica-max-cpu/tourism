@@ -9,7 +9,7 @@
 | 一级 | B2B 工作台 | /admin/workbench | workbench/AdminDashboard | LayoutDashboard |
 | 一级 | 入驻管理 | /admin/entry | layouts/default/index | UserCheck |
 | 一级 | 商品与报价 | /admin/goods | layouts/default/index | Package |
-| 一级 | 库存管理 | /admin/stocks | admin/StockManage | Boxes |
+| 一级 | 库存管理 | /admin/stock | layouts/default/index | Boxes |
 | 一级 | 门店采购订单 | /admin/store-orders | admin/StoreOrderManage | ShoppingCart |
 | 一级 | 支付管理 | /admin/payments/pending | admin/PaymentManage | CreditCard |
 | 一级 | 集采管理 | /admin/collective | layouts/default/index | GitMerge |
@@ -25,6 +25,8 @@
 | 入驻管理 | 门店审核 | /admin/stores | admin/StoreReview |
 | 商品与报价 | 供应商报价审核 | /admin/quotes | admin/QuoteReview |
 | 商品与报价 | 平台商品目录 | /admin/catalogs | admin/CatalogManage |
+| 库存管理 | 库存列表 | /admin/stocks | admin/StockManage |
+| 库存管理 | 库存流水 | /admin/stocks/log | admin/StockLog |
 | 集采管理 | 待集采订单 | /admin/collective/pending-orders | admin/CollectivePending |
 | 集采管理 | 集采单列表 | /admin/collective/orders | admin/CollectiveOrders |
 | 集采管理 | 触发配置 | /admin/collective/config | admin/CollectiveConfig |

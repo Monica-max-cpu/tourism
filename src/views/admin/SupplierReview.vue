@@ -47,13 +47,17 @@ async function loadData(params: any) {
   return await listSupplierApplyApi({ ...params, ...search });
 }
 
+function formatAddress(row: SupplierApply) {
+  return row.address || [row.province, row.city].filter(Boolean).join('') || '-';
+}
+
 const columns: BasicColumn[] = [
   { field: 'supplierName', title: '供应商名称', minWidth: 160, align: 'center' },
   { field: 'contactPerson', title: '联系人', width: 150 },
   { field: 'contactPhone', title: '联系电话', width: 200 },
-  { field: 'province', title: '省份', width: 150 },
+  { field: 'address', title: '详细地址', minWidth: 220, formatter: ({ row }) => formatAddress(row) },
   { field: 'reviewStatus', title: '审核状态', width: 150, align: 'center', slots: { default: 'reviewStatus' } },
-  { field: 'operationStatus', title: '运营状态', width: 100, align: 'center', slots: { default: 'operationStatus' } },
+  { field: 'operationStatus', title: '运营状态', width: 150, align: 'center', slots: { default: 'operationStatus' } },
   { field: 'createTime', title: '提交时间', width: 200, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'action', title: '操作', width: 200, fixed: 'right', slots: { default: 'action' } },
 ];

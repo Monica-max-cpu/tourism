@@ -10,6 +10,7 @@ import { defineStore } from 'pinia';
 import { store } from '/@/stores';
 import type { UserInfo, LoginParams } from '/#/user';
 import { loginApi, logoutApi, getUserInfoApi } from '/@/api/login/api';
+import { useAppStore } from '/@/stores/modules/app';
 import {
   getToken as readToken,
   setToken as saveToken,
@@ -75,30 +76,6 @@ export const useUserStore = defineStore({
       const { token, user } = await loginApi(params);
       this.setToken(token);
       this.setUserInfo(user);
-      // 登录接口不返回权限/角色码/店铺ID，补调 getUserInfo 拿
-      try {
-        const info = await getUserInfoApi();
-        let changed = false;
-        if (info.permissions && info.permissions.length > 0) {
-          user.permissions = info.permissions;
-          changed = true;
-        }
-        if (!user.roleCode && info.roleCode) {
-          user.roleCode = info.roleCode;
-          changed = true;
-        }
-        if (!user.supplierId && info.supplierId) {
-          user.supplierId = info.supplierId;
-          changed = true;
-        }
-        if (!user.storeId && info.storeId) {
-          user.storeId = info.storeId;
-          changed = true;
-        }
-        if (changed) this.setUserInfo(user);
-      } catch {
-        // 拿不到权限不阻塞登录
-      }
       return user;
     },
     /** 占位：CAS 单点登录入口（后续阶段对接） */
@@ -112,16 +89,21 @@ export const useUserStore = defineStore({
       return user;
     },
     async logout() {
+      const appStore = useAppStore();
+      appStore.setLoggingOut(true);
+      const permissionStoreModulePromise = import('/@/stores/modules/permission').catch(() => null);
+      const logoutPromise = logoutApi().catch(() => undefined);
       try {
-        await logoutApi();
-      } catch {
-        // 忽略登出接口异常
+        const permissionStoreModule = await permissionStoreModulePromise;
+        if (permissionStoreModule?.usePermissionStore) {
+          permissionStoreModule.usePermissionStore().resetState();
+        }
+      } finally {
+        this.user = null;
+        this.token = '';
+        clearAuth();
       }
-      const { usePermissionStore } = await import('/@/stores/modules/permission');
-      usePermissionStore().resetState();
-      this.user = null;
-      this.token = '';
-      clearAuth();
+      await logoutPromise;
     },
   },
 });

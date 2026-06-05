@@ -26,6 +26,7 @@ export const ROUTE_PATHS = {
   ADMIN_CATALOGS: '/b2b/admin/catalogs',
   ADMIN_CATALOG_CREATE: '/b2b/admin/catalog/create',
   ADMIN_CATALOG_EDIT: '/b2b/admin/catalog/:id/edit',
+  ADMIN_STOCK_MANAGE: '/b2b/admin/stock',
   ADMIN_STOCKS: '/b2b/admin/stocks',
   ADMIN_STOCK_LOGS: '/b2b/admin/stocks/log',
   ADMIN_STORE_ORDERS: '/b2b/admin/store-orders',

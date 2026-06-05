@@ -17,7 +17,7 @@ import { SearchBar } from '/@/components/SearchBar';
 import { listStoreCatalogApi } from '/@/api/store/catalog';
 import { STORE_CATEGORY_OPTIONS } from '/@/constants/storeStatus';
 import { formatCurrency } from '/@/utils/format';
-import { getProductImages } from '/@/utils/mockProductImages';
+import { getProductImages } from '/@/utils/productImages';
 import { useCartStore } from '/@/stores/modules/cart';
 import { useUserStore } from '/@/stores/modules/user';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
@@ -156,14 +156,17 @@ function goCart() {
     <div v-if="loading" class="text-center text-muted-foreground py-12">加载中...</div>
     <div v-else-if="list.length === 0" class="text-center text-muted-foreground py-16">暂无商品</div>
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-      <div
+        <div
         v-for="item in list"
         :key="item.id"
-        class="bg-card border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow flex flex-col cursor-pointer"
+        class="bg-card border border-border/70 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 flex flex-col cursor-pointer"
         @click="goDetail(item)"
       >
-        <div class="aspect-[4/3] bg-muted overflow-hidden relative group" @click.stop="goDetail(item)">
-          <img :src="getCover(item)" :alt="item.productName" class="w-full h-full object-cover" loading="lazy" />
+        <div class="aspect-[4/3] bg-muted overflow-hidden relative group">
+          <img v-if="getCover(item)" :src="getCover(item)" :alt="item.productName" class="w-full h-full object-cover" loading="lazy" />
+          <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground">
+            暂无图片
+          </div>
           <template v-if="getProductImages(item).length > 1">
             <button
               class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/85 border border-border shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -192,10 +195,10 @@ function goCart() {
           </template>
         </div>
 
-        <div class="p-3.5 flex flex-col flex-1">
-          <div class="min-h-[62px]">
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-              <span class="inline-flex max-w-[70%] items-center rounded bg-muted px-2 py-0.5 text-[11px] leading-4 text-muted-foreground truncate">
+        <div class="p-4 flex flex-col flex-1">
+          <div class="min-h-[68px]">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="inline-flex max-w-[70%] items-center rounded-full bg-muted px-2.5 py-0.5 text-[11px] leading-4 text-muted-foreground truncate">
                 {{ item.categoryId || '未分类' }}
               </span>
               <span class="text-[11px] leading-4 text-muted-foreground whitespace-nowrap">
@@ -205,34 +208,17 @@ function goCart() {
             <div class="text-[15px] font-semibold leading-5 line-clamp-2 text-foreground">{{ item.productName }}</div>
           </div>
 
-          <div class="mt-3">
+          <div class="mt-4 rounded-xl bg-muted/30 px-3 py-2.5">
             <div class="text-[11px] leading-4 text-muted-foreground">目录价</div>
-            <div class="flex items-baseline gap-1">
-              <span class="text-[22px] leading-none font-bold text-primary tabular-nums tracking-tight">
+            <div class="mt-1 flex items-baseline gap-1">
+              <span class="text-[24px] leading-none font-extrabold text-primary tabular-nums tracking-tight">
                 {{ formatCurrency(item.basePrice) }}
               </span>
-              <span class="text-xs text-muted-foreground whitespace-nowrap">/{{ item.unit }}</span>
+              <span class="text-xs text-muted-foreground/80 whitespace-nowrap">/{{ item.unit }}</span>
             </div>
           </div>
 
-          <div v-if="item.catalogTiers && item.catalogTiers.length" class="mt-3 rounded-md border border-border bg-muted/25 px-3 py-2" @click.stop>
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-              <span class="text-xs font-medium text-foreground">阶梯价</span>
-              <span v-if="item.catalogTiers.length > 2" class="text-[11px] text-muted-foreground">
-                +{{ item.catalogTiers.length - 2 }} 档
-              </span>
-            </div>
-            <div class="space-y-1">
-              <div v-for="(tier, index) in item.catalogTiers.slice(0, 2)" :key="index" class="grid grid-cols-[1fr_auto] items-center gap-2 text-xs">
-                <span class="text-muted-foreground truncate">
-                  {{ tier.minQty }}{{ tier.maxQty ? `~${tier.maxQty}` : '+' }} {{ item.unit }}
-                </span>
-                <span class="font-semibold text-foreground tabular-nums">{{ formatCurrency(tier.unitPrice) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between mt-auto pt-3 gap-2" @click.stop>
+          <div class="flex items-center justify-between mt-auto pt-4 gap-2" @click.stop>
             <div class="inline-flex h-8 items-center border border-border rounded-md overflow-hidden bg-background">
               <button
                 class="w-8 h-8 flex items-center justify-center hover:bg-muted disabled:opacity-40"

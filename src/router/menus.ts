@@ -29,7 +29,7 @@ export const adminMenus: MenuItem[] = [
   },
   {
     name: 'AdminStockManage',
-    path: '/b2b/admin/stocks',
+    path: ROUTE_PATHS.ADMIN_STOCK_MANAGE,
     title: '库存管理',
     icon: 'Boxes',
     children: [

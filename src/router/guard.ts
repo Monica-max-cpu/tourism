@@ -7,6 +7,7 @@
 import type { Router, RouteRecordRaw } from 'vue-router';
 import { useUserStoreWithOut } from '/@/stores/modules/user';
 import { usePermissionStoreWithOut } from '/@/stores/modules/permission';
+import { useAppStoreWithOut } from '/@/stores/modules/app';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import type { UserRole } from '/#/user';
 import { PAGE_NOT_FOUND_NAME, LAYOUT, EXCEPTION_COMPONENT } from '/@/router/constant';
@@ -39,6 +40,7 @@ export function setupGuards(router: Router) {
   router.beforeEach(async (to, from) => {
     const userStore = useUserStoreWithOut();
     const permissionStore = usePermissionStoreWithOut();
+    const appStore = useAppStoreWithOut();
     const token = userStore.getToken;
     const role = userStore.getRole as UserRole | '';
 
@@ -69,6 +71,7 @@ export function setupGuards(router: Router) {
     }
 
     // ========== 首次进入业务页：构建动态路由 ==========
+    appStore.setRouteLoading(true);
     try {
       const routes = await permissionStore.buildRoutesAction();
 
@@ -103,6 +106,14 @@ export function setupGuards(router: Router) {
       console.error('[guard] 动态路由构建异常:', error);
       permissionStore.setDynamicAddedRoute(true);
       return true;
+    } finally {
+      appStore.setRouteLoading(false);
+    }
+  });
+
+  router.afterEach((to) => {
+    if (to.name === 'Login') {
+      useAppStoreWithOut().setLoggingOut(false);
     }
   });
 }

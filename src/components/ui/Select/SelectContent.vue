@@ -2,8 +2,11 @@
 import { SelectContent, SelectPortal, SelectViewport, type SelectContentProps, type SelectContentEmits, useForwardPropsEmits } from 'radix-vue';
 import { cn } from '/@/utils/cn';
 
-interface Props extends SelectContentProps { class?: string }
-const props = withDefaults(defineProps<Props>(), { position: 'popper' });
+interface Props extends SelectContentProps {
+  class?: string;
+  bodyLock?: boolean;
+}
+const props = withDefaults(defineProps<Props>(), { position: 'popper', bodyLock: false });
 const emits = defineEmits<SelectContentEmits>();
 const forwarded = useForwardPropsEmits(props, emits);
 </script>

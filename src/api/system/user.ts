@@ -2,7 +2,7 @@ import { defHttp } from '/@/api/http';
 import axios from 'axios';
 import { getToken } from '/@/utils/auth';
 import type { PageResult, SystemRole, SystemUser } from '/#/system';
-import { buildQueryString, normalizePageResult } from './_helpers';
+import { buildQueryString, buildUserSavePayload, normalizePageResult } from './_helpers';
 
 enum Api {
   List = '/sys/user/list',
@@ -21,7 +21,7 @@ export async function listUsersApi(params: Recordable): Promise<PageResult<Syste
 }
 
 export function saveUserApi(data: Partial<SystemUser> & Recordable, isUpdate: boolean) {
-  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, data });
+  return defHttp.post({ url: isUpdate ? Api.Edit : Api.Save, data: buildUserSavePayload(data) });
 }
 
 export function deleteUserApi(id: string) {

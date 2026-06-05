@@ -9,7 +9,6 @@ import ApplyShell from './ApplyShell.vue';
 const route = useRoute();
 const router = useRouter();
 const type = computed(() => route.query.type as string);
-const applyId = computed(() => (route.query.id as string) || '-');
 const name = computed(() => (route.query.name as string) || '-');
 const typeLabel = computed(() => (type.value === 'supplier' ? '供应商' : '门店'));
 </script>
@@ -28,10 +27,6 @@ const typeLabel = computed(() => (type.value === 'supplier' ? '供应商' : '门
         </div>
 
         <div class="max-w-md mx-auto bg-muted/50 rounded-lg p-4 text-left space-y-2">
-          <div class="flex justify-between text-sm">
-            <span class="text-muted-foreground">申请ID</span>
-            <span class="font-mono font-medium">{{ applyId }}</span>
-          </div>
           <div class="flex justify-between text-sm">
             <span class="text-muted-foreground">{{ typeLabel }}名称</span>
             <span class="font-medium">{{ name }}</span>

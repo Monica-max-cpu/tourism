@@ -24,8 +24,8 @@ const columns: BasicColumn[] = [
   { field: 'warehouseName', title: '仓库名称', minWidth: 100 },
   { field: 'contactPerson', title: '联系人', width: 180 },
   { field: 'contactPhone', title: '联系电话', width: 200 },
-  { field: 'province', title: '省份', width: 150 },
-  { field: 'city', title: '城市', width: 150 },
+  // { field: 'province', title: '省份', width: 150 },
+  // { field: 'city', title: '城市', width: 150 },
   { field: 'address', title: '详细地址', minWidth: 200 },
   { field: 'isDefault', title: '是否默认', width: 120, slots: { default: 'isDefault' } },
   { field: 'action', title: '操作', width: 240, fixed: 'right', slots: { default: 'action' } },
@@ -132,14 +132,14 @@ async function onDelete(row: SupplierWarehouse) {
           <Label>联系电话</Label>
           <Input v-model="form.contactPhone" placeholder="手机号" />
         </div>
-        <div class="space-y-1.5">
+        <!-- <div class="space-y-1.5">
           <Label>省份</Label>
           <Input v-model="form.province" placeholder="省" />
         </div>
         <div class="space-y-1.5">
           <Label>城市</Label>
           <Input v-model="form.city" placeholder="市" />
-        </div>
+        </div> -->
         <div class="space-y-1.5 col-span-2">
           <Label>详细地址</Label>
           <Input v-model="form.address" placeholder="区/街道/门牌号" />

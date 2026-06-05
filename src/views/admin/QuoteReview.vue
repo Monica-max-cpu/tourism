@@ -47,7 +47,7 @@ const columns: BasicColumn[] = [
   { field: 'supplierName', title: '供应商', width: 160 },
   { field: 'productName', title: '商品名称', width: 200 },
    { field: 'minOrderQty', title: '起订量', width: 100, align: 'center' },
-  { field: 'basePrice', title: '报价', width: 90, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
+  { field: 'basePrice', title: '报价', width: 120, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'tierSummary', title: '档位', width: 100, align: 'center', formatter: ({ row }) => {
     return row.tiers && row.tiers.length > 0 ? `${row.tiers.length} 档` : '-';
   } },
@@ -58,8 +58,8 @@ const columns: BasicColumn[] = [
       return `${qty}：${formatCurrency(t.unitPrice)}`;
     }).join('，');
   } },
-  { field: 'validFrom', title: '生效日期', width: 120, formatter: ({ cellValue }) => formatDate(cellValue) },
-  { field: 'validTo', title: '截止日期', width: 120, formatter: ({ cellValue }) => formatDate(cellValue) },
+  { field: 'validFrom', title: '生效日期', width: 130, formatter: ({ cellValue }) => formatDate(cellValue) },
+  { field: 'validTo', title: '截止日期', width: 130, formatter: ({ cellValue }) => formatDate(cellValue) },
   { field: 'leadTimeDays', title: '备货天数', width: 100, align: 'center' },
   { field: 'status', title: '状态', width: 180, slots: { default: 'status' } },
   { field: 'action', title: '操作', width: 220, fixed: 'right', slots: { default: 'action' } },

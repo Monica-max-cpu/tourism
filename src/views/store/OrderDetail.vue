@@ -13,6 +13,7 @@ import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicModal, useModal } from '/@/components/BasicModal';
 import { getStoreOrderApi, cancelStoreOrderApi } from '/@/api/store/order';
 import { getPaymentByOrderApi, submitPaymentApi } from '/@/api/store/payment';
+import { uploadImageApi } from '/@/api/common/upload';
 import {
   PLATFORM_BANK_INFO,
   STORE_ORDER_STATUS_LABEL,
@@ -151,7 +152,16 @@ const payModal = useModal();
 const canSubmit = computed(() => method.value === 'OFFLINE' ? !!form.voucherUrl : !!form.transactionNo);
 
 function pickMockVoucher() {
-  form.voucherUrl = `https://placehold.co/600x400/eef2ff/4f46e5?text=Voucher+${Date.now() % 1000}`;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    const result = await uploadImageApi(file, 'b2b/payment/voucher');
+    form.voucherUrl = result.singleUrl || result.urls[0] || '';
+  };
+  input.click();
 }
 
 function goBack() {
@@ -455,8 +465,8 @@ async function confirmCancel() {
           <div class="space-y-2">
             <Label>转账凭证 <span class="text-destructive">*</span></Label>
             <div class="flex items-center gap-2">
-              <Input v-model="form.voucherUrl" placeholder="粘贴凭证图片 URL" class="flex-1" />
-              <Button variant="outline" size="sm" @click="pickMockVoucher">模拟上传</Button>
+              <Input v-model="form.voucherUrl" placeholder="上传后自动填充凭证 URL" class="flex-1" />
+              <Button variant="outline" size="sm" @click="pickMockVoucher">上传凭证</Button>
             </div>
             <img v-if="form.voucherUrl" :src="form.voucherUrl" alt="凭证预览" class="rounded border border-border max-h-40" />
           </div>

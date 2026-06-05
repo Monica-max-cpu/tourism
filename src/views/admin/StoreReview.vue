@@ -48,14 +48,18 @@ async function loadData(params: any) {
   return await listStoreApplyApi({ ...params, ...search });
 }
 
+function formatAddress(row: StoreApply) {
+  return row.address || [row.province, row.city].filter(Boolean).join('') || '-';
+}
+
 const columns: BasicColumn[] = [
   { field: 'storeName', title: '门店名称', minWidth: 180 },
   { field: 'storeType', title: '类型', width: 160, formatter: ({ cellValue }) => STORE_TYPE_LABEL[cellValue as keyof typeof STORE_TYPE_LABEL] || '-' },
   { field: 'contactPerson', title: '负责人', width: 160 },
   { field: 'contactPhone', title: '联系电话', width: 180 },
-  { field: 'province', title: '省份', width: 120 },
+  { field: 'address', title: '详细地址', minWidth: 220, formatter: ({ row }) => formatAddress(row) },
   { field: 'reviewStatus', title: '审核状态', width: 150, align: 'center', slots: { default: 'reviewStatus' } },
-  { field: 'operationStatus', title: '运营状态', width: 100, align: 'center', slots: { default: 'operationStatus' } },
+  { field: 'operationStatus', title: '运营状态', width: 150, align: 'center', slots: { default: 'operationStatus' } },
   { field: 'createTime', title: '提交时间', width: 200, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'action', title: '操作', width: 200, fixed: 'right', slots: { default: 'action' } },
 ];

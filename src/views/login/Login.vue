@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { nextTick, reactive, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { onMounted, onUnmounted } from 'vue';
 import { ArrowRight, Eye, EyeOff, Shield, BarChart3, Store, Truck, CreditCard, Users, Building2, Store as StoreIcon } from 'lucide-vue-next';
@@ -130,7 +130,9 @@ async function handleLogin(e: Event) {
   try {
     const user = await userStore.login({ username: form.username.trim(), password: form.password });
     const redirect = route.query.redirect as string;
-    router.push(redirect || ROLE_HOME[user.role]);
+    isLoading.value = false;
+    await nextTick();
+    void router.push(redirect || ROLE_HOME[user.role]);
   } catch (err) {
     errorMsg.value = (err as Error).message || '登录失败';
   } finally {

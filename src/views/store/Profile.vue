@@ -119,7 +119,7 @@ async function save() {
               <Input v-model="form.storeName" :readonly="!isEditing" />
             </div>
             <div class="space-y-2">
-              <Label>门店类型</Label>
+              <Label>店铺类别</Label>
               <Select v-model="form.storeType" :disabled="!isEditing">
                 <SelectTrigger><SelectValue :placeholder="STORE_TYPE_LABEL[form.storeType]" /></SelectTrigger>
                 <SelectContent>
@@ -128,7 +128,7 @@ async function save() {
               </Select>
             </div>
             <div class="space-y-2">
-              <Label>门店编号</Label>
+              <Label>主营类别</Label>
               <Input :model-value="form.storeId" readonly class="bg-muted" />
             </div>
             <div class="space-y-2">

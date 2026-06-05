@@ -266,12 +266,6 @@ onMounted(loadStatus);
               <span class="text-muted-foreground">绑定状态：</span>
               <Badge v-if="card.data.bindStatus !== null" :variant="BIND_STATUS_VARIANT[card.data.bindStatus]">{{ BIND_STATUS_LABEL[card.data.bindStatus] }}</Badge>
             </div>
-            <div v-if="card.data.merchantId">
-              <span class="text-muted-foreground">商户ID：</span>{{ card.data.merchantId }}
-            </div>
-            <div v-if="card.data.memberRole">
-              <span class="text-muted-foreground">成员角色：</span>{{ card.data.memberRole === 'OWNER' ? '负责人' : '成员' }}
-            </div>
           </div>
 
           <div class="flex justify-end">

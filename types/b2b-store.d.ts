@@ -21,6 +21,12 @@ export interface StoreCatalogItem {
   status: 0 | 1 | 2;
   sortOrder?: number;
   description?: string;
+  originPlace?: string;
+  packageSpec?: string;
+  storageCondition?: string;
+  shelfLife?: string;
+  applicableScene?: string;
+  afterSaleNote?: string;
   catalogTiers?: CatalogTier[];
 }
 
