@@ -2,6 +2,7 @@ export interface ProductImageSource {
   id?: string;
   productName?: string;
   categoryId?: string;
+  productImageList?: string[] | string;
   productImages?: string;
 }
 
@@ -26,6 +27,12 @@ function parseImages(raw?: string): string[] {
 
 export function getProductImages(item?: ProductImageSource | null): string[] {
   if (!item) return [];
+  if (Array.isArray(item.productImageList)) {
+    return normalizeImages(item.productImageList);
+  }
+  if (typeof item.productImageList === 'string') {
+    return parseImages(item.productImageList);
+  }
   return parseImages(item.productImages);
 }
 

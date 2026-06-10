@@ -10,6 +10,7 @@ import type { SupplierProduct, SupplierProductStatus, SupplierQuoteRecord, Suppl
 enum Api {
   // 自营商品
   ListProducts = '/b2b/supplier/product/list',
+  DetailProduct = '/b2b/supplier/product',
   AddProduct = '/b2b/supplier/product/add',
   EditProduct = '/b2b/supplier/product/edit',
   // 报价
@@ -20,6 +21,9 @@ enum Api {
 // ===== 自营商品 =====
 export function listSupplierProductsApi(params: any) {
   return defHttp.get({ url: Api.ListProducts, params });
+}
+export function getSupplierProductDetailApi(id: string) {
+  return defHttp.get({ url: `${Api.DetailProduct}/${id}` });
 }
 export function saveSupplierProductApi(payload: Partial<SupplierProduct>) {
   return payload.id

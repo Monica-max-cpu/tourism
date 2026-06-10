@@ -18,7 +18,7 @@ export const SUPPLIER_QUOTE_STATUS_LABEL: Record<number, string> = {
   0: '待审核',
   1: '已通过',
   2: '已驳回',
-  3: '已下架',
+  3: '已撤回',
 };
 
 export const SUPPLIER_QUOTE_STATUS_VARIANT: Record<number, 'warning' | 'success' | 'destructive' | 'info'> = {
@@ -33,7 +33,7 @@ export const SUPPLIER_QUOTE_STATUS_OPTIONS = [
   { value: 0, label: '待审核' },
   { value: 1, label: '已通过' },
   { value: 2, label: '已驳回' },
-  { value: 3, label: '已下架' },
+  { value: 3, label: '已撤回' },
 ];
 
 export const SUPPLIER_ORDER_STATUS_LABEL: Record<number | string, string> = {

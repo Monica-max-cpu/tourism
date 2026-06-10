@@ -52,7 +52,7 @@ function normalizeLog(row: any): StockLogRecord {
   return {
     ...row,
     id: row.id || row.logId,
-    supplierName: row.supplierName || row.supplierId || '-',
+    supplierName: row.supplierName || '-',
     productName: row.productName || row.productId || '-',
     warehouseName: row.warehouseName || row.warehouseId || '-',
     changeType: row.changeType || row.type,
@@ -111,8 +111,8 @@ function onReset() {
         <Input v-model="search.keyword" placeholder="商品 / 供应商 / 单据" class="w-64" @keyup.enter="onSearch" />
       </div>
       <div class="flex items-center gap-2">
-        <Label class="text-xs text-muted-foreground">供应商ID</Label>
-        <Input v-model="search.supplierId" placeholder="供应商ID" class="w-44" @keyup.enter="onSearch" />
+        <Label class="text-xs text-muted-foreground">供应商</Label>
+        <Input v-model="search.supplierId" placeholder="供应商" class="w-44" @keyup.enter="onSearch" />
       </div>
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">商品ID</Label>

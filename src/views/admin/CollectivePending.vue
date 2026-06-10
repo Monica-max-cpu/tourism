@@ -41,7 +41,7 @@ const columns: BasicColumn[] = [
   { type: 'checkbox', width: 50, fixed: 'left' },
   // { field: 'catalogId', title: '目录商品ID', width: 180, showOverflow: 'tooltip' },
   { field: 'productName', title: '商品名称', minWidth: 220 },
-  { field: 'supplierName', title: '供应商', width:280, showOverflow: 'tooltip', formatter: ({ row }) => row.supplierName || row.supplierId || '-' },
+  { field: 'supplierName', title: '供应商', width:280, showOverflow: 'tooltip', formatter: ({ row }) => row.supplierName || '-' },
   // { field: 'preferredQuoteId', title: '推荐报价ID', width: 180, showOverflow: 'tooltip', formatter: ({ cellValue }) => cellValue || '-' },
   { field: 'totalQty', title: '待采购数量', width: 280, align: 'right', formatter: ({ cellValue, row }) => `${formatNumber(cellValue)} ${row.unit}` },
   { field: 'storeCount', title: '涉及门店', width: 280, align: 'right' },

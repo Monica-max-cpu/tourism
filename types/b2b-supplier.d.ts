@@ -32,6 +32,10 @@ export interface SupplierProduct {
   shelfLife?: string;
   applicableScene?: string;
   afterSaleNote?: string;
+  createBy?: string;
+  updateBy?: string;
+  updateTime?: string;
+  delFlag?: number;
   status: SupplierProductStatus;
   createTime: string;
 }

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft, Package, PackageCheck, ShieldCheck, Truck, Image, Upload, Trash2, Warehouse } from 'lucide-vue-next'
+import { ArrowLeft, Package, PackageCheck, ShieldCheck, Truck, Image, Upload, Trash2 } from 'lucide-vue-next'
 import { Button, Input, Label, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '/@/components/ui'
 import { PageWrapper } from '/@/components/PageWrapper'
 import StoreProductDetailShowcase from '/@/components/store/StoreProductDetailShowcase.vue'
-import { saveSupplierProductApi, listSupplierProductsApi } from '/@/api/supplier/quote'
+import { saveSupplierProductApi, getSupplierProductDetailApi } from '/@/api/supplier/quote'
 import { listWarehousesApi } from '/@/api/supplier/warehouse'
-import { uploadFilesApi } from '/@/api/common/upload'
+import { normalizeUploadUrl, normalizeUploadUrls, uploadFilesApi } from '/@/api/common/upload'
 import { ROUTE_PATHS } from '/@/constants/routePaths'
 import type { SupplierProduct, SupplierWarehouse } from '/#/b2b-supplier'
 
@@ -20,7 +20,9 @@ const pageDesc = computed(() => (isEdit.value ? '完善商品主数据，让平�
 
 const submitting = ref(false)
 const uploadingImages = ref(false)
-const loading = ref(false)
+const loading = ref(isEdit.value)
+const loadFailed = ref(false)
+const loadFailedMessage = ref('')
 const productNameInput = ref<HTMLInputElement | null>(null)
 const warehouseOptions = ref<SupplierWarehouse[]>([])
 
@@ -66,18 +68,9 @@ const previewSpecs = computed(() => [
   { label: '条码', value: form.barcode || '-' },
   { label: '仓库', value: currentWarehouseName.value || '非必填' },
 ])
-const previewDetails = computed(() => [
-  { label: '产地', value: form.originPlace || '待补充' },
-  { label: '包装规格', value: form.packageSpec || '待补充' },
-  { label: '储存条件', value: form.storageCondition || '待补充' },
-  { label: '保质期', value: form.shelfLife || '待补充' },
-  { label: '适用场景', value: form.applicableScene || '待补充' },
-  { label: '售后说明', value: form.afterSaleNote || '待补充' },
-])
-const previewDetailText = computed(() => previewDetails.value.map((detail) => `${detail.label}：${detail.value}`).join('；') || '补充更多商品说明后，门店页会更完整。')
 const previewTips = [
   '商品名称、品类、单位、主图会同步到门店采购页和商品详情页。',
-  '产地、包装规格、储存条件、保质期这些字段会直接进入商品详情。',
+  '补充更完整的商品说明后，门店页会更完整。',
   '图片至少上传 1 张，便于后续审核和平台目录展示。',
 ]
 const previewDescription = computed(() => form.description || '补充商品介绍、口感 / 材质 / 卖点 / 使用说明等内容，门店采购页会更完整。')
@@ -104,7 +97,7 @@ async function handleImageFiles(e: Event) {
   uploadingImages.value = true
   try {
     const result = await uploadFilesApi(imageFiles)
-    const uploaded = result.urls.length ? result.urls : (result.singleUrl ? [result.singleUrl] : [])
+    const uploaded = result.urls.length ? normalizeUploadUrls(result.urls) : (result.singleUrl ? [normalizeUploadUrl(result.singleUrl)] : [])
     if (!uploaded.length) throw new Error('未获取到上传地址')
     const hadImages = imagePreviews.value.length > 0
     imagePreviews.value.push(...uploaded)
@@ -134,10 +127,12 @@ function setPreviewImage(index: number) {
 async function loadProduct() {
   if (!isEdit.value) return
   loading.value = true
+  loadFailed.value = false
+  loadFailedMessage.value = ''
   try {
-    const result: any = await listSupplierProductsApi({ pageNo: 1, pageSize: 200 })
-    const product = result.records?.find((p: SupplierProduct) => p.id === productId.value)
-    if (product) {
+    const result: any = await getSupplierProductDetailApi(productId.value)
+    const product: SupplierProduct | undefined = result
+    if (product?.id) {
       Object.assign(form, {
         productName: product.productName || '',
         brand: product.brand || '',
@@ -157,11 +152,17 @@ async function loadProduct() {
       })
       if (product.images) {
         try {
-          imagePreviews.value = JSON.parse(product.images)
+          const parsedImages = JSON.parse(product.images)
+          imagePreviews.value = Array.isArray(parsedImages)
+            ? normalizeUploadUrls(parsedImages)
+            : [normalizeUploadUrl(String(parsedImages))]
         } catch {
-          imagePreviews.value = [product.images]
+          imagePreviews.value = [normalizeUploadUrl(product.images)]
         }
       }
+    } else {
+      loadFailed.value = true
+      loadFailedMessage.value = '未找到该商品，可能已被删除或不在当前供应商商品库中。'
     }
   } finally {
     loading.value = false
@@ -230,6 +231,13 @@ function goBack() {
     <div v-if="loading" class="flex items-center justify-center py-32">
       <div class="h-6 w-6 animate-spin rounded-full border-2 border-[#1A2C54] border-t-transparent" />
       <span class="ml-3 text-sm text-muted-foreground">加载商品信息...</span>
+    </div>
+
+    <div v-else-if="loadFailed" class="flex flex-col items-center justify-center gap-3 py-24 text-center">
+      <div class="rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">{{ loadFailedMessage }}</div>
+      <Button variant="outline" @click="goBack">
+        返回商品库
+      </Button>
     </div>
 
     <form v-else class="pt-4 pb-16" @submit.prevent="handleSubmit">
@@ -320,42 +328,6 @@ function goBack() {
           <section class="rounded-[20px] border border-border bg-white p-6 shadow-[0_8px_32px_rgba(26,44,84,0.05)]">
             <div class="flex items-center gap-2.5">
               <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                <Warehouse class="w-3.5 h-3.5 text-[#1A2C54]" />
-              </div>
-              <h4 class="text-lg font-semibold text-[#1A2C54]">采购展示信息</h4>
-            </div>
-
-            <div class="mt-6 grid grid-cols-2 gap-4">
-              <div class="space-y-1.5">
-                <Label class="text-[15px] font-medium text-foreground/80">产地</Label>
-                <Input v-model="form.originPlace" placeholder="如：山西晋中" class="h-12 rounded-xl text-[15px]" />
-              </div>
-              <div class="space-y-1.5">
-                <Label class="text-[15px] font-medium text-foreground/80">包装规格</Label>
-                <Input v-model="form.packageSpec" placeholder="如：10盒/箱" class="h-12 rounded-xl text-[15px]" />
-              </div>
-              <div class="space-y-1.5">
-                <Label class="text-[15px] font-medium text-foreground/80">储存条件</Label>
-                <Input v-model="form.storageCondition" placeholder="如：常温避光保存" class="h-12 rounded-xl text-[15px]" />
-              </div>
-              <div class="space-y-1.5">
-                <Label class="text-[15px] font-medium text-foreground/80">保质期</Label>
-                <Input v-model="form.shelfLife" placeholder="如：12个月" class="h-12 rounded-xl text-[15px]" />
-              </div>
-              <div class="space-y-1.5">
-                <Label class="text-[15px] font-medium text-foreground/80">适用场景</Label>
-                <Input v-model="form.applicableScene" placeholder="如：门店陈列、团购礼盒" class="h-12 rounded-xl text-[15px]" />
-              </div>
-              <div class="space-y-1.5">
-                <Label class="text-[15px] font-medium text-foreground/80">售后说明</Label>
-                <Input v-model="form.afterSaleNote" placeholder="如：破损包换、按平台规则售后" class="h-12 rounded-xl text-[15px]" />
-              </div>
-            </div>
-          </section>
-
-          <section class="rounded-[20px] border border-border bg-white p-6 shadow-[0_8px_32px_rgba(26,44,84,0.05)]">
-            <div class="flex items-center gap-2.5">
-              <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
                 <Image class="w-3.5 h-3.5 text-[#1A2C54]" />
               </div>
               <h4 class="text-lg font-semibold text-[#1A2C54]">图片与描述</h4>
@@ -433,7 +405,6 @@ function goBack() {
                 :banner-text="previewDescription"
                 :highlights="previewHighlights"
                 :specs="previewSpecs"
-                :detail-text="previewDetailText"
                 :tips="previewTips"
                 empty-image-text="请上传至少 1 张商品图片"
                 @change-image="changePreviewImage"
@@ -441,7 +412,7 @@ function goBack() {
               />
             </div>
           </section>
-           <section class="rounded-[20px] border border-border bg-white p-6 shadow-[0_8px_32px_rgba(26,44,84,0.05)]">
+          <section class="rounded-[20px] border border-border bg-white p-6 shadow-[0_8px_32px_rgba(26,44,84,0.05)]">
             <h4 class="text-lg font-semibold text-[#1A2C54]">填写提醒</h4>
             <ul class="mt-4 space-y-2.5 text-sm text-foreground/70">
               <li class="flex items-start gap-2">
@@ -459,23 +430,19 @@ function goBack() {
             </ul>
           </section>
         </div>
-        <!-- </div> -->
+
       </div>
 
-      <div class="mt-6 flex items-center justify-between rounded-[20px] border border-border bg-white px-6 py-5 shadow-[0_8px_32px_rgba(26,44,84,0.05)]">
-        <button type="button" class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 transition-colors" @click="goBack">
-          <ArrowLeft class="w-4 h-4" />
-          取消
-        </button>
+      <div class="mt-8 flex justify-center">
         <button
           type="submit"
           :disabled="submitting || !formValid"
-          class="inline-flex items-center gap-1.5 h-11 px-8 rounded-full text-sm font-medium text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center gap-1.5 h-11 min-w-[180px] justify-center rounded-full px-8 text-sm font-medium text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           style="background: linear-gradient(135deg, #1A2C54 0%, #5B67D8 100%); box-shadow: 0 12px 24px rgba(91, 103, 216, 0.22);"
           @click="handleSubmit"
         >
           <div v-if="submitting" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          <span>{{ submitting ? '保存中...' : (isEdit ? '保存修改' : '创建商品') }}</span>
+          <span>{{ submitting ? '保存中...' : (isEdit ? '保存' : '提交') }}</span>
         </button>
       </div>
     </form>

@@ -79,7 +79,11 @@ async function saveEdit() {
   if (!editModal.data.value) return;
   submitting.value = true;
   try {
-    await updateStockThresholdApi(editModal.data.value.id, Number(editForm.threshold));
+    await updateStockThresholdApi(
+      editModal.data.value.supplierId,
+      editModal.data.value.productId,
+      Number(editForm.threshold),
+    );
     editModal.close();
     reload();
   } finally {

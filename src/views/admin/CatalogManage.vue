@@ -26,7 +26,6 @@ import { listCatalogsApi, toggleShelfApi } from '/@/api/admin';
 import { CATALOG_STATUS_LABEL, CATALOG_STATUS_VARIANT } from '/@/constants/b2bStatus';
 import { STORE_CATEGORY_OPTIONS } from '/@/constants/storeStatus';
 import { formatCurrency } from '/@/utils/format';
-import { getProductImages } from '/@/utils/productImages';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import type { PlatformCatalog } from '/#/b2b';
 import {
@@ -109,7 +108,7 @@ async function markSoldOut(row: PlatformCatalog) {
 }
 
 function productCover(row: PlatformCatalog) {
-  return getProductImages(row)[0] || '';
+  return row.productImageList?.[0] || row.productImages || '';
 }
 
 function onSearch() {
@@ -171,7 +170,7 @@ function onReset() {
             </div>
             <div class="catalog-product__main">
               <div class="catalog-product__name">{{ row.productName }}</div>
-              <div class="catalog-product__supplier">{{ resolveCatalogSupplierName(row) || '暂无优选供应商' }}</div>
+              <div class="catalog-product__supplier">{{ row.supplierName || resolveCatalogSupplierName(row) || '暂无优选供应商' }}</div>
             </div>
           </div>
         </template>

@@ -5,6 +5,16 @@ export interface UploadResult {
   singleUrl?: string;
 }
 
+export function normalizeUploadUrl(url: string): string {
+  if (!url) return '';
+  if (/^(?:https?:)?\/\//i.test(url) || url.startsWith('data:')) return url;
+  return url.startsWith('/') ? url : `/${url}`;
+}
+
+export function normalizeUploadUrls(urls: string[]): string[] {
+  return urls.map(normalizeUploadUrl).filter(Boolean);
+}
+
 function toFileArray(files: File | File[] | FileList): File[] {
   if (files instanceof File) return [files];
   return Array.from(files);

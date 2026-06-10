@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   AlertCircle, ArrowLeft, CheckCircle2, Clock3, CreditCard,
-  MapPin, Package, Receipt, ShoppingCart, Smartphone, Truck, Wallet, XCircle,
+  MapPin, Package, Receipt, ShoppingCart, Smartphone, Truck, Wallet,
 } from 'lucide-vue-next';
 import {
   Badge, Button, Input, Label,
@@ -13,7 +13,7 @@ import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicModal, useModal } from '/@/components/BasicModal';
 import { getStoreOrderApi, cancelStoreOrderApi } from '/@/api/store/order';
 import { getPaymentByOrderApi, submitPaymentApi } from '/@/api/store/payment';
-import { uploadImageApi } from '/@/api/common/upload';
+import { normalizeUploadUrl, uploadImageApi } from '/@/api/common/upload';
 import {
   PLATFORM_BANK_INFO,
   STORE_ORDER_STATUS_LABEL,
@@ -48,12 +48,9 @@ const address = computed(() => parseAddress(order.value?.deliveryAddress));
 const orderCreateTime = computed(() => order.value?.createTime || String(route.query.createTime || ''));
 const paidTime = computed(() => payment.value?.confirmedAt || order.value?.paymentTime || '');
 const shippedTime = computed(() => order.value?.deliveries?.find((it) => it.shippedTime)?.shippedTime || '');
-const receivedTime = computed(() => {
-  const delivery = (order.value?.deliveries || []).find((it: any) => it.receivedTime) as any;
-  return delivery?.receivedTime || '';
-});
+const primaryDelivery = computed(() => order.value?.deliveries?.find((it) => it.shippedTime) || order.value?.deliveries?.[0] || null);
 
-type LogisticsStepState = 'done' | 'current' | 'pending' | 'cancelled';
+type LogisticsStepState = 'done' | 'current' | 'pending';
 
 interface LogisticsStep {
   title: string;
@@ -62,10 +59,8 @@ interface LogisticsStep {
   state: LogisticsStepState;
 }
 
-function stepState(done: boolean, current: boolean): LogisticsStepState {
-  if (done) return 'done';
-  if (current) return 'current';
-  return 'pending';
+function stepTime(...values: Array<string | undefined | null>) {
+  return values.find((value) => !!value) || '';
 }
 
 const logisticsSteps = computed<LogisticsStep[]>(() => {
@@ -75,52 +70,59 @@ const logisticsSteps = computed<LogisticsStep[]>(() => {
     return [
       {
         title: '已下单',
-        description: '采购订单已提交',
+        description: '订单已取消，流程终止',
         time: orderCreateTime.value,
         state: 'done',
-      },
-      {
-        title: '已取消',
-        description: '订单已取消，物流流程终止',
-        time: (order.value as any).cancelTime || (order.value as any).updateTime,
-        state: 'cancelled',
       },
     ];
   }
 
-  const isReceiving = status === 3 || status === 4;
-  const isSigned = status === 5;
-  return [
+  const rawStatus = Number(status || 0);
+  if (rawStatus <= 0) return [];
+  const visibleStage = rawStatus >= 3 ? 3 : Math.max(0, rawStatus - 1);
+  const activeIndex = rawStatus >= 4 ? -1 : visibleStage;
+  const allSteps: LogisticsStep[] = [
     {
       title: '已下单',
-      description: '采购订单已提交',
-      time: orderCreateTime.value,
-      state: 'done',
+      description: '支付成功，采购订单已提交',
+      time: paidTime.value || (order.value as any).paymentTime || orderCreateTime.value,
+      state: activeIndex === 0 ? 'current' : 'done',
     },
     {
-      title: '待收货',
-      description: isReceiving || isSigned ? '商品已进入履约配送，等待门店收货确认' : '订单完成支付和集采后进入收货阶段',
-      time: shippedTime.value || paidTime.value,
-      state: stepState(isReceiving || isSigned, status === 1 || status === 2),
+      title: '仓库已接单',
+      description: '平台已发起集采，仓库开始接单处理',
+      time: stepTime(paidTime.value, (order.value as any).paymentTime),
+      state: activeIndex === 1 ? 'current' : 'done',
     },
     {
-      title: '已签收',
-      description: isSigned ? '订单已完成签收' : '确认全部收货后完成签收',
-      time: receivedTime.value || (order.value as any).completedAt,
-      state: stepState(isSigned, isReceiving),
+      title: '仓库处理中',
+      description: '供应商已接单，仓库正在备货、分拣与打包',
+      time: stepTime((order.value as any).updateTime, paidTime.value),
+      state: activeIndex === 2 ? 'current' : 'done',
+    },
+    {
+      title: '已发货',
+      description: primaryDelivery.value?.logisticsCompany || primaryDelivery.value?.trackingNo
+        ? `${primaryDelivery.value?.logisticsCompany || '物流'} ${primaryDelivery.value?.trackingNo || ''}`.trim()
+        : '商品已交由物流配送',
+      time: shippedTime.value,
+      state: activeIndex === 3 ? 'current' : 'done',
     },
   ];
+
+  return allSteps.slice(0, visibleStage + 1).map((item, index) => ({
+    ...item,
+    state: index === activeIndex ? 'current' : 'done',
+  }));
 });
 
 function logisticsDotClass(state: LogisticsStepState) {
-  if (state === 'cancelled') return 'bg-red-50 text-red-500 border-red-100';
   if (state === 'done') return 'bg-[#1A2C54] text-white border-[#1A2C54]';
   if (state === 'current') return 'bg-[#EFF6FF] text-[#1A2C54] border-[#b8c9e6]';
   return 'bg-white text-muted-foreground border-[#d9e0e8]';
 }
 
 function logisticsTextClass(state: LogisticsStepState) {
-  if (state === 'cancelled') return 'text-red-500';
   if (state === 'done' || state === 'current') return 'text-[#1A2C54]';
   return 'text-muted-foreground';
 }
@@ -159,7 +161,7 @@ function pickMockVoucher() {
     const file = input.files?.[0];
     if (!file) return;
     const result = await uploadImageApi(file, 'b2b/payment/voucher');
-    form.voucherUrl = result.singleUrl || result.urls[0] || '';
+    form.voucherUrl = normalizeUploadUrl(result.singleUrl || result.urls[0] || '');
   };
   input.click();
 }
@@ -339,10 +341,11 @@ async function confirmCancel() {
                         class="relative z-10 h-8 w-8 shrink-0 rounded-full border flex items-center justify-center"
                         :class="logisticsDotClass(step.state)"
                       >
-                        <XCircle v-if="step.state === 'cancelled'" class="w-4 h-4" />
-                        <CheckCircle2 v-else-if="step.state === 'done'" class="w-4 h-4" />
-                        <Truck v-else-if="step.state === 'current' && index === 1" class="w-4 h-4" />
-                        <Clock3 v-else class="w-4 h-4" />
+                        <CheckCircle2 v-if="step.state === 'done'" class="w-4 h-4" />
+                        <Truck v-else-if="step.title === '已发货'" class="w-4 h-4" />
+                        <Package v-else-if="step.title === '仓库处理中'" class="w-4 h-4" />
+                        <Receipt v-else-if="step.title === '仓库已接单'" class="w-4 h-4" />
+                        <ShoppingCart v-else class="w-4 h-4" />
                       </div>
                       <div class="min-w-0 flex-1 pt-1">
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -385,7 +388,7 @@ async function confirmCancel() {
               <Button class="w-full" @click="payModal.open()">
                 <CreditCard class="w-4 h-4 mr-1.5" />立即支付
               </Button>
-              <Button variant="outline" class="w-full" @click="onCancel">取消订单</Button>
+              <Button variant="destructive" class="w-full border-0" @click="onCancel">取消订单</Button>
             </div>
             <div v-else-if="order.orderStatus === 0 && payment?.status === 2" class="mt-5 space-y-2">
               <div class="flex items-center gap-1.5 text-sm text-destructive mb-2">
@@ -393,7 +396,7 @@ async function confirmCancel() {
                 支付凭证被驳回
               </div>
               <Button class="w-full" @click="payModal.open()">重新提交凭证</Button>
-              <Button variant="outline" class="w-full" @click="onCancel">取消订单</Button>
+              <Button variant="destructive" class="w-full border-0" @click="onCancel">取消订单</Button>
             </div>
             <div v-else-if="order.orderStatus === 5" class="mt-5">
               <Badge variant="success" class="w-full justify-center py-2 text-sm">订单已完成</Badge>

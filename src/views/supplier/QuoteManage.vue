@@ -16,7 +16,7 @@ import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import {
-  listSupplierQuotesApi, offSupplierQuoteApi, resubmitSupplierQuoteApi,
+  listSupplierQuotesApi, offSupplierQuoteApi,
 } from '/@/api/supplier/quote';
 import {
   SUPPLIER_QUOTE_STATUS_LABEL, SUPPLIER_QUOTE_STATUS_VARIANT, SUPPLIER_QUOTE_STATUS_OPTIONS,
@@ -77,11 +77,6 @@ async function offShelf(row: SupplierQuoteRecord) {
   if (res?.success === false) return;
   reload();
 }
-async function resubmit(row: SupplierQuoteRecord) {
-  await resubmitSupplierQuoteApi(row.id);
-  reload();
-}
-
 function onSearch() { reload({ pageNo: 1 }); }
 function onReset() { search.keyword = ''; search.status = ''; reload({ pageNo: 1 }); }
 </script>
@@ -120,7 +115,6 @@ function onReset() { search.keyword = ''; search.status = ''; reload({ pageNo: 1
         <TableAction
           :actions="[
             { label: '撤回', authCode: 'b2b:supplier:quote', hidden: row.status !== 0, onClick: () => offShelf(row) },
-            { label: '重新提交', authCode: 'b2b:supplier:quote', hidden: row.status !== 3 && row.status !== 2, onClick: () => resubmit(row) },
           ]"
         />
       </template>

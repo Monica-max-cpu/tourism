@@ -241,13 +241,13 @@ function addToCart() {
             <div class="text-base font-semibold">图文详情</div>
             <div class="text-xs text-muted-foreground mt-1">展示商品图片与补充说明</div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 gap-3">
             <div v-for="(img, index) in images" :key="index" class="overflow-hidden rounded-md border border-border bg-muted">
               <img :src="img" :alt="`${productName} 详情图 ${index + 1}`" class="aspect-[4/3] w-full object-cover" />
             </div>
           </div>
-          <div class="rounded-md border border-border p-4 text-sm leading-6 text-muted-foreground">
-            {{ detailText || '暂无更多商品说明' }}
+          <div v-if="detailText" class="rounded-md border border-border p-4 text-sm leading-6 text-muted-foreground">
+            {{ detailText }}
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@
  * - 维护本供应商 SKU 主数据，作为新建报价时的来源
  * - 新建/编辑跳转至 ProductForm 二级页面
  */
-import { reactive } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Plus } from 'lucide-vue-next';
 import {
@@ -16,29 +16,62 @@ import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import { listSupplierProductsApi, toggleSupplierProductShelfApi, deleteSupplierProductApi } from '/@/api/supplier/quote';
+import { listWarehousesApi } from '/@/api/supplier/warehouse';
 import {
   SUPPLIER_PRODUCT_STATUS_LABEL, SUPPLIER_PRODUCT_STATUS_VARIANT, SUPPLIER_PRODUCT_STATUS_OPTIONS,
 } from '/@/constants/supplierStatus';
 import { formatDateTime } from '/@/utils/format';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
-import type { SupplierProduct } from '/#/b2b-supplier';
+import type { SupplierProduct, SupplierWarehouse } from '/#/b2b-supplier';
 
 const router = useRouter();
 
 
 const search = reactive({ keyword: '', status: '' });
 const [registerTable, { reload }] = useTable();
+const warehouseOptions = ref<SupplierWarehouse[]>([]);
+const warehouseNameMap = computed(() =>
+  Object.fromEntries(warehouseOptions.value.map((warehouse) => [warehouse.id, warehouse.warehouseName])),
+);
+
+async function loadWarehouseOptions() {
+  try {
+    const res: any = await listWarehousesApi({ pageNo: 1, pageSize: 200 });
+    warehouseOptions.value = res?.records || res || [];
+  } catch {
+    warehouseOptions.value = [];
+  }
+}
+
+onMounted(() => {
+  void loadWarehouseOptions();
+});
 
 async function loadData(params: any) {
-  return await listSupplierProductsApi({ ...params, ...search });
+  if (!warehouseOptions.value.length) {
+    await loadWarehouseOptions();
+  }
+  const res: any = await listSupplierProductsApi({ ...params, ...search });
+  const records = (res?.records || []).map((row: SupplierProduct) => ({
+    ...row,
+    warehouseName: row.warehouseName || warehouseNameMap.value[row.warehouseId || ''] || '',
+  }));
+  if (Array.isArray(res)) {
+    return res.map((row: SupplierProduct) => ({
+      ...row,
+      warehouseName: row.warehouseName || warehouseNameMap.value[row.warehouseId || ''] || '',
+    }));
+  }
+  return { ...res, records };
 }
 
 const columns: BasicColumn[] = [
   { field: 'productName', title: '商品名称',align: 'center', minWidth: 120 },
+  { field: 'supplierName', title: '供应商', align: 'center', width: 160 },
   { field: 'brand', title: '品牌', align: 'center',width: 150 },
   { field: 'spec', title: '规格', align: 'center',width: 160 },
   { field: 'unit', title: '单位', align: 'center',width: 100 },
-  { field: 'warehouseName', title: '仓库', align: 'center', width: 160, formatter: ({ row }) => row.warehouseName || row.warehouseId || '-' },
+  // { field: 'warehouseName', title: '仓库', align: 'center', width: 160, formatter: ({ row }) => row.warehouseName || warehouseNameMap.value[row.warehouseId || ''] || row.warehouseId || '-' },
   { field: 'barcode', title: '条码',align: 'center', width: 180 },
   { field: 'status', title: '状态',align: 'center', width: 100, slots: { default: 'status' } },
   { field: 'createTime', title: '创建时间', align: 'center',width: 240, formatter: ({ cellValue }) => formatDateTime(cellValue) },

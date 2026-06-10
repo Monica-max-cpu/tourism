@@ -35,7 +35,7 @@ const columns: BasicColumn[] = [
   { field: 'deliveryNo', title: '发货单号', width: 160 },
   { field: 'collectiveOrderId', title: '集采单ID', width: 180, showOverflow: 'tooltip' },
   // { field: 'collectiveItemId', title: '集采明细ID', width: 180, showOverflow: 'tooltip' },
-  { field: 'supplierName', title: '供应商', minWidth: 160, formatter: ({ row }) => row.supplierName || row.supplierId || '-' },
+  { field: 'supplierName', title: '供应商', minWidth: 160, formatter: ({ row }) => row.supplierName || '-' },
   { field: 'storeName', title: '门店', width: 170, showOverflow: 'tooltip', formatter: ({ row }) => row.storeName || row.storeId || '-' },
   { field: 'productName', title: '商品', minWidth: 160, formatter: ({ cellValue }) => cellValue || '-' },
   { field: 'deliveryQty', title: '发货数量', width: 100, align: 'right' },

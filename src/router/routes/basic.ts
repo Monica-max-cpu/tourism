@@ -133,7 +133,7 @@ export const basicRoutes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'SupplierOrderDetailContent',
-        component: () => import('/@/views/admin/CollectiveDetail.vue'),
+        component: () => import('/@/views/supplier/CollectiveDetail.vue'),
         meta: { title: '集采单详情', hideInMenu: true, authCode: 'b2b:collective:detail' },
       },
     ],

@@ -38,7 +38,7 @@ async function loadData(params: any) {
 
 const columns: BasicColumn[] = [
   { field: 'collectiveNo', title: '集采单号', width: 170 },
-  { field: 'supplierName', title: '供应商', minWidth: 180, showOverflow: 'tooltip', formatter: ({ row }) => row.supplierName || row.supplierId || '-' },
+  { field: 'supplierName', title: '供应商', minWidth: 180, showOverflow: 'tooltip', formatter: ({ row }) => row.supplierName || '-' },
   { field: 'orderCount', title: '关联订单数', width: 110, align: 'right' },
   { field: 'totalAmount', title: '集采金额', width: 150, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'orderStatus', title: '状态', width: 120, slots: { default: 'status' } },
@@ -70,8 +70,8 @@ function onReset() {
         <Input v-model="search.collectiveNo" placeholder="集采单号" class="w-48" @keyup.enter="onSearch" />
       </div>
       <div class="flex items-center gap-2">
-        <Label class="text-xs text-muted-foreground">供应商ID</Label>
-        <Input v-model="search.supplierId" placeholder="供应商ID" class="w-52" @keyup.enter="onSearch" />
+        <Label class="text-xs text-muted-foreground">供应商</Label>
+        <Input v-model="search.supplierId" placeholder="供应商" class="w-52" @keyup.enter="onSearch" />
       </div>
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">状态</Label>

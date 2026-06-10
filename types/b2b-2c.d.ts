@@ -73,6 +73,7 @@ export interface CollectiveOrder {
 }
 
 export interface CollectiveConfig {
+  id?: string;
   /** 单 SKU 累计订单达到该数量时自动触发 */
   qtyThreshold: number;
   /** 距上次触发的最大间隔（小时），超时强制触发 */

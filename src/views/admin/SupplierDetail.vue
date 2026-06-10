@@ -142,7 +142,6 @@ async function confirmToggle() {
                   <h4 class="text-lg font-semibold text-[#1A2C54]">基本信息</h4>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[15px]">
-                  <!-- <div><span class="text-muted-foreground">供应商ID：</span><span class="font-medium">{{ item.id }}</span></div> -->
                   <div><span class="text-muted-foreground">供应商名称：</span><span class="font-medium">{{ item.supplierName }}</span></div>
                   <div><span class="text-muted-foreground">认证类型：</span><span class="font-medium">{{ AUTH_TYPE_LABEL[item.authType as keyof typeof AUTH_TYPE_LABEL] || item.authType || '-' }}</span></div>
                   <div><span class="text-muted-foreground">店铺类别：</span><span class="font-medium">{{ item.storeType ? SUPPLIER_STORE_TYPE_LABEL[item.storeType] : '-' }}</span></div>

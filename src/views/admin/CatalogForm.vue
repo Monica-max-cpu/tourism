@@ -29,11 +29,11 @@ import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { storeCategoryLabel } from '/@/constants/storeStatus';
 import { formatCurrency } from '/@/utils/format';
 import { getProductImages } from '/@/utils/productImages';
-import type { CatalogStatus, CatalogTier, PlatformCatalog } from '/#/b2b';
+import type { CatalogStatus, CatalogTier } from '/#/b2b';
 import {
   addCatalogApi,
+  getCatalogDetailApi,
   listApprovedQuotesForSelectApi,
-  listCatalogsApi,
   updateCatalogApi,
 } from '/@/api/admin';
 import {
@@ -61,6 +61,7 @@ interface QuoteOption {
   supplierName: string;
   productId?: string;
   productName: string;
+  productImageList?: string[];
   productImages?: string;
   images?: string;
   description?: string;
@@ -86,6 +87,7 @@ interface SelectedCatalogItem {
   supplierName: string;
   productId?: string;
   productName: string;
+  productImageList?: string[];
   productImages?: string;
   description?: string;
   categoryId?: string;
@@ -104,19 +106,14 @@ interface SelectedCatalogItem {
   commissionRate: number;
   sortOrder: number;
   shelfNow: boolean;
-  pricingLevel: 'UNIFIED' | 'TIERED';
   catalogTiers: CatalogTier[];
 }
 
-const loading = ref(false);
+const loading = ref(isEdit.value);
 const submitting = ref(false);
 const quoteOptions = ref<QuoteOption[]>([]);
 const selectedItems = ref<SelectedCatalogItem[]>([]);
 const search = reactive({ keyword: '' });
-const pricingLevelOptions = [
-  { value: 'UNIFIED', label: '统一定价' },
-  { value: 'TIERED', label: '阶梯定价' },
-] as const;
 
 const currentItem = computed(() => selectedItems.value[0] || null);
 
@@ -145,6 +142,7 @@ const formValid = computed(() =>
 function normalizeQuoteRecord(item: any): QuoteOption {
   const quote = item.quote || item;
   const product = item.product || item.productInfo || {};
+  const productImageList = quote.productImageList || product.productImageList || item.productImageList || [];
   const productImages = quote.productImages || quote.images || product.productImages || product.images || '';
   const costPrice = quote.basePrice ?? quote.costPrice ?? quote.price ?? item.basePrice ?? 0;
 
@@ -155,6 +153,7 @@ function normalizeQuoteRecord(item: any): QuoteOption {
     supplierName: quote.supplierName || item.supplierName || product.supplierName || '-',
     productId: quote.productId || product.id || item.productId,
     productName: quote.productName || product.productName || item.productName || '-',
+    productImageList,
     productImages,
     images: productImages,
     description: quote.description || product.description || item.description || '',
@@ -179,6 +178,8 @@ function normalizeQuoteRecord(item: any): QuoteOption {
 }
 
 function createSelectedItem(quote: QuoteOption): SelectedCatalogItem {
+  const productImageList = quote.productImageList || [];
+  const productImages = quote.productImages || quote.images || productImageList[0] || '';
   return {
     tempId: `${quote.id}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     quoteId: quote.id,
@@ -186,7 +187,8 @@ function createSelectedItem(quote: QuoteOption): SelectedCatalogItem {
     supplierName: quote.supplierName,
     productId: quote.productId,
     productName: quote.productName,
-    productImages: quote.productImages || quote.images || '',
+    productImageList,
+    productImages,
     description: quote.description || '',
     categoryId: quote.categoryId || '',
     brand: quote.brand,
@@ -204,7 +206,6 @@ function createSelectedItem(quote: QuoteOption): SelectedCatalogItem {
     commissionRate: 0,
     sortOrder: selectedItems.value.length + 1,
     shelfNow: true,
-    pricingLevel: quote.tiers?.length ? 'TIERED' : 'UNIFIED',
     catalogTiers: quote.tiers?.length
       ? quote.tiers.map((tier) => ({ ...tier, unitPrice: Number(tier.unitPrice || quote.costPrice || 0) }))
       : [],
@@ -237,14 +238,16 @@ function removeTier(item: SelectedCatalogItem, index: number) {
 function buildPayload(item: SelectedCatalogItem) {
   return {
     productName: item.productName,
+    supplierName: item.supplierName,
+    preferredSupplierName: item.supplierName,
     productImages: item.productImages,
+    productImageList: item.productImageList?.length ? item.productImageList : undefined,
     categoryId: item.categoryId,
     unit: item.unit,
     basePrice: item.basePrice,
     minOrderQty: item.minOrderQty,
     commissionRate: item.commissionRate,
     preferredQuoteId: item.quoteId,
-    preferredSupplierName: item.supplierName,
     supplierBasePrice: item.supplierBasePrice,
     description: item.description,
     originPlace: item.originPlace,
@@ -253,7 +256,6 @@ function buildPayload(item: SelectedCatalogItem) {
     shelfLife: item.shelfLife,
     applicableScene: item.applicableScene,
     afterSaleNote: item.afterSaleNote,
-    pricingLevel: item.pricingLevel,
     sortOrder: item.sortOrder,
     status: (item.shelfNow ? 1 : 0) as CatalogStatus,
     catalogTiers: item.catalogTiers.length ? item.catalogTiers : undefined,
@@ -274,15 +276,15 @@ async function loadCatalog() {
   if (!isEdit.value) return;
   loading.value = true;
   try {
-    const result: any = await listCatalogsApi({ pageNo: 1, pageSize: 200 });
-    const catalog = (result.records || []).map(normalizeCatalogRecord).find((item: PlatformCatalog) => item.id === catalogId.value);
+    const catalog = normalizeCatalogRecord(await getCatalogDetailApi(catalogId.value));
     if (!catalog) return;
 
     selectedItems.value = [{
       tempId: catalog.id,
       quoteId: catalog.preferredQuoteId || '',
-      supplierName: catalog.preferredSupplierName || '-',
+      supplierName: catalog.supplierName || catalog.preferredSupplierName || '-',
       productName: catalog.productName || '',
+      productImageList: catalog.productImageList || [],
       productImages: catalog.productImages || '',
       description: catalog.description || '',
       originPlace: (catalog as any).originPlace || '',
@@ -299,7 +301,6 @@ async function loadCatalog() {
       commissionRate: Number(catalog.commissionRate || 0),
       sortOrder: Number(catalog.sortOrder || 1),
       shelfNow: normalizeCatalogStatus(catalog.status) === 1,
-    pricingLevel: catalog.catalogTiers && catalog.catalogTiers.length ? 'TIERED' : 'UNIFIED',
     catalogTiers: catalog.catalogTiers ? [...catalog.catalogTiers] : [],
   }];
   } finally {
@@ -341,7 +342,7 @@ function tierRangeText(tier: CatalogTier, unit: string) {
 }
 
 function firstProductImage(item: { productImages?: string }) {
-  return getProductImages(item)[0] || '';
+  return getProductImages(item as any)[0] || '';
 }
 </script>
 
@@ -481,19 +482,6 @@ function firstProductImage(item: { productImages?: string }) {
                     <div class="flex items-center px-4 text-sm text-muted-foreground">数字越小越靠前</div>
                   </div>
                 </div>
-                <div class="space-y-2">
-                  <Label class="text-[15px] font-medium text-foreground/80">定价层级</Label>
-                  <Select v-model="selectedItems[0].pricingLevel">
-                    <SelectTrigger class="h-12 w-full rounded-xl bg-background text-[#1A2C54] [&_svg]:text-[#1A2C54] [&_svg]:opacity-60">
-                      <SelectValue placeholder="请选择定价层级" />
-                    </SelectTrigger>
-                    <SelectContent side="bottom" class="w-[var(--radix-select-trigger-width)]">
-                      <SelectItem v-for="option in pricingLevelOptions" :key="option.value" :value="option.value">
-                        {{ option.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
               <div class="mt-6 flex items-center gap-4 rounded-2xl border border-border px-4 py-4">
@@ -593,9 +581,9 @@ function firstProductImage(item: { productImages?: string }) {
               class="rounded-lg border border-border bg-white p-3 transition-colors hover:border-[#1A2C54]/40 hover:bg-[#f8fafc]"
             >
               <div class="flex gap-3">
-                <div v-if="firstProductImage({ productImages: quote.productImages || quote.images })" class="h-16 w-16 shrink-0 overflow-hidden rounded-md">
+                <div v-if="firstProductImage(quote)" class="h-16 w-16 shrink-0 overflow-hidden rounded-md">
                   <img
-                    :src="firstProductImage({ productImages: quote.productImages || quote.images })"
+                    :src="firstProductImage(quote)"
                     class="h-full w-full object-cover"
                     alt=""
                   />

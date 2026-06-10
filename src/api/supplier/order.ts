@@ -25,7 +25,7 @@ export function listSupplierOrdersApi(params: any) {
   return defHttp.get({ url: Api.ListOrders, params: flat });
 }
 export function getSupplierOrderApi(id: string) {
-  return defHttp.get({ url: `/b2b/collective/detail/${id}` });
+  return defHttp.get({ url: `/b2b/collective/supplier/detail/${id}` });
 }
 export function confirmSupplierOrderApi(id: string) {
   return defHttp.put({ url: `/b2b/collective/supplier/confirm/${id}`, data: {} });

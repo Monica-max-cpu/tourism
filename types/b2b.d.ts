@@ -119,6 +119,7 @@ export interface QuoteTier {
 export interface PlatformCatalog {
   id: string;
   productName: string;
+  productImageList?: string[];
   productImages?: string;
   categoryId?: string;
   categoryName?: string;

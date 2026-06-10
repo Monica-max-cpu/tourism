@@ -23,7 +23,7 @@ async function loadData(params: any) {
 
 const columns: BasicColumn[] = [
   { field: 'collectiveNo', title: '集采单号', width: 170 },
-  { field: 'supplierId', title: '供应商ID', minWidth: 180, showOverflow: 'tooltip' },
+  { field: 'supplierName', title: '供应商', minWidth: 180, showOverflow: 'tooltip', formatter: ({ row }) => row.supplierName || '-' },
   { field: 'orderCount', title: '关联订单数', width: 110, align: 'right' },
   { field: 'totalAmount', title: '应收金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'orderStatus', title: '状态', width: 100, slots: { default: 'status' } },

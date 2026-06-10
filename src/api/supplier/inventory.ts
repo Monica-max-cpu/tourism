@@ -21,7 +21,7 @@ enum Api {
 export function listSupplierStocksApi(params: any) {
   return defHttp.get({ url: Api.ListStocks, params });
 }
-export function replenishStockApi(data: { supplierId?: string; productId: string; warehouseId?: string; qty: number; remark?: string }) {
+export function replenishStockApi(data: { productId: string; warehouseId?: string; qty: number; remark?: string }) {
   return defHttp.post({ url: Api.ReplenishStock, data });
 }
 export function updateSupplierStockThresholdApi(id: string, warnThreshold: number) {

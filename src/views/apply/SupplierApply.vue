@@ -7,7 +7,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '/@/components/ui';
 import { supplierApplyApi, publicOnboardingApplyApi } from '/@/api/b2b/apply';
-import { uploadFilesApi, uploadImageApi } from '/@/api/common/upload';
+import { normalizeUploadUrl, normalizeUploadUrls, uploadFilesApi, uploadImageApi } from '/@/api/common/upload';
 import { ROUTE_PATHS } from '/@/constants/routePaths';
 import { SUPPLIER_STORE_TYPE_OPTIONS } from '/@/constants/b2bStatus';
 import { useUserStore } from '/@/stores/modules/user';
@@ -57,7 +57,7 @@ async function uploadSingleImage(field: 'logoId' | 'businessLicense', file: File
   if (field === 'businessLicense') uploadingLicense.value = true;
   try {
     const result = await uploadImageApi(file);
-    const url = result.singleUrl || result.urls[0] || '';
+    const url = normalizeUploadUrl(result.singleUrl || result.urls[0] || '');
     if (!url) throw new Error('未获取到上传地址');
     (form as Record<string, string>)[field] = url;
   } catch (err) {
@@ -75,7 +75,7 @@ async function addStorePhoto(files: FileList | File[]) {
   errorMsg.value = '';
   try {
     const result = await uploadFilesApi(list);
-    const uploaded = result.urls.length ? result.urls : (result.singleUrl ? [result.singleUrl] : []);
+    const uploaded = result.urls.length ? normalizeUploadUrls(result.urls) : (result.singleUrl ? [normalizeUploadUrl(result.singleUrl)] : []);
     if (!uploaded.length) throw new Error('未获取到上传地址');
     form.storePhotos = form.storePhotos ? `${form.storePhotos},${uploaded.join(',')}` : uploaded.join(',');
   } catch (err) {

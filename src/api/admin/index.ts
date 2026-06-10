@@ -25,6 +25,7 @@ enum Api {
   AdminWithdrawQuote = '/b2b/supplier/quote/admin/withdraw',
   // 商品目录（管理员侧）
   ListCatalogs = '/b2b/catalog/admin/list',
+  GetCatalogDetail = '/b2b/catalog/admin/detail',
   UpdateCatalog = '/b2b/catalog/edit',
   AddCatalog = '/b2b/catalog/add',
 }
@@ -96,6 +97,9 @@ export function listApprovedQuotesForSelectApi() {
 // ===== 商品目录 =====
 export function listCatalogsApi(params: any) {
   return defHttp.get({ url: Api.ListCatalogs, params });
+}
+export function getCatalogDetailApi(id: string) {
+  return defHttp.get({ url: `${Api.GetCatalogDetail}/${id}` });
 }
 export function updateCatalogApi(id: string, patch: Partial<PlatformCatalog>) {
   return defHttp.put({ url: Api.UpdateCatalog, data: { id, ...patch } });

@@ -129,13 +129,29 @@ export function listCollectiveOrdersApi(params: any) {
   return defHttp.get({ url: Api.ListCollectiveOrders, params });
 }
 export function getCollectiveOrderApi(id: string) {
-  return defHttp.get({ url: `/b2b/collective/detail/${id}` });
+  return defHttp.get({ url: `/b2b/collective/detail/${id}`, params: { isAdmin: true } });
 }
 export function getCollectiveConfigApi() {
-  return defHttp.get({ url: Api.GetCollectiveConfig });
+  return defHttp.get({ url: Api.GetCollectiveConfig }).then((res: any) => {
+    const list = Array.isArray(res) ? res : [res];
+    const cfg = list.find((item) => item?.isActive === 1) || list[0];
+    if (!cfg) return { qtyThreshold: 100, hoursTimeout: 48, autoTrigger: true } as CollectiveConfig;
+    return {
+      qtyThreshold: cfg.qtyThreshold ?? 100,
+      hoursTimeout: cfg.hoursTimeout ?? cfg.timeThresholdHours ?? 48,
+      autoTrigger: cfg.autoTrigger ?? (cfg.isActive === 1),
+    } as CollectiveConfig;
+  });
 }
 export function updateCollectiveConfigApi(patch: Partial<CollectiveConfig>) {
-  return defHttp.put({ url: Api.UpdateCollectiveConfig, data: patch });
+  const payload: any = {
+    ...patch,
+    timeThresholdHours: patch.hoursTimeout,
+    isActive: patch.autoTrigger ? 1 : 0,
+  };
+  delete payload.hoursTimeout;
+  delete payload.autoTrigger;
+  return defHttp.put({ url: Api.UpdateCollectiveConfig, data: payload });
 }
 
 // ===== 履约 =====

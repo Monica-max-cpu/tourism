@@ -33,8 +33,8 @@ export function resolveCatalogSupplierName(row: any): string {
   const quote = getNestedQuote(row);
   return String(
     firstDefined(
-      row?.preferredSupplierName,
       row?.supplierName,
+      row?.preferredSupplierName,
       row?.supplier?.supplierName,
       row?.supplier?.name,
       row?.supplier?.companyName,
@@ -118,6 +118,7 @@ export function resolveCatalogUnit(row: any): string {
 export function normalizeCatalogRecord(row: any): PlatformCatalog {
   const product = getNestedProduct(row);
   const quote = getNestedQuote(row);
+  const productImageList = row?.productImageList || product?.productImageList || quote?.productImageList || [];
   const productImages =
     row?.productImages ||
     row?.images ||
@@ -132,6 +133,8 @@ export function normalizeCatalogRecord(row: any): PlatformCatalog {
     ...row,
     status: normalizeCatalogStatus(row?.status),
     productName: row?.productName || product?.productName || quote?.productName || '-',
+    supplierName: resolveCatalogSupplierName(row),
+    productImageList,
     productImages,
     categoryId: resolveCatalogCategoryId(row),
     unit,

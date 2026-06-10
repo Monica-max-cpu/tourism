@@ -149,8 +149,8 @@ export function listStocksApi(params: any) {
 export function listStockLogsApi(params: any) {
   return defHttp.get({ url: Api.ListStockLogs, params });
 }
-export function updateStockThresholdApi(id: string, threshold: number) {
-  return defHttp.put({ url: Api.UpdateStockAlertQty, data: { id, alertQty: threshold } });
+export function updateStockThresholdApi(supplierId: string, productId: string, threshold: number) {
+  return defHttp.put({ url: Api.UpdateStockAlertQty, data: { supplierId, productId, alertQty: threshold } });
 }
 
 // ===== 门店订单 =====

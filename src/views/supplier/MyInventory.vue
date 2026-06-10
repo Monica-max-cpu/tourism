@@ -8,7 +8,6 @@
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段3】供应商库存
  */
 import { reactive, ref, computed } from 'vue';
-import { useUserStore } from '/@/stores/modules/user';
 import { Input, Label } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
@@ -22,23 +21,24 @@ import type { SupplierStock } from '/#/b2b-supplier';
 
 const search = reactive({ keyword: '' });
 const [registerTable, { reload }] = useTable();
-const userStore = useUserStore();
-const currentSupplierId = computed(() => userStore.getUserInfo?.supplierId || userStore.getUserInfo?.b2bMerchantInfo?.supplierId || '');
 
 /** 从商品档案中补齐库存列表里不存在的商品（虚拟行，availableQty=0） */
 async function mergeProductsIntoStocks(stocks: SupplierStock[]): Promise<SupplierStock[]> {
-  const stockProductIds = new Set(stocks.map((s) => s.productId));
+  const stockKeys = new Set(stocks.map((s) => `${s.supplierId || '__current__'}::${s.productId}`));
   const productRes: any = await listSupplierProductsApi({
     pageNo: 1, pageSize: 999,
   });
   const productList: any[] = Array.isArray(productRes) ? productRes : (productRes?.records || []);
   const virtualRows: SupplierStock[] = [];
+  const currentSupplierId = stocks[0]?.supplierId || '';
 
   for (const p of productList) {
     const pid = p.id || '';
-    if (!pid || stockProductIds.has(pid)) continue;
+    const key = `${currentSupplierId || '__current__'}::${pid}`;
+    if (!pid || stockKeys.has(key)) continue;
     virtualRows.push({
       id: '',
+      supplierId: currentSupplierId,
       productId: pid,
       productName: p.productName || '',
       productSku: p.sku || '',
@@ -71,13 +71,13 @@ async function loadData(params: any) {
     total = res?.total || 0;
   }
   const merged = await mergeProductsIntoStocks(stocks);
-  return { records: merged, total: total + (merged.length - stocks.length) };
+  return { records: merged, total: merged.length };
 }
 
 const columns: BasicColumn[] = [
   // { field: 'productSku', title: 'SKU', width: 130 },
   { field: 'productName', title: '商品名称', minWidth: 180 },
-  { field: 'warehouseName', title: '仓库', width: 200 },
+  // { field: 'warehouseName', title: '仓库', width: 200 },
   // { field: 'unit', title: '单位', width: 180 },
   { field: 'availableQty', title: '可用库存', width: 200, align: 'center' },
   // { field: 'lockedQty', title: '锁定库存', width: 100, align: 'right' },
@@ -104,7 +104,6 @@ async function confirmQty() {
   try {
     const row = qtyModal.data.value as any;
     await replenishStockApi({
-      supplierId: currentSupplierId.value || undefined,
       productId: row.productId,
       warehouseId: row.warehouseId || undefined,
       qty: qtyValue.value,

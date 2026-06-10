@@ -9,6 +9,7 @@ import { PageWrapper } from '/@/components/PageWrapper';
 import { getCollectiveConfigApi, updateCollectiveConfigApi } from '/@/api/admin/fulfillment';
 
 const form = reactive({
+  id: '',
   qtyThreshold: 100,
   hoursTimeout: 48,
   autoTrigger: true,
