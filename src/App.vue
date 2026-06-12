@@ -11,19 +11,44 @@ const { getRouteLoading } = storeToRefs(appStore);
   <RouterView />
   <Transition name="fade">
     <div v-if="getRouteLoading" class="route-loading-overlay">
-      <div class="route-loading-card">
+      <div class="route-loading-card" role="status" aria-live="polite">
         <div class="route-loading-mark" aria-hidden="true">
           <span class="route-loading-halo" />
-          <span class="route-loading-ring" />
-          <span class="route-loading-ring route-loading-ring--inner" />
-          <span class="route-loading-emblem">晋</span>
+          <svg class="route-loading-orbit route-loading-orbit--dashed" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48" />
+          </svg>
+          <svg class="route-loading-orbit route-loading-orbit--dots" viewBox="0 0 100 100">
+            <circle cx="50" cy="10" r="2" />
+            <circle cx="90" cy="50" r="1.5" />
+            <circle cx="10" cy="50" r="1" />
+          </svg>
+          <svg class="route-loading-orbit route-loading-orbit--main" viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="route-loading-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#214fb6" />
+                <stop offset="100%" stop-color="#a8c5ec" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="40" stroke="url(#route-loading-gradient)" />
+          </svg>
+          <svg class="route-loading-orbit route-loading-orbit--inner" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="30" />
+          </svg>
+          <div class="route-loading-core">
+            <span class="route-loading-core__ping" />
+            <span class="route-loading-core__dot" />
+          </div>
         </div>
         <div class="route-loading-copy">
           <p class="route-loading-title">正在加载工作台</p>
-          <p class="route-loading-desc">权限与菜单正在准备中，请稍候...</p>
-        </div>
-        <div class="route-loading-accent" aria-hidden="true">
-          <span />
+          <p class="route-loading-desc">
+            <span>权限与菜单正在准备中</span>
+            <span class="route-loading-dots" aria-hidden="true">
+              <span>.</span>
+              <span>.</span>
+              <span>.</span>
+            </span>
+          </p>
         </div>
       </div>
     </div>
@@ -40,19 +65,19 @@ const { getRouteLoading } = storeToRefs(appStore);
   justify-content: center;
   padding: 24px;
   background:
-    radial-gradient(circle at 50% 30%, hsl(var(--primary) / 0.12), transparent 34%),
-    radial-gradient(circle at 50% 72%, hsl(var(--accent) / 0.12), transparent 30%),
-    linear-gradient(180deg, hsl(var(--background) / 0.84), hsl(var(--background) / 0.9));
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+    radial-gradient(circle at 50% 26%, rgb(33 79 182 / 0.1), transparent 32%),
+    radial-gradient(circle at 50% 74%, rgb(127 166 225 / 0.1), transparent 28%),
+    linear-gradient(180deg, rgb(248 250 252 / 0.88), rgb(248 250 252 / 0.94));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .route-loading-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  min-width: min(92vw, 360px);
+  gap: 18px;
+  min-width: min(92vw, 320px);
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -62,8 +87,8 @@ const { getRouteLoading } = storeToRefs(appStore);
 
 .route-loading-mark {
   position: relative;
-  width: 116px;
-  height: 116px;
+  width: 128px;
+  height: 128px;
   display: grid;
   place-items: center;
   flex: none;
@@ -71,83 +96,107 @@ const { getRouteLoading } = storeToRefs(appStore);
 
 .route-loading-halo {
   position: absolute;
-  inset: -22px;
-  border-radius: 9999px;
-  background:
-    radial-gradient(circle, hsl(var(--accent) / 0.14) 0%, transparent 58%),
-    radial-gradient(circle, hsl(var(--primary) / 0.12) 20%, transparent 68%);
-  filter: blur(8px);
-  animation: route-breathe 2.8s ease-in-out infinite;
-}
-
-.route-loading-ring {
-  position: absolute;
   inset: 0;
   border-radius: 9999px;
-  border: 2px solid transparent;
-  background:
-    linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
-    conic-gradient(
-      from 220deg,
-      transparent 0deg,
-      transparent 250deg,
-      hsl(var(--primary) / 0.96) 272deg,
-      hsl(var(--accent) / 0.95) 304deg,
-      hsl(var(--primary) / 0.96) 332deg,
-      transparent 360deg
-    ) border-box;
-  animation: route-spin 1.5s linear infinite;
-  -webkit-mask:
-    linear-gradient(#000 0 0) padding-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  background: rgb(33 79 182 / 0.2);
+  filter: blur(24px);
+  animation: route-pulse 1.8s ease-in-out infinite;
 }
 
-.route-loading-ring--inner {
-  inset: 28px;
-  background:
-    linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
-    conic-gradient(
-      from 40deg,
-      transparent 0deg,
-      transparent 210deg,
-      hsl(var(--accent) / 0.62) 244deg,
-      hsl(var(--primary) / 0.78) 288deg,
-      transparent 330deg,
-      transparent 360deg
-    ) border-box;
-  animation-duration: 2.3s;
-  animation-direction: reverse;
-  opacity: 0.88;
-}
-
-.route-loading-ring::after {
-  content: '';
+.route-loading-orbit {
   position: absolute;
-  inset: 12px;
-  border-radius: inherit;
-  border: 1px solid hsl(var(--primary) / 0.12);
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.route-loading-emblem {
-  position: relative;
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
+.route-loading-orbit circle {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.route-loading-orbit--dashed {
+  color: rgb(203 220 244 / 0.8);
+  animation: route-spin 8s linear infinite;
+}
+
+.route-loading-orbit--dashed circle {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.route-loading-orbit--dots {
+  color: #7fa6e1;
+  animation: route-spin-reverse 4s linear infinite;
+}
+
+.route-loading-orbit--dots circle {
+  fill: currentColor;
+}
+
+.route-loading-orbit--dots circle:nth-child(2) {
+  opacity: 0.5;
+}
+
+.route-loading-orbit--dots circle:nth-child(3) {
+  opacity: 0.3;
+}
+
+.route-loading-orbit--main {
+  inset: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  filter: drop-shadow(0 0 8px rgb(33 79 182 / 0.5));
+  animation: route-spin-soft 2s ease-in-out infinite;
+}
+
+.route-loading-orbit--main circle {
+  stroke-width: 4;
+  stroke-dasharray: 180 250;
+}
+
+.route-loading-orbit--inner {
+  inset: 24px;
+  width: calc(100% - 48px);
+  height: calc(100% - 48px);
+  color: rgb(94 135 214 / 0.4);
+  animation: route-spin 1s linear infinite;
+}
+
+.route-loading-orbit--inner circle {
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-dasharray: 40 150;
+}
+
+.route-loading-core {
+  position: absolute;
+  inset: 35px;
   display: grid;
   place-items: center;
-  color: hsl(var(--primary));
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-shadow:
-    0 1px 0 hsl(var(--card) / 0.88),
-    0 3px 8px hsl(var(--primary) / 0.06);
-  animation: route-emblem 3s ease-in-out infinite;
+  border: 1px solid rgb(226 235 249 / 0.8);
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #eff4fc 0%, #fff 100%);
+  box-shadow: inset 0 2px 10px rgb(33 79 182 / 0.1);
+}
+
+.route-loading-core__ping {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: #214fb6;
+  opacity: 0.75;
+  animation: route-ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.route-loading-core__dot {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #5e87d6;
 }
 
 .route-loading-copy {
@@ -156,35 +205,22 @@ const { getRouteLoading } = storeToRefs(appStore);
 
 .route-loading-title {
   margin: 0;
-  color: hsl(var(--foreground));
-  font-size: 15px;
+  color: #111827;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.18em;
 }
 
 .route-loading-desc {
-  margin: 6px 0 0;
-  color: hsl(var(--muted-foreground));
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.route-loading-accent {
-  width: 100%;
-  height: 4px;
-  overflow: hidden;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, hsl(var(--muted) / 0.72), hsl(var(--muted) / 0.38), hsl(var(--muted) / 0.72));
-}
-
-.route-loading-accent > span {
-  display: block;
-  width: 34%;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
-  box-shadow: 0 0 18px hsl(var(--accent) / 0.18);
-  animation: route-accent 1.8s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 10px 0 0;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
 }
 
 .fade-enter-active,
@@ -198,54 +234,61 @@ const { getRouteLoading } = storeToRefs(appStore);
 }
 
 @keyframes route-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-@keyframes route-breathe {
+@keyframes route-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes route-spin-soft {
   0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.78;
-  }
-  50% {
-    transform: scale(1.03);
-    opacity: 1;
-  }
+  100% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg); }
 }
 
-@keyframes route-emblem {
+@keyframes route-pulse {
   0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-1px) scale(1.03);
-  }
+  100% { transform: scale(1); opacity: 0.68; }
+  50% { transform: scale(1.04); opacity: 1; }
 }
 
-@keyframes route-accent {
-  0% {
-    transform: translateX(-120%);
-  }
-  50% {
-    transform: translateX(125%);
-  }
-  100% {
-    transform: translateX(260%);
-  }
+@keyframes route-ping {
+  75%,
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.route-loading-dots span {
+  display: inline-block;
+  color: #7fa6e1;
+}
+
+.route-loading-dots span:nth-child(1) {
+  animation: route-dot 1.4s infinite;
+}
+
+.route-loading-dots span:nth-child(2) {
+  animation: route-dot 1.4s infinite 0.2s;
+}
+
+.route-loading-dots span:nth-child(3) {
+  animation: route-dot 1.4s infinite 0.4s;
+}
+
+@keyframes route-dot {
+  0%,
+  80%,
+  100% { transform: translateY(0); opacity: 0.55; }
+  40% { transform: translateY(-2px); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .route-loading-halo,
-  .route-loading-ring,
-  .route-loading-ring--inner,
-  .route-loading-emblem,
-  .route-loading-accent > span {
+  .route-loading-orbit,
+  .route-loading-core__ping,
+  .route-loading-dots span {
     animation: none !important;
   }
 }

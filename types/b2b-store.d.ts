@@ -119,6 +119,8 @@ export interface StoreViewOrder {
 
 export interface StoreOrderCreateParams {
   storeId?: string;
+  paymentMethod?: 'UNIONPAY' | 'BANK_CREDIT';
+  creditAccountId?: string;
   deliveryAddress: {
     recipientName?: string;
     recipientPhone?: string;
@@ -132,8 +134,116 @@ export interface StoreOrderCreateParams {
   items: { catalogId: string; quantity: number }[];
 }
 
+// ===== 门店授信账户 =====
+export type StoreCreditStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface StoreCreditAccount {
+  creditAccountId?: string;
+  storeId?: string;
+  storeName?: string;
+  bankCode?: string;
+  bankName?: string;
+  totalCreditAmount?: number;
+  usedCreditAmount?: number;
+  frozenCreditAmount?: number;
+  availableCreditAmount?: number;
+  creditDays?: number;
+  creditStatus: StoreCreditStatus;
+  creditStatusLabel?: string;
+  auditRemark?: string;
+  bankCreditApplyNo?: string;
+  bankCreditAccountNo?: string;
+  lastSyncTime?: string;
+}
+
+export interface StoreCreditApplyParams {
+  storeId?: string;
+  contactName: string;
+  contactPhone: string;
+  agreementChecked: boolean;
+}
+
+export interface StoreCreditApplyResult {
+  applyNo?: string;
+  creditStatus: StoreCreditStatus;
+  creditStatusLabel?: string;
+  account?: StoreCreditAccount;
+}
+
+export type CreditBillStatus = 0 | 1 | 2 | 3 | 4;
+export type CreditSplitStatus = 0 | 1 | 2 | 3 | 4;
+
+export interface CreditBillRecord {
+  id: string;
+  creditAccountId: string;
+  storeId: string;
+  storeName?: string;
+  billNo: string;
+  billCycle: string;
+  billAmount: number;
+  paidAmount: number;
+  unpaidAmount: number;
+  dueDate?: string;
+  overdueDays?: number;
+  billStatus: CreditBillStatus;
+  billStatusLabel?: string;
+  createTime?: string;
+}
+
+export interface CreditBillDetailItem {
+  id: string;
+  billId: string;
+  orderId?: string;
+  orderNo?: string;
+  productName?: string;
+  detailTime?: string;
+  creditAmount: number;
+}
+
+export interface CreditBillDetail extends CreditBillRecord {
+  items?: CreditBillDetailItem[];
+}
+
+export interface CreditBillRepayApplyParams {
+  billId: string;
+  repayAmount: number;
+  repayNo?: string;
+  remark?: string;
+}
+
+export interface CreditBillRepayApplyResult {
+  repayNo?: string;
+  billId: string;
+  bankTradeNo?: string;
+  bankStatus?: string;
+  repayAmount: number;
+  message?: string;
+}
+
+export interface CreditPaymentSplitRecord {
+  id: string;
+  orderId: string;
+  orderNo: string;
+  paymentId?: string;
+  paymentMethod?: 'UNIONPAY' | 'BANK_CREDIT';
+  splitChannel?: 'UNIONPAY' | 'BANK_CREDIT';
+  channelTradeNo?: string;
+  collectiveOrderId?: string;
+  supplierId?: string;
+  settlementId?: string;
+  orderAmount?: number;
+  supplierAmount?: number;
+  platformProfitAmount?: number;
+  splitAmount?: number;
+  splitRatio?: number;
+  splitStatus: CreditSplitStatus;
+  splitStatusLabel?: string;
+  channelSplitNo?: string;
+  createTime?: string;
+}
+
 // ===== 门店付款记录（门店视角） =====
-export type StorePaymentMethod = 'OFFLINE' | 'ONLINE_WECHAT' | 'ONLINE_ALIPAY';
+export type StorePaymentMethod = 'UNIONPAY' | 'BANK_CREDIT';
 /** 支付状态: 0=待支付, 1=支付成功, 2=支付失败, 3=已退款 */
 export type StoreViewPaymentStatus = 0 | 1 | 2 | 3;
 
@@ -145,9 +255,7 @@ export interface StorePaymentRecord {
   storeId: string;
   amount: number;
   method: StorePaymentMethod;
-  /** 凭证图片（线下转账） */
-  voucherUrl?: string;
-  /** 第三方流水号（线上支付） */
+  /** 渠道流水号 */
   transactionNo?: string;
   status: StoreViewPaymentStatus;
   remark?: string;
@@ -161,6 +269,7 @@ export interface SubmitPaymentParams {
   orderNo: string;
   amount: number;
   method: StorePaymentMethod;
+  creditAccountId?: string;
   voucherUrl?: string;
   transactionNo?: string;
   remark?: string;

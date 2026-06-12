@@ -13,8 +13,7 @@ enum Api {
   // 门店订单
   ListStoreOrders = '/b2b/store/order/admin/list',
   // 支付
-  ListPayments = '/b2b/payment/pending/list',
-  ConfirmPayment = '/b2b/payment/manual/confirm',
+  ListPayments = '/b2b/payment/list',
 }
 
 function normalizePage(page: any, normalizeRecord: (row: any) => any = (row) => row) {
@@ -62,21 +61,29 @@ function normalizeStoreOrder(row: any) {
 }
 
 const PAYMENT_METHOD_MAP: Record<string, string> = {
-  OFFLINE: 'OFFLINE_TRANSFER',
-  WECHAT: 'ONLINE_WECHAT',
-  ALIPAY: 'ONLINE_ALIPAY',
-  TONGLIAN: 'OFFLINE_TRANSFER',
+  UNIONPAY: 'UNIONPAY',
+  BANK_CREDIT: 'BANK_CREDIT',
 };
 
 function paymentMethodText(method?: string) {
   const normalized = PAYMENT_METHOD_MAP[method || ''] || method || '';
   const labels: Record<string, string> = {
-    OFFLINE_TRANSFER: '线下转账',
-    ONLINE_WECHAT: '微信支付',
-    ONLINE_ALIPAY: '支付宝',
+    UNIONPAY: '银联在线支付',
+    BANK_CREDIT: '授信支付',
   };
   return labels[normalized] || normalized || '-';
 }
+
+const PAYMENT_STATUS_MAP: Record<number | string, string> = {
+  0: 'WAIT_PAY',
+  1: 'PAID',
+  2: 'FAILED',
+  3: 'REFUNDED',
+  WAIT_PAY: 'WAIT_PAY',
+  PAID: 'PAID',
+  FAILED: 'FAILED',
+  REFUNDED: 'REFUNDED',
+};
 
 const MOCK_PAYMENTS = [
   {
@@ -87,10 +94,9 @@ const MOCK_PAYMENTS = [
     storeName: '山西文旅太原旗舰门店',
     storeId: 'store-001',
     amount: 3860,
-    method: 'OFFLINE_TRANSFER',
-    voucherUrl: '',
-    transactionNo: 'BANK202606030001',
-    status: 'PENDING_CONFIRM',
+    method: 'UNIONPAY',
+    transactionNo: 'UP202606030001',
+    status: 'WAIT_PAY',
     submittedAt: '2026-06-03 09:18:00',
   },
   {
@@ -101,12 +107,11 @@ const MOCK_PAYMENTS = [
     storeName: '平遥古城文创店',
     storeId: 'store-002',
     amount: 1280,
-    method: 'ONLINE_WECHAT',
-    transactionNo: 'WX202606020006',
-    status: 'CONFIRMED',
+    method: 'UNIONPAY',
+    transactionNo: 'UP202606020006',
+    status: 'PAID',
     submittedAt: '2026-06-02 15:42:00',
     confirmedAt: '2026-06-02 16:08:00',
-    confirmedBy: '平台财务',
   },
   {
     id: 'admin-pay-003',
@@ -116,10 +121,9 @@ const MOCK_PAYMENTS = [
     storeName: '云冈石窟游客中心店',
     storeId: 'store-003',
     amount: 760,
-    method: 'ONLINE_ALIPAY',
-    transactionNo: 'ALI202606010003',
-    status: 'REJECTED',
-    rejectReason: '付款流水号与订单金额不一致',
+    method: 'BANK_CREDIT',
+    transactionNo: 'BC202606010003',
+    status: 'PAID',
     submittedAt: '2026-06-01 11:20:00',
     confirmedAt: '2026-06-01 14:10:00',
   },
@@ -133,9 +137,9 @@ function normalizePayment(row: any) {
     orderId: row.orderId || row.storeOrderId,
     storeName: row.storeName || row.storeId || '-',
     amount: row.amount ?? row.paymentAmount ?? row.actualAmount ?? 0,
-    method: PAYMENT_METHOD_MAP[row.method || row.paymentMethod] || row.method || row.paymentMethod || 'OFFLINE_TRANSFER',
-    transactionNo: row.transactionNo || row.thirdTradeNo,
-    status: row.status || 'PENDING_CONFIRM',
+    method: PAYMENT_METHOD_MAP[row.method || row.paymentMethod] || row.method || row.paymentMethod || 'UNIONPAY',
+    transactionNo: row.transactionNo || row.channelTradeNo || row.thirdTradeNo,
+    status: PAYMENT_STATUS_MAP[row.status ?? row.paymentStatus] || 'WAIT_PAY',
     submittedAt: row.submittedAt || row.createTime,
     confirmedAt: row.confirmedAt || row.paidTime,
     confirmedBy: row.confirmedBy || row.confirmBy,
@@ -172,9 +176,13 @@ export async function listPaymentsApi(params: any) {
   const search = params?.searchInfo || {};
   const status = search.status;
   const flat = flattenSearchParams(params, 'tradeNo');
+  if (status) {
+    const reverseStatus: Record<string, number> = { WAIT_PAY: 0, PAID: 1, FAILED: 2, REFUNDED: 3 };
+    flat.paymentStatus = reverseStatus[status];
+  }
+  if (search.method) flat.paymentMethod = search.method;
   delete flat.status;
   delete flat.method;
-  delete flat.tradeNo;
   let res: any;
   try {
     res = await defHttp.get({ url: Api.ListPayments, params: flat });
@@ -195,9 +203,6 @@ export async function listPaymentsApi(params: any) {
     return matchedKeyword && matchedMethod && matchedStatus;
   });
   return { ...page, records, total: records.length };
-}
-export function confirmPaymentApi(id: string, actualAmount = 0) {
-  return defHttp.put({ url: Api.ConfirmPayment, data: { paymentId: id, actualAmount } });
 }
 export function rejectPaymentApi(id: string, reason: string) {
   void id;

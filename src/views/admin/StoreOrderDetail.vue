@@ -105,14 +105,14 @@ const logisticsSteps = computed<LogisticsStep[]>(() => {
 
 function logisticsDotClass(state: LogisticsStepState) {
   if (state === 'cancelled') return 'bg-red-50 text-red-500 border-red-100';
-  if (state === 'done') return 'bg-[#1A2C54] text-white border-[#1A2C54]';
-  if (state === 'current') return 'bg-[#EFF6FF] text-[#1A2C54] border-[#b8c9e6]';
+  if (state === 'done') return 'bg-primary text-white border-primary';
+  if (state === 'current') return 'bg-primary/5 text-primary border-[#b8c9e6]';
   return 'bg-white text-muted-foreground border-[#d9e0e8]';
 }
 
 function logisticsTextClass(state: LogisticsStepState) {
   if (state === 'cancelled') return 'text-red-500';
-  if (state === 'done' || state === 'current') return 'text-[#1A2C54]';
+  if (state === 'done' || state === 'current') return 'text-primary';
   return 'text-muted-foreground';
 }
 
@@ -164,7 +164,7 @@ watch(orderId, loadOrder);
     </template>
 
     <div v-if="loading" class="flex items-center justify-center py-32">
-      <div class="h-6 w-6 animate-spin rounded-full border-2 border-[#1A2C54] border-t-transparent" />
+      <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       <span class="ml-3 text-sm text-muted-foreground">加载订单信息...</span>
     </div>
 
@@ -175,19 +175,19 @@ watch(orderId, loadOrder);
     <div v-else class="pt-4 pb-16">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
-          <div class="bg-white rounded-[16px] overflow-hidden" style="box-shadow: 0 8px 32px rgba(26, 44, 84, 0.05);">
-            <div class="h-5 bg-[#1A2C54] rounded-t-[16px]" />
+          <div class="bg-white rounded-[16px] overflow-hidden" style="box-shadow: 0 8px 32px hsl(var(--primary) / 0.05);">
+            <div class="h-5 bg-primary rounded-t-[16px]" />
             <div class="p-8 space-y-8">
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <MapPin class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <MapPin class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">收货信息</h4>
+                  <h4 class="text-lg font-semibold text-primary">收货信息</h4>
                 </div>
                 <div class="rounded-xl border border-[#edf1f5] bg-[#fafbfc] p-5 text-sm">
                   <template v-if="address">
-                    <div class="text-base font-medium text-[#1A2C54]">
+                    <div class="text-base font-medium text-primary">
                       {{ address.province }}{{ address.city }} {{ address.address }}
                     </div>
                     <div class="text-muted-foreground mt-2">
@@ -201,10 +201,10 @@ watch(orderId, loadOrder);
 
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <Package class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <Package class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">商品明细</h4>
+                  <h4 class="text-lg font-semibold text-primary">商品明细</h4>
                 </div>
                 <div class="rounded-xl border border-[#edf1f5] overflow-hidden">
                   <div class="overflow-x-auto">
@@ -229,7 +229,7 @@ watch(orderId, loadOrder);
                           <td class="px-4 py-3 text-right">{{ formatCurrency(it.actualPrice) }}</td>
                           <td class="px-4 py-3 text-right">{{ it.quantity ?? it.qty ?? 0 }} {{ it.unit }}</td>
                           <!-- <td class="px-4 py-3 text-right">{{ it.receivedQty ?? 0 }} {{ it.unit }}</td> -->
-                          <td class="px-4 py-3 text-right font-semibold text-[#1A2C54]">{{ formatCurrency(it.subtotal) }}</td>
+                          <td class="px-4 py-3 text-right font-semibold text-primary">{{ formatCurrency(it.subtotal) }}</td>
                         </tr>
                         <tr v-if="!order.items?.length">
                           <td colspan="6" class="px-4 py-10 text-center text-muted-foreground">暂无商品明细</td>
@@ -243,7 +243,7 @@ watch(orderId, loadOrder);
                     </div>
                     <div class="flex justify-end items-baseline gap-2">
                       <span class="text-sm text-muted-foreground">订单合计</span>
-                      <span class="text-2xl font-bold text-[#1A2C54]">{{ formatCurrency(order.totalAmount) }}</span>
+                      <span class="text-2xl font-bold text-primary">{{ formatCurrency(order.totalAmount) }}</span>
                     </div>
                   </div>
                 </div>
@@ -251,10 +251,10 @@ watch(orderId, loadOrder);
 
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <Truck class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <Truck class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">物流信息</h4>
+                  <h4 class="text-lg font-semibold text-primary">物流信息</h4>
                 </div>
                 <div class="rounded-xl border border-[#edf1f5] bg-[#fafbfc] p-5">
                   <div class="flex items-start justify-between gap-4 pb-5 mb-5 border-b border-[#e8edf3]">
@@ -266,7 +266,7 @@ watch(orderId, loadOrder);
                     </div>
                     <div class="text-right text-sm min-w-0">
                       <div class="text-xs text-muted-foreground mb-1">订单号</div>
-                      <div class="font-mono text-[#1A2C54] break-all">{{ order.orderNo }}</div>
+                      <div class="font-mono text-primary break-all">{{ order.orderNo }}</div>
                     </div>
                   </div>
 
@@ -308,7 +308,7 @@ watch(orderId, loadOrder);
         </div>
 
         <div class="space-y-5 lg:sticky lg:top-20 h-fit">
-          <div class="bg-[#1A2C54] text-white rounded-2xl p-6 overflow-hidden relative">
+          <div class="bg-primary text-white rounded-2xl p-6 overflow-hidden relative">
             <div class="relative z-10">
               <div class="text-sm text-white/70">订单金额</div>
               <div class="text-3xl font-bold mt-1 tabular-nums">{{ formatCurrency(order.totalAmount) }}</div>
@@ -330,7 +330,7 @@ watch(orderId, loadOrder);
           </div>
 
           <div class="bg-white border border-[#edf1f5] rounded-2xl p-5">
-            <h4 class="font-bold text-[#1A2C54] mb-4 flex items-center gap-2">
+            <h4 class="font-bold text-primary mb-4 flex items-center gap-2">
               <CreditCard class="w-4 h-4" />
               付款信息
             </h4>

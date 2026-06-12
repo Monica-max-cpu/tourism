@@ -3,15 +3,14 @@
  * 门店 - 购物车
  * update-begin--author:claude---date:2026-05-24---for:【B2B-阶段4】购物车结算
  * - 来自 Pinia + localStorage 持久化
- * - 勾选提交 跳转 OrderDetail（待支付）
+ * - 勾选提交 跳转 OrderDetail
  * update-end--author:claude---date:2026-05-24---for:【B2B-阶段4】购物车结算
  */
-import { ref, computed, onMounted, reactive } from 'vue';
+import { ref, computed, onMounted, reactive, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-vue-next';
 import { Button, Input, Label, Badge } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
-import { BasicModal, useModal } from '/@/components/BasicModal';
 import { useCartStore } from '/@/stores/modules/cart';
 import { useUserStore } from '/@/stores/modules/user';
 import { createStoreOrderApi } from '/@/api/store/order';
@@ -41,17 +40,21 @@ const deliveryAddress = reactive({
 });
 const submitting = ref(false);
 const remark = ref('');
-const checkout = useModal();
 
 onMounted(async () => {
-  if (!storeId.value) return;
-  const profile = await getStoreProfileApi(storeId.value);
-  if (profile) {
-    deliveryAddress.recipientName = profile.receiver || profile.contactPerson || '';
-    deliveryAddress.recipientPhone = profile.receiverPhone || profile.contactPhone || '';
-    deliveryAddress.address = profile.receiveAddress || profile.address || '';
-  }
+  await loadCheckoutContext();
 });
+
+watch(
+  () => storeId.value,
+  async (currentStoreId, previousStoreId) => {
+    if (!currentStoreId || currentStoreId === previousStoreId) return;
+    if (cartStore.storeId !== currentStoreId) {
+      cartStore.switchStore(currentStoreId);
+    }
+    await loadCheckoutContext();
+  },
+);
 
 function inc(catalogId: string) {
   const it = cartStore.getItems.find((x) => x.catalogId === catalogId);
@@ -73,6 +76,15 @@ const canCheckout = computed(
     && !!deliveryAddress.address,
 );
 
+async function loadCheckoutContext() {
+  const currentStoreId = storeId.value;
+  const profile = currentStoreId ? await getStoreProfileApi(currentStoreId) : null;
+  if (!profile) return;
+  deliveryAddress.recipientName = profile.receiver || profile.contactPerson || '';
+  deliveryAddress.recipientPhone = profile.receiverPhone || profile.contactPhone || '';
+  deliveryAddress.address = profile.receiveAddress || profile.address || '';
+}
+
 async function confirmCheckout() {
   if (!canCheckout.value) return;
   submitting.value = true;
@@ -89,7 +101,6 @@ async function confirmCheckout() {
     const res: any = await createStoreOrderApi(storeId.value ? { ...payload, storeId: storeId.value } : payload);
     // 移除已下单商品
     cartStore.removeBatch(items.map((x) => x.catalogId));
-    checkout.close();
     router.push(ROUTE_PATHS.STORE_ORDER_DETAIL.replace(':id', res.id));
   } finally {
     submitting.value = false;
@@ -98,11 +109,7 @@ async function confirmCheckout() {
 </script>
 
 <template>
-  <PageWrapper title="购物车" subtitle="勾选后可一键提交订单（提交后将进入待支付）">
-    <template #extra>
-      <Badge variant="secondary">共 {{ cartStore.getCount }} 件商品</Badge>
-    </template>
-
+  <PageWrapper title="购物车" subtitle="提交订单后进入订单详情页完成支付">
     <div v-if="cartStore.getItems.length === 0" class="bg-card border border-border rounded-lg py-20 text-center text-muted-foreground">
       <ShoppingBag class="w-10 h-10 mx-auto mb-3 opacity-30" />
       购物车空空如也
@@ -113,7 +120,7 @@ async function confirmCheckout() {
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4">
       <!-- 左：列表 -->
-      <div class="bg-card border border-border rounded-lg">
+      <div class="bg-card border border-border rounded-lg relative pb-14">
         <div class="px-4 py-3 border-b border-border flex items-center gap-3">
           <input type="checkbox" :checked="cartStore.isAllSelected" @change="cartStore.toggleSelectAll()" class="w-4 h-4" />
           <span class="text-sm">全选</span>
@@ -164,6 +171,9 @@ async function confirmCheckout() {
             <Trash2 class="w-4 h-4 text-destructive" />
           </Button>
         </div>
+        <div class="absolute right-4 bottom-4">
+          <Badge variant="secondary">共 {{ cartStore.getCount }} 件商品</Badge>
+        </div>
       </div>
 
       <!-- 右：结算栏 -->
@@ -189,42 +199,21 @@ async function confirmCheckout() {
             <Label class="w-17">收货地址 <span class="text-destructive">*</span></Label>
             <Input v-model="deliveryAddress.address" placeholder="请输入收货地址" class="flex-1"/>
           </div>
+          <div class="flex items-start gap-2">
+            <Label class="w-17">备注</Label>
+            <textarea
+              v-model="remark"
+              rows="3"
+              placeholder="选填，特殊需求 / 配送时间..."
+              class="flex min-h-[84px] flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
+            />
+          </div>
         </div>
 
-        <Button class="w-full mt-4" :disabled="!canCheckout" @click="checkout.open()">
-          提交订单
+        <Button class="w-full mt-4" :disabled="!canCheckout || submitting" @click="confirmCheckout">
+          {{ submitting ? '提交中...' : '提交订单' }}
         </Button>
       </div>
     </div>
-
-    <BasicModal
-      v-model:open="checkout.visible.value"
-      title="确认提交订单"
-      description="提交后订单将进入「待支付」，请在支付中心上传支付凭证"
-      :confirm-loading="submitting"
-      :confirm-disabled="!canCheckout"
-      width="500px"
-      @confirm="confirmCheckout"
-    >
-      <div class="space-y-3 text-sm">
-        <div class="flex justify-between">
-          <span class="text-muted-foreground">商品件数</span>
-          <span class="tabular-nums">{{ cartStore.getSelectedItems.length }}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-muted-foreground">合计金额</span>
-          <span class="text-primary font-bold tabular-nums">{{ formatCurrency(cartStore.getSelectedAmount) }}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-muted-foreground">收货</span>
-          <span>{{ deliveryAddress.recipientName }} {{ deliveryAddress.recipientPhone }}</span>
-        </div>
-        <div class="text-muted-foreground">{{ deliveryAddress.address }}</div>
-        <div class="space-y-1.5 pt-2">
-          <Label>备注（选填）</Label>
-          <Input v-model="remark" placeholder="特殊需求 / 配送时间..." />
-        </div>
-      </div>
-    </BasicModal>
   </PageWrapper>
 </template>

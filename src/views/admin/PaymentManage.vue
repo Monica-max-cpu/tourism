@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
-import { CreditCard, FileImage, Wallet } from 'lucide-vue-next';
+import { reactive } from 'vue';
+import { CreditCard } from 'lucide-vue-next';
 import {
   Badge,
-  Button,
   Input,
   Label,
   Select,
@@ -17,7 +16,7 @@ import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable
 import { BasicModal, useModal } from '/@/components/BasicModal';
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
-import { confirmPaymentApi, listPaymentsApi } from '/@/api/admin/operations';
+import { listPaymentsApi } from '/@/api/admin/operations';
 import {
   PAYMENT_METHOD_OPTIONS,
   PAYMENT_STATUS_LABEL,
@@ -26,19 +25,19 @@ import {
   paymentMethodLabel,
 } from '/@/constants/b2b2bStatus';
 import { formatCurrency, formatDateTime } from '/@/utils/format';
-import type { PaymentMethod, PaymentRecord, PaymentStatus } from '/#/b2b-2b';
+import type { PaymentRecord, PaymentStatus } from '/#/b2b-2b';
 
 const search = reactive({ keyword: '', status: '', method: '' });
 const [registerTable, { reload }] = useTable();
 const detailModal = useModal<PaymentRecord>();
-const submitting = ref(false);
 
 async function loadData(params: any) {
   return await listPaymentsApi({ ...params, searchInfo: { ...search } });
 }
 
-function methodIcon(method: PaymentMethod) {
-  return method === 'OFFLINE_TRANSFER' ? Wallet : CreditCard;
+function methodIcon(method?: unknown) {
+  void method;
+  return CreditCard;
 }
 
 function paymentStatusLabel(status: PaymentStatus) {
@@ -56,24 +55,13 @@ const columns: BasicColumn[] = [
   { field: 'amount', title: '金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'method', title: '支付方式', width: 150, slots: { default: 'method' } },
   { field: 'status', title: '状态', width: 110, slots: { default: 'status' } },
-  { field: 'submittedAt', title: '提交时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'confirmedAt', title: '确认时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'action', title: '操作', width: 190, fixed: 'right', slots: { default: 'action' } },
+  { field: 'submittedAt', title: '创建时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'confirmedAt', title: '支付时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'action', title: '操作', width: 100, fixed: 'right', slots: { default: 'action' } },
 ];
 
 function openDetail(row: PaymentRecord) {
   detailModal.open(row);
-}
-
-async function confirm(row: PaymentRecord) {
-  submitting.value = true;
-  try {
-    await confirmPaymentApi(row.id, row.amount);
-    detailModal.close();
-    reload();
-  } finally {
-    submitting.value = false;
-  }
 }
 
 function onSearch() {
@@ -89,7 +77,7 @@ function onReset() {
 </script>
 
 <template>
-  <PageWrapper title="财务管理" subtitle="确认门店提交的付款记录，当前接口未完善时展示模拟数据">
+  <PageWrapper title="支付记录" subtitle="查看银联在线支付和授信支付状态">
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">关键词</Label>
@@ -129,7 +117,6 @@ function onReset() {
         <TableAction
           :actions="[
             { label: '查看', onClick: () => openDetail(row) },
-            { label: '确认收款', authCode: 'b2b:payment:manualConfirm', hidden: row.status !== 'PENDING_CONFIRM', onClick: () => confirm(row) },
           ]"
         />
       </template>
@@ -153,28 +140,15 @@ function onReset() {
           <div v-if="detailModal.data.value.transactionNo">
             <span class="text-muted-foreground">流水号：</span><span class="font-mono text-xs">{{ detailModal.data.value.transactionNo }}</span>
           </div>
-          <div><span class="text-muted-foreground">提交时间：</span>{{ formatDateTime(detailModal.data.value.submittedAt) }}</div>
+          <div><span class="text-muted-foreground">创建时间：</span>{{ formatDateTime(detailModal.data.value.submittedAt) }}</div>
           <div v-if="detailModal.data.value.confirmedAt">
-            <span class="text-muted-foreground">确认时间：</span>{{ formatDateTime(detailModal.data.value.confirmedAt) }}
+            <span class="text-muted-foreground">支付时间：</span>{{ formatDateTime(detailModal.data.value.confirmedAt) }}
           </div>
           <div v-if="detailModal.data.value.rejectReason" class="col-span-2 text-destructive">
             <span class="text-muted-foreground">驳回原因：</span>{{ detailModal.data.value.rejectReason }}
           </div>
         </div>
 
-        <div v-if="detailModal.data.value.voucherUrl" class="pt-3 border-t border-border">
-          <div class="flex items-center gap-2 mb-2">
-            <FileImage class="w-4 h-4 text-muted-foreground" />
-            <span class="font-medium">转账凭证</span>
-          </div>
-          <a :href="detailModal.data.value.voucherUrl" target="_blank" class="block">
-            <img :src="detailModal.data.value.voucherUrl" alt="凭证" class="max-h-72 w-full object-contain rounded border border-border bg-muted/30" loading="lazy" />
-          </a>
-        </div>
-
-        <div v-if="detailModal.data.value.status === 'PENDING_CONFIRM'" v-auth="'b2b:payment:manualConfirm'" class="flex justify-end gap-2 pt-3 border-t border-border">
-          <Button :disabled="submitting" @click="confirm(detailModal.data.value)">确认收款</Button>
-        </div>
       </div>
     </BasicModal>
   </PageWrapper>

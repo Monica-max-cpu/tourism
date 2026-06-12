@@ -38,35 +38,36 @@ export const ORDER_STATUS_OPTIONS = [
 ];
 
 export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
-  PENDING_CONFIRM: '待确认',
-  CONFIRMED: '已确认',
-  REJECTED: '已驳回',
+  WAIT_PAY: '待支付',
+  PAID: '支付成功',
+  FAILED: '支付失败',
+  REFUNDED: '已退款',
 };
 
-export const PAYMENT_STATUS_VARIANT: Record<PaymentStatus, 'warning' | 'success' | 'destructive'> = {
-  PENDING_CONFIRM: 'warning',
-  CONFIRMED: 'success',
-  REJECTED: 'destructive',
+export const PAYMENT_STATUS_VARIANT: Record<PaymentStatus, 'warning' | 'success' | 'destructive' | 'info'> = {
+  WAIT_PAY: 'warning',
+  PAID: 'success',
+  FAILED: 'destructive',
+  REFUNDED: 'info',
 };
 
 export const PAYMENT_STATUS_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'PENDING_CONFIRM', label: '待确认' },
-  { value: 'CONFIRMED', label: '已确认' },
-  { value: 'REJECTED', label: '已驳回' },
+  { value: 'WAIT_PAY', label: '待支付' },
+  { value: 'PAID', label: '支付成功' },
+  { value: 'FAILED', label: '支付失败' },
+  { value: 'REFUNDED', label: '已退款' },
 ];
 
 export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
-  OFFLINE_TRANSFER: '线下转账',
-  ONLINE_WECHAT: '微信支付',
-  ONLINE_ALIPAY: '支付宝',
+  UNIONPAY: '银联在线支付',
+  BANK_CREDIT: '授信支付',
 };
 
 export const PAYMENT_METHOD_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'OFFLINE_TRANSFER', label: '线下转账' },
-  { value: 'ONLINE_WECHAT', label: '微信支付' },
-  { value: 'ONLINE_ALIPAY', label: '支付宝' },
+  { value: 'UNIONPAY', label: '银联在线支付' },
+  { value: 'BANK_CREDIT', label: '授信支付' },
 ];
 
 export function paymentMethodLabel(method?: string) {

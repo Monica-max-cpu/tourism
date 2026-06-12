@@ -101,7 +101,7 @@ async function confirmToggle() {
     </template>
 
     <div v-if="loading" class="flex items-center justify-center py-32">
-      <div class="h-6 w-6 animate-spin rounded-full border-2 border-[#1A2C54] border-t-transparent" />
+      <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       <span class="ml-3 text-sm text-muted-foreground">加载中...</span>
     </div>
 
@@ -114,15 +114,15 @@ async function confirmToggle() {
 
         <!-- 左侧：主卡片 占 2/3 -->
         <div class="lg:col-span-2">
-          <div class="bg-white rounded-[16px] overflow-hidden" style="box-shadow: 0 8px 32px rgba(26, 44, 84, 0.05);">
+          <div class="bg-white rounded-[16px] overflow-hidden" style="box-shadow: 0 8px 32px hsl(var(--primary) / 0.05);">
             <!-- 顶部品牌装饰条 -->
-            <div class="h-5 bg-[#1A2C54] rounded-t-[16px]" />
+            <div class="h-5 bg-primary rounded-t-[16px]" />
 
             <div class="p-8 space-y-10">
 
               <!-- ===== 状态头部 ===== -->
               <div class="flex flex-wrap items-center justify-between gap-4">
-                <h2 class="text-xl font-bold text-[#1A2C54]">{{ item.supplierName }}</h2>
+                <h2 class="text-xl font-bold text-primary">{{ item.supplierName }}</h2>
                 <div class="flex items-center gap-2">
                   <Badge :variant="REVIEW_STATUS_VARIANT[normalizeReviewStatus(item)]">
                     {{ REVIEW_STATUS_LABEL[normalizeReviewStatus(item)] }}
@@ -136,10 +136,10 @@ async function confirmToggle() {
               <!-- ===== 分区1：基本信息 ===== -->
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <Building2 class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <Building2 class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">基本信息</h4>
+                  <h4 class="text-lg font-semibold text-primary">基本信息</h4>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[15px]">
                   <div><span class="text-muted-foreground">供应商名称：</span><span class="font-medium">{{ item.supplierName }}</span></div>
@@ -155,10 +155,10 @@ async function confirmToggle() {
               <!-- ===== 分区2：联系人信息 ===== -->
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <User class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <User class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">联系人信息</h4>
+                  <h4 class="text-lg font-semibold text-primary">联系人信息</h4>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[15px]">
                   <div><span class="text-muted-foreground">联系人：</span><span class="font-medium">{{ item.contactPerson }}</span></div>
@@ -170,10 +170,10 @@ async function confirmToggle() {
               <!-- ===== 分区3：地区与地址 ===== -->
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <MapPin class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <MapPin class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">地区与地址</h4>
+                  <h4 class="text-lg font-semibold text-primary">地区与地址</h4>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[15px]">
                   <div><span class="text-muted-foreground">所在地：</span><span class="font-medium">{{ item.province }} {{ item.city }}</span></div>
@@ -186,10 +186,10 @@ async function confirmToggle() {
               <!-- ===== 分区4：银行信息 ===== -->
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <Landmark class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <Landmark class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">银行信息</h4>
+                  <h4 class="text-lg font-semibold text-primary">银行信息</h4>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[15px]">
                   <div><span class="text-muted-foreground">开户行：</span><span class="font-medium">{{ item.bankName || '-' }}</span></div>
@@ -201,10 +201,10 @@ async function confirmToggle() {
               <!-- ===== 分区5：店铺信息 ===== -->
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <Store class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <Store class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">店铺信息</h4>
+                  <h4 class="text-lg font-semibold text-primary">店铺信息</h4>
                 </div>
                 <div class="grid grid-cols-1 gap-y-4 text-[15px]">
                   <div><span class="text-muted-foreground">Logo：</span><span class="font-medium">{{ item.logoId || '-' }}</span></div>
@@ -217,10 +217,10 @@ async function confirmToggle() {
               <!-- ===== 分区6：审核信息 ===== -->
               <section>
                 <div class="flex items-center gap-2.5 mb-5">
-                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-[#EFF6FF]">
-                    <ClipboardCheck class="w-3.5 h-3.5 text-[#1A2C54]" />
+                  <div class="w-6 h-6 flex items-center justify-center rounded-md bg-primary/5">
+                    <ClipboardCheck class="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h4 class="text-lg font-semibold text-[#1A2C54]">审核信息</h4>
+                  <h4 class="text-lg font-semibold text-primary">审核信息</h4>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-[15px]">
                   <div><span class="text-muted-foreground">提交时间：</span><span class="font-medium">{{ formatDateTime(item.createTime) }}</span></div>
@@ -244,7 +244,7 @@ async function confirmToggle() {
                 >驳回</button>
                 <button
                   class="inline-flex items-center gap-1.5 h-10 px-8 rounded-[20px] text-sm font-medium text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style="background: linear-gradient(135deg, #1A2C54 0%, #0f1d3a 100%); box-shadow: 0 2px 8px rgba(26, 44, 84, 0.25);"
+                  style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.82) 100%); box-shadow: 0 2px 8px hsl(var(--primary) / 0.25);"
                   :disabled="submitting"
                   @click="approve"
                 >通过审核</button>
@@ -259,7 +259,7 @@ async function confirmToggle() {
                 <button
                   v-if="isOperationDisabled(normalizeOperationStatus(item))"
                   class="inline-flex items-center gap-1.5 h-10 px-8 rounded-[20px] text-sm font-medium text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style="background: linear-gradient(135deg, #1A2C54 0%, #0f1d3a 100%); box-shadow: 0 2px 8px rgba(26, 44, 84, 0.25);"
+                  style="background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.82) 100%); box-shadow: 0 2px 8px hsl(var(--primary) / 0.25);"
                   :disabled="submitting"
                   @click="openToggle"
                 >启用</button>
@@ -270,28 +270,28 @@ async function confirmToggle() {
 
         <!-- 右侧：提示面板 -->
         <div class="space-y-5">
-          <div class="bg-[#EFF6FF]/60 border border-[#EFF6FF] rounded-2xl p-5">
-            <h4 class="font-bold text-[#1A2C54] mb-3 flex items-center gap-2">
+          <div class="bg-primary/5 border border-primary/10 rounded-2xl p-5">
+            <h4 class="font-bold text-primary mb-3 flex items-center gap-2">
               <Info class="w-4 h-4" />
               审核说明
             </h4>
             <ul class="space-y-2.5 text-sm text-foreground/70">
               <li class="flex items-start gap-2">
-                <div class="w-1.5 h-1.5 rounded-full bg-[#1A2C54]/30 mt-1.5 shrink-0" />
+                <div class="w-1.5 h-1.5 rounded-full bg-primary/30 mt-1.5 shrink-0" />
                 <span>审核通过后，供应商即可登录系统进行报价</span>
               </li>
               <li class="flex items-start gap-2">
-                <div class="w-1.5 h-1.5 rounded-full bg-[#1A2C54]/30 mt-1.5 shrink-0" />
+                <div class="w-1.5 h-1.5 rounded-full bg-primary/30 mt-1.5 shrink-0" />
                 <span>驳回需填写原因，申请方可修改后重新提交</span>
               </li>
               <li class="flex items-start gap-2">
-                <div class="w-1.5 h-1.5 rounded-full bg-[#1A2C54]/30 mt-1.5 shrink-0" />
+                <div class="w-1.5 h-1.5 rounded-full bg-primary/30 mt-1.5 shrink-0" />
                 <span>停用后供应商将无法接单，可随时重新启用</span>
               </li>
             </ul>
           </div>
 
-          <div class="bg-[#1A2C54] text-white rounded-2xl p-5 overflow-hidden relative">
+          <div class="bg-primary text-white rounded-2xl p-5 overflow-hidden relative">
             <div class="relative z-10">
               <h4 class="font-bold mb-2">需要帮助？</h4>
               <p class="text-sm text-white/70 mb-3">

@@ -11,7 +11,7 @@ const todos = [
   { label: '待审核供应商', value: 8, icon: FileCheck, accent: 'bg-amber-500/10 text-amber-600' },
   { label: '待审核门店', value: 12, icon: FileCheck, accent: 'bg-amber-500/10 text-amber-600' },
   { label: '待审核报价', value: 23, icon: FileCheck, accent: 'bg-amber-500/10 text-amber-600' },
-  { label: '待确认收款', value: 5, icon: CreditCard, accent: 'bg-blue-500/10 text-blue-600' },
+  { label: '待支付记录', value: 5, icon: CreditCard, accent: 'bg-blue-500/10 text-blue-600' },
   { label: '待集采商品', value: 7, icon: GitMerge, accent: 'bg-violet-500/10 text-violet-600' },
   { label: '异常发货单', value: 2, icon: AlertCircle, accent: 'bg-red-500/10 text-red-600' },
 ];

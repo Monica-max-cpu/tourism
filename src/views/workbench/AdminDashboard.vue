@@ -32,7 +32,7 @@ const todos = [
   { label: '待审核供应商', value: 8, icon: FileCheck, accent: 'bg-amber-500/10 text-amber-600' },
   { label: '待审核门店', value: 12, icon: FileCheck, accent: 'bg-amber-500/10 text-amber-600' },
   { label: '待审核报价', value: 23, icon: FileCheck, accent: 'bg-amber-500/10 text-amber-600' },
-  { label: '待确认收款', value: 5, icon: CreditCard, accent: 'bg-blue-500/10 text-blue-600' },
+  { label: '待支付记录', value: 5, icon: CreditCard, accent: 'bg-blue-500/10 text-blue-600' },
   { label: '待集采商品', value: 7, icon: GitMerge, accent: 'bg-violet-500/10 text-violet-600' },
   { label: '异常发货单', value: 2, icon: AlertCircle, accent: 'bg-red-500/10 text-red-600' },
 ];
@@ -118,7 +118,7 @@ const kpi = computed(() => data.value?.kpi);
      <section class="-mt-16 relative z-10 mb-6">
     <!-- <section class="-mt-16 relative z-10 mb-6" v-auth="'b2b:settlement:profitList'"> -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
-        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0s">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg" style="animation-delay:0s">
           <CardContent class="py-16 px-3">
             <div class="flex items-center justify-between">
               <div class="space-y-2">
@@ -131,7 +131,7 @@ const kpi = computed(() => data.value?.kpi);
             </div>
           </CardContent>
         </Card>
-        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.08s">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg" style="animation-delay:0.08s">
           <CardContent class="py-16 px-3">
             <div class="flex items-center justify-between">
               <div class="space-y-2">
@@ -144,7 +144,7 @@ const kpi = computed(() => data.value?.kpi);
             </div>
           </CardContent>
         </Card>
-        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.16s">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg" style="animation-delay:0.16s">
           <CardContent class="py-16 px-3">
             <div class="flex items-center justify-between">
               <div class="space-y-2">
@@ -159,7 +159,7 @@ const kpi = computed(() => data.value?.kpi);
             </div>
           </CardContent>
         </Card>
-        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.24s">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg" style="animation-delay:0.24s">
           <CardContent class="py-16 px-3">
             <div class="flex items-center justify-between">
               <div class="space-y-2">

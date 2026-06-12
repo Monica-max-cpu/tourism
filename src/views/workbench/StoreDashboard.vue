@@ -150,7 +150,7 @@ function go(to: string) { router.push(to); }
     <!-- KPI 4 卡 — 浮在 Hero 上 -->
     <section class="-mt-16 relative z-10 mb-6">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
-        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0s">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg" style="animation-delay:0s">
           <CardContent class="py-16 px-3">
             <div class="flex items-center justify-between">
               <div class="space-y-2">
@@ -163,7 +163,7 @@ function go(to: string) { router.push(to); }
             </div>
           </CardContent>
         </Card>
-        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.08s">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg" style="animation-delay:0.08s">
           <CardContent class="py-16 px-3">
             <div class="flex items-center justify-between">
               <div class="space-y-2">
@@ -178,7 +178,7 @@ function go(to: string) { router.push(to); }
             </div>
           </CardContent>
         </Card>
-        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.16s">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg" style="animation-delay:0.16s">
           <CardContent class="py-16 px-3">
             <div class="flex items-center justify-between">
               <div class="space-y-2">
@@ -191,7 +191,7 @@ function go(to: string) { router.push(to); }
             </div>
           </CardContent>
         </Card>
-        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary" style="animation-delay:0.24s">
+        <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg" style="animation-delay:0.24s">
           <CardContent class="py-16 px-3">
             <div class="flex items-center justify-between">
               <div class="space-y-2">

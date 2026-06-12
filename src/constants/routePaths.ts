@@ -32,6 +32,9 @@ export const ROUTE_PATHS = {
   ADMIN_STORE_ORDERS: '/b2b/admin/store-orders',
   ADMIN_STORE_ORDER_DETAIL: '/b2b/admin/store-orders/:id',
   ADMIN_PAYMENTS_PENDING: '/b2b/admin/payments/pending',
+  ADMIN_CREDIT_ACCOUNTS: '/b2b/admin/credit/accounts',
+  ADMIN_CREDIT_BILLS: '/b2b/admin/credit/bills',
+  ADMIN_CREDIT_SPLITS: '/b2b/admin/credit/splits',
   ADMIN_COLLECTIVE_PENDING: '/b2b/admin/collective/pending-orders',
   ADMIN_COLLECTIVE_ORDERS: '/b2b/admin/collective/orders',
   ADMIN_COLLECTIVE_DETAIL: '/b2b/admin/collective/orders/:id',
@@ -72,6 +75,7 @@ export const ROUTE_PATHS = {
   // update-begin--author:claude---date:2026-05-24---for:【B2B-阶段4】门店端路由路径
   STORE_CATALOG: '/b2b/store/procurement',
   STORE_CART: '/b2b/store/cart',
+  STORE_CREDIT: '/b2b/store/credit',
   STORE_ORDERS: '/b2b/store/orders',
   STORE_ORDER_DETAIL: '/b2b/store/orders/:id',
   STORE_PAYMENT: '/b2b/store/payments',

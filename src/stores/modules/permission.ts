@@ -11,6 +11,38 @@ import { transformObjToRoute, flatMultiLevelRoutes, addSlashToRouteComponent } f
 import { transformRouteToMenu } from '/@/router/helper/menuHelper';
 import { filter } from '/@/utils/helper/treeHelper';
 import type { AppRouteRecordRaw, Menu } from '/@/router/helper/types';
+import { adminRoutes, storeRoutes, supplierRoutes } from '/@/router/routes/business';
+
+const LOCAL_MENU_ICON_BY_NAME = new Map<string, string>();
+const LOCAL_MENU_ICON_BY_TITLE = new Map<string, string>();
+
+collectLocalMenuIcons([adminRoutes, supplierRoutes, storeRoutes]);
+
+function collectLocalMenuIcons(routes: any[]) {
+  routes.forEach((route) => {
+    if (!route) return;
+    const title = String(route.meta?.title || '');
+    const icon = String(route.meta?.icon || '');
+    const name = String(route.name || '');
+    if (icon) {
+      if (name) LOCAL_MENU_ICON_BY_NAME.set(name, icon);
+      if (title) LOCAL_MENU_ICON_BY_TITLE.set(title, icon);
+    }
+    if (Array.isArray(route.children) && route.children.length > 0) {
+      collectLocalMenuIcons(route.children);
+    }
+  });
+}
+
+function resolveMenuIcon(item: any) {
+  const title = String(item?.meta?.title || item?.name || '');
+  const name = String(item?.name || item?.routeName || item?.componentName || '');
+  return item?.meta?.icon
+    || item?.icon
+    || LOCAL_MENU_ICON_BY_NAME.get(name)
+    || LOCAL_MENU_ICON_BY_TITLE.get(title)
+    || '';
+}
 
 /** 将后端 Menu 转为前端 MenuItem */
 function isDefaultHomeMenu(item: any) {
@@ -149,7 +181,7 @@ function normalizeBackendRoute(menus: any[]): any[] {
         meta: {
           ...(item.meta || {}),
           title: item.meta?.title || item.name || '',
-          icon: item.meta?.icon || item.icon || '',
+          icon: resolveMenuIcon(item),
         },
         component: item.component || '',
       };

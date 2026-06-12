@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { CheckCircle, Clock, CreditCard, Package, Truck } from 'lucide-vue-next';
+import { CheckCircle, Clock, CreditCard, Package } from 'lucide-vue-next';
 import {
   Badge, Button, Card, CardContent, Input, Label,
   Tabs, TabsContent, TabsList, TabsTrigger,
@@ -30,14 +30,15 @@ interface StatItem {
   icon: any;
   color: string;
   bg: string;
+  borderColor: string;
+  accentShadow: string;
 }
 
 const stats = ref<StatItem[]>([
-  { key: 'all', label: '全部订单', value: 0, icon: Package, color: 'text-primary', bg: 'bg-primary/5' },
-  { key: '0', label: '待支付', value: 0, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
-  { key: '3', label: '发货中', value: 0, icon: Truck, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-  { key: '5', label: '已完成', value: 0, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-  { key: 'amount', label: '订单总金额', value: formatCurrency(0), icon: CreditCard, color: 'text-primary', bg: 'bg-primary/5' },
+  { key: 'all', label: '全部订单', value: 0, icon: Package, color: 'text-primary', bg: 'bg-primary/5', borderColor: 'hsl(var(--primary))', accentShadow: 'inset 1px 0 0 rgb(33 79 182 / 0.18)' },
+  { key: '0', label: '待支付', value: 0, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50', borderColor: '#f59e0b', accentShadow: 'inset 1px 0 0 rgb(245 158 11 / 0.18)' },
+  { key: '5', label: '已完成', value: 0, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50', borderColor: '#10b981', accentShadow: 'inset 1px 0 0 rgb(16 185 129 / 0.18)' },
+  { key: 'amount', label: '订单总金额', value: formatCurrency(0), icon: CreditCard, color: 'text-primary', bg: 'bg-primary/5', borderColor: 'hsl(var(--primary))', accentShadow: 'inset 1px 0 0 rgb(33 79 182 / 0.18)' },
 ]);
 
 async function loadStats() {
@@ -48,11 +49,10 @@ async function loadStats() {
   const totalAmount = records.reduce((sum, row) => sum + Number(row.totalAmount || 0), 0);
 
   stats.value = [
-    { key: 'all', label: '全部订单', value: total, icon: Package, color: 'text-primary', bg: 'bg-primary/5' },
-    { key: '0', label: '待支付', value: countByStatus(0), icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
-    { key: '3', label: '发货中', value: countByStatus(3), icon: Truck, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-    { key: '5', label: '已完成', value: countByStatus(5), icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    { key: 'amount', label: '订单总金额', value: formatCurrency(totalAmount), icon: CreditCard, color: 'text-primary', bg: 'bg-primary/5' },
+    { key: 'all', label: '全部订单', value: total, icon: Package, color: 'text-primary', bg: 'bg-primary/5', borderColor: 'hsl(var(--primary))', accentShadow: 'inset 1px 0 0 rgb(33 79 182 / 0.18)' },
+    { key: '0', label: '待支付', value: countByStatus(0), icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50', borderColor: '#f59e0b', accentShadow: 'inset 1px 0 0 rgb(245 158 11 / 0.18)' },
+    { key: '5', label: '已完成', value: countByStatus(5), icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50', borderColor: '#10b981', accentShadow: 'inset 1px 0 0 rgb(16 185 129 / 0.18)' },
+    { key: 'amount', label: '订单总金额', value: formatCurrency(totalAmount), icon: CreditCard, color: 'text-primary', bg: 'bg-primary/5', borderColor: 'hsl(var(--primary))', accentShadow: 'inset 1px 0 0 rgb(33 79 182 / 0.18)' },
   ];
 }
 
@@ -150,19 +150,14 @@ function onReset() {
       </Button>
     </template>
 
-    <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+    <section class="mb-6 grid grid-cols-2 gap-6 xl:grid-cols-4">
       <Card
         v-for="s in stats"
         :key="s.key"
-        :class="[
-          'overflow-hidden border-l-4 transition-shadow hover:shadow-md',
-          s.key === '0' ? 'border-l-amber-500'
-            : s.key === '3' ? 'border-l-indigo-500'
-              : s.key === '5' ? 'border-l-emerald-500'
-                : 'border-l-primary',
-        ]"
+        class="overflow-hidden transition-shadow hover:shadow-md"
+        :style="{ borderLeftWidth: '6px', borderLeftStyle: 'solid', borderLeftColor: s.borderColor, boxShadow: s.accentShadow }"
       >
-        <CardContent class="p-4">
+        <CardContent class="p-5 md:p-6">
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
               <p class="text-xs text-muted-foreground">{{ s.label }}</p>

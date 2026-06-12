@@ -1,23 +1,24 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Badge, Input, Label } from '/@/components/ui';
+import { Badge, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';
 import { BasicTable, useTable, type BasicColumn } from '/@/components/BasicTable';
 import { TableAction } from '/@/components/TableAction';
 import { SearchBar } from '/@/components/SearchBar';
 import { listSupplierOrdersApi, confirmSupplierOrderApi } from '/@/api/supplier/order';
-import { SUPPLIER_ORDER_STATUS_LABEL, SUPPLIER_ORDER_STATUS_VARIANT } from '/@/constants/supplierStatus';
+import { SUPPLIER_ORDER_STATUS_LABEL, SUPPLIER_ORDER_STATUS_OPTIONS, SUPPLIER_ORDER_STATUS_VARIANT } from '/@/constants/supplierStatus';
 import { formatCurrency, formatDate, formatDateTime } from '/@/utils/format';
 
 const router = useRouter();
-const search = reactive({ collectiveNo: '' });
+const search = reactive({ collectiveNo: '', status: '' });
 const [registerTable, { reload }] = useTable();
 const submitting = ref(false);
 
 async function loadData(params: any) {
-  const query: any = { ...params, orderStatus: 0 };
+  const query: any = { ...params };
   if (search.collectiveNo) query.collectiveNo = search.collectiveNo;
+  if (search.status !== '') query.orderStatus = Number(search.status);
   return await listSupplierOrdersApi(query);
 }
 
@@ -28,16 +29,25 @@ const columns: BasicColumn[] = [
   { field: 'totalAmount', title: '应收金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'orderStatus', title: '状态', width: 100, slots: { default: 'status' } },
   { field: 'expectedDeliveryDate', title: '预计发货日期', width: 130, formatter: ({ cellValue }) => formatDate(cellValue) },
+  { field: 'confirmTime', title: '接单时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'createTime', title: '下达时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'remark', title: '备注', minWidth: 160, showOverflow: 'tooltip', formatter: ({ cellValue }) => cellValue || '-' },
   { field: 'action', title: '操作', width: 180, fixed: 'right', slots: { default: 'action' } },
 ];
 
+function isPendingOrder(row: any) {
+  return Number(row?.orderStatus) === 0 || row?.orderStatus === 'TRIGGERED';
+}
+
 async function confirmOrder(row: any) {
   submitting.value = true;
   try {
-    await confirmSupplierOrderApi(row.id);
-    reload();
+    const result: any = await confirmSupplierOrderApi(row.id);
+    Object.assign(row, {
+      ...(result && typeof result === 'object' ? result : {}),
+      orderStatus: result?.orderStatus ?? result?.status ?? 1,
+      confirmTime: result?.confirmTime ?? result?.updateTime ?? new Date().toISOString(),
+    });
   } finally {
     submitting.value = false;
   }
@@ -49,17 +59,28 @@ function openDetail(row: any) {
 
 function onSearch() { reload({ pageNo: 1 }); }
 function onReset() {
-  search.collectiveNo = '';
+  Object.assign(search, { collectiveNo: '', status: '' });
   reload({ pageNo: 1 });
 }
 </script>
 
 <template>
-  <PageWrapper title="待确认集采单" subtitle="后端状态 orderStatus=0 的集采单，可确认接单">
+  <PageWrapper title="待确认集采单" subtitle="默认展示全部集采单；待接单可确认，已接单及后续状态仅查看详情">
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">集采单号</Label>
         <Input v-model="search.collectiveNo" placeholder="集采单号" class="w-52" @keyup.enter="onSearch" />
+      </div>
+      <div class="flex items-center gap-2">
+        <Label class="text-xs text-muted-foreground">状态</Label>
+        <Select v-model="search.status">
+          <SelectTrigger class="w-40"><SelectValue placeholder="全部" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="o in SUPPLIER_ORDER_STATUS_OPTIONS" :key="String(o.value)" :value="String(o.value)">
+              {{ o.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </SearchBar>
 
@@ -73,7 +94,9 @@ function onReset() {
         <TableAction
           :actions="[
             { label: '详情', onClick: () => openDetail(row) },
-            { label: '确认接单', authCode: 'b2b:supplier:delivery', onClick: () => confirmOrder(row), disabled: submitting },
+            ...(isPendingOrder(row)
+              ? [{ label: '确认接单', authCode: 'b2b:supplier:delivery', onClick: () => confirmOrder(row), disabled: submitting }]
+              : []),
           ]"
         />
       </template>

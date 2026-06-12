@@ -29,6 +29,7 @@ interface SummaryItem {
 interface CollectiveDetail {
   id: string;
   collectiveNo: string;
+  orderStatus?: number;
   createTime?: string;
   procurementDetails?: ProcurementDetail[];
   summaryItems?: SummaryItem[];
@@ -50,10 +51,6 @@ const orderStatusVariant = computed(() => {
   const status = detail.value?.orderStatus;
   return COLLECTIVE_ORDER_STATUS_VARIANT?.[status as number] || 'warning';
 });
-const totalReceivableAmount = computed(() =>
-  summaryItems.value.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0),
-);
-
 function parseAddress(value: any) {
   if (!value) return null;
   if (typeof value === 'object') return value;

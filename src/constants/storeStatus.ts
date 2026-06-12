@@ -73,26 +73,15 @@ export const STORE_PAYMENT_STATUS_OPTIONS = [
 
 // ===== 支付方式 =====
 export const STORE_PAYMENT_METHOD_LABEL: Record<StorePaymentMethod, string> = {
-  OFFLINE: '线下转账',
-  ONLINE_WECHAT: '微信支付',
-  ONLINE_ALIPAY: '支付宝',
+  UNIONPAY: '银联在线支付',
+  BANK_CREDIT: '授信支付',
 };
 
 export const STORE_PAYMENT_METHOD_OPTIONS = [
   { value: '', label: '全部' },
-  { value: 'OFFLINE', label: '线下转账' },
-  { value: 'ONLINE_WECHAT', label: '微信支付' },
-  { value: 'ONLINE_ALIPAY', label: '支付宝' },
+  { value: 'UNIONPAY', label: '银联在线支付' },
+  { value: 'BANK_CREDIT', label: '授信支付' },
 ];
-
-/** 收款账户信息（线下转账时展示给门店） */
-export const PLATFORM_BANK_INFO = {
-  bankName: '中国工商银行 - 上海分行营业部',
-  accountName: '上海智采供应链有限公司',
-  accountNo: '6222 0212 0010 0286 318',
-  swiftCode: 'ICBKCNBJSHI',
-  notice: '请使用对公账户转账，转账备注请填写「订单号」，便于平台快速核验。',
-};
 
 /** 商品分类（采购目录筛选） */
 export const STORE_CATEGORY_OPTIONS = [

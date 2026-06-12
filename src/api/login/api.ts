@@ -46,15 +46,30 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
         'b2b:store:review',
         'b2b:quote:review',
         'b2b:catalog:edit',
-        'b2b:payment:pendingList',
-        'b2b:payment:manualConfirm',
+        'b2b:payment:list',
         'b2b:settlement:storeList',
         'b2b:settlement:supplierList',
         'b2b:settlement:supplierPay',
         'b2b:settlement:profitList',
         'b2b:settlement:profitSummary',
+        'b2b:credit:accountList',
+        'b2b:credit:billList',
+        'b2b:paymentSplit:list',
+        'b2b:paymentSplit:submit',
         'b2b:admin:dashboard',
         'b2b:admin:fulfillment',
+      ];
+    }
+    if (role === 'STORE') {
+      return [
+        'b2b:store:catalog',
+        'b2b:store:order',
+        'b2b:store:payment',
+        'b2b:credit:account',
+        'b2b:credit:apply',
+        'b2b:credit:statusSync',
+        'b2b:credit:billList',
+        'b2b:credit:billRepay',
       ];
     }
     return [];
@@ -142,15 +157,30 @@ export async function getUserInfoApi(): Promise<UserInfo> {
         'b2b:store:review',
         'b2b:quote:review',
         'b2b:catalog:edit',
-        'b2b:payment:pendingList',
-        'b2b:payment:manualConfirm',
+        'b2b:payment:list',
         'b2b:settlement:storeList',
         'b2b:settlement:supplierList',
         'b2b:settlement:supplierPay',
         'b2b:settlement:profitList',
         'b2b:settlement:profitSummary',
+        'b2b:credit:accountList',
+        'b2b:credit:billList',
+        'b2b:paymentSplit:list',
+        'b2b:paymentSplit:submit',
         'b2b:admin:dashboard',
         'b2b:admin:fulfillment',
+      ];
+    }
+    if (roleCode.includes('b2b_store')) {
+      return [
+        'b2b:store:catalog',
+        'b2b:store:order',
+        'b2b:store:payment',
+        'b2b:credit:account',
+        'b2b:credit:apply',
+        'b2b:credit:statusSync',
+        'b2b:credit:billList',
+        'b2b:credit:billRepay',
       ];
     }
     return [];
@@ -176,3 +206,4 @@ export async function getUserInfoApi(): Promise<UserInfo> {
     permissions: resolvePerms(),
   };
 }
+

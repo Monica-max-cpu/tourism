@@ -62,13 +62,10 @@ async function loadData(params: any) {
   if (search.keyword) query.keyword = search.keyword;
   const res: any = await listSupplierStocksApi(query);
   let stocks: SupplierStock[] = [];
-  let total = 0;
   if (Array.isArray(res)) {
     stocks = res;
-    total = res.length;
   } else {
     stocks = res?.records || [];
-    total = res?.total || 0;
   }
   const merged = await mergeProductsIntoStocks(stocks);
   return { records: merged, total: merged.length };

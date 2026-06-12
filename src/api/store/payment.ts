@@ -8,67 +8,60 @@ import type { StorePaymentRecord, SubmitPaymentParams } from '/#/b2b-store';
 
 enum Api {
   Submit = '/b2b/payment/create',
+  List = '/b2b/payment/list',
 }
 
 export function listStorePaymentsApi(params: any) {
-  const records: StorePaymentRecord[] = [
-    {
-      id: 'mock-pay-001',
-      paymentNo: 'PAY202606030001',
-      orderId: '2062019430962626561',
-      orderNo: 'SO202606030001',
-      storeId: params?.storeId || 'mock-store',
-      amount: 3860,
-      method: 'OFFLINE',
-      voucherUrl: '',
-      transactionNo: 'BANK202606030001',
-      status: 1,
-      remark: '线下转账，平台已确认',
-      submittedAt: '2026-06-03 09:18:00',
-      confirmedAt: '2026-06-03 10:05:00',
-    },
-    {
-      id: 'mock-pay-002',
-      paymentNo: 'PAY202606020006',
-      orderId: 'mock-order-002',
-      orderNo: 'SO202606020006',
-      storeId: params?.storeId || 'mock-store',
-      amount: 1280,
-      method: 'ONLINE_WECHAT',
-      transactionNo: 'WX202606020006',
-      status: 0,
-      remark: '等待平台确认',
-      submittedAt: '2026-06-02 15:42:00',
-    },
-    {
-      id: 'mock-pay-003',
-      paymentNo: 'PAY202606010003',
-      orderId: 'mock-order-003',
-      orderNo: 'SO202606010003',
-      storeId: params?.storeId || 'mock-store',
-      amount: 760,
-      method: 'ONLINE_ALIPAY',
-      transactionNo: 'ALI202606010003',
-      status: 2,
-      rejectReason: '付款流水号与订单金额不一致',
-      submittedAt: '2026-06-01 11:20:00',
-      confirmedAt: '2026-06-01 14:10:00',
-    },
-  ];
-  const keyword = String(params?.keyword || '').trim().toLowerCase();
-  const status = params?.status === '' || params?.status == null ? '' : Number(params.status);
-  const method = params?.method || '';
-  const filtered = records.filter((row) => {
-    const matchedKeyword = !keyword || [row.paymentNo, row.orderNo].some((value) => value.toLowerCase().includes(keyword));
-    const matchedStatus = status === '' || row.status === status;
-    const matchedMethod = !method || row.method === method;
-    return matchedKeyword && matchedStatus && matchedMethod;
-  });
-  return Promise.resolve({ records: filtered, total: filtered.length });
+  const query = {
+    pageNo: params?.pageNo || 1,
+    pageSize: params?.pageSize || 10,
+    storeId: params?.storeId,
+    tradeNo: params?.keyword || undefined,
+    paymentStatus: params?.status === '' || params?.status == null ? undefined : Number(params.status),
+    paymentMethod: params?.method || undefined,
+  };
+  return defHttp.get({ url: Api.List, params: query }).then(normalizePaymentPage);
 }
 export function getPaymentByOrderApi(orderNo: string) {
-  return defHttp.get({ url: `/b2b/payment/query/${orderNo}` });
+  return defHttp.get({ url: `/b2b/payment/query/${orderNo}` }).then(normalizePaymentRecord);
 }
 export function submitPaymentApi(params: SubmitPaymentParams) {
-  return defHttp.post({ url: Api.Submit, data: params });
+  return defHttp.post({
+    url: Api.Submit,
+    data: {
+      storeOrderId: params.orderId,
+      paymentMethod: params.method,
+      creditAccountId: params.creditAccountId,
+    },
+  }).then(normalizePaymentRecord);
+}
+
+function normalizePaymentRecord(input: any): StorePaymentRecord {
+  const row = input?.result || input;
+  return {
+    id: row?.id || row?.paymentId,
+    paymentNo: row?.paymentNo || row?.tradeNo || row?.paymentId || row?.id,
+    orderId: row?.orderId || row?.storeOrderId,
+    orderNo: row?.orderNo || row?.tradeNo,
+    storeId: row?.storeId,
+    amount: Number(row?.amount ?? row?.paymentAmount ?? row?.actualAmount ?? 0),
+    method: (row?.method || row?.paymentMethod || '') as StorePaymentRecord['method'],
+    transactionNo: row?.transactionNo || row?.channelTradeNo || row?.thirdTradeNo,
+    status: Number(row?.status ?? row?.paymentStatus ?? 0) as StorePaymentRecord['status'],
+    remark: row?.remark,
+    rejectReason: row?.rejectReason,
+    submittedAt: row?.submittedAt || row?.createTime || '',
+    confirmedAt: row?.confirmedAt || row?.paidTime,
+  };
+}
+
+function normalizePaymentPage(input: any): { records: StorePaymentRecord[]; total: number } {
+  const page = input?.result || input;
+  const records = Array.isArray(page?.records)
+    ? page.records.map((item: any) => normalizePaymentRecord(item))
+    : [];
+  return {
+    records,
+    total: Number(page?.total ?? records.length),
+  };
 }

@@ -107,8 +107,8 @@ export interface StoreOrder {
 }
 
 // ===== 支付管理 =====
-export type PaymentMethod = 'OFFLINE_TRANSFER' | 'ONLINE_WECHAT' | 'ONLINE_ALIPAY';
-export type PaymentStatus = 'PENDING_CONFIRM' | 'CONFIRMED' | 'REJECTED';
+export type PaymentMethod = 'UNIONPAY' | 'BANK_CREDIT';
+export type PaymentStatus = 'WAIT_PAY' | 'PAID' | 'FAILED' | 'REFUNDED';
 
 export interface PaymentRecord {
   id: string;
@@ -116,13 +116,11 @@ export interface PaymentRecord {
   orderNo: string;
   orderId: string;
   storeName: string;
-  /** 申报金额（应收） */
+  /** 应付金额 */
   amount: number;
   /** 支付方式 */
   method: PaymentMethod;
-  /** 凭证图片 URL（线下转账） */
-  voucherUrl?: string;
-  /** 第三方流水号 */
+  /** 渠道流水号 */
   transactionNo?: string;
   status: PaymentStatus;
   remark?: string;

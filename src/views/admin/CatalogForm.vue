@@ -17,11 +17,6 @@ import {
   Button,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from '/@/components/ui';
 import { Switch } from '/@/components/ui';
 import { PageWrapper } from '/@/components/PageWrapper';

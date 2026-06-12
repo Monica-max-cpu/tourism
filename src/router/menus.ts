@@ -96,8 +96,7 @@ export const supplierMenus: MenuItem[] = [
     title: '集采订单',
     icon: 'GitMerge',
     children: [
-      { name: 'SupplierOrderPending', path: ROUTE_PATHS.SUPPLIER_ORDERS_PENDING, title: '待确认' },
-      { name: 'SupplierOrderActive', path: ROUTE_PATHS.SUPPLIER_ORDERS_ACTIVE, title: '进行中' },
+      { name: 'SupplierOrderPending', path: ROUTE_PATHS.SUPPLIER_ORDERS_PENDING, title: '待确认集采单' },
     ],
   },
   { name: 'SupplierWarehouses', path: ROUTE_PATHS.SUPPLIER_WAREHOUSES, title: '仓库管理', icon: 'Warehouse' },
@@ -113,6 +112,7 @@ export const storeMenus: MenuItem[] = [
   { name: 'StoreWorkbench', path: ROUTE_PATHS.STORE_WORKBENCH, title: '门店工作台', icon: 'LayoutDashboard' },
   { name: 'StoreProcurement', path: ROUTE_PATHS.STORE_CATALOG, title: '商品采购', icon: 'ShoppingBag' },
   { name: 'StoreCart', path: ROUTE_PATHS.STORE_CART, title: '购物车', icon: 'ShoppingCart' },
+  { name: 'StoreCredit', path: ROUTE_PATHS.STORE_CREDIT, title: '授信账户', icon: 'Wallet' },
   { name: 'StoreOrders', path: ROUTE_PATHS.STORE_ORDERS, title: '我的采购订单', icon: 'ClipboardList' },
   { name: 'StorePayments', path: ROUTE_PATHS.STORE_PAYMENT, title: '我的付款记录', icon: 'CreditCard' },
   { name: 'StoreProfile', path: ROUTE_PATHS.STORE_PROFILE, title: '门店资料', icon: 'Building2' },

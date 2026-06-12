@@ -73,4 +73,49 @@ describe('permission store cache', () => {
     expect(getBackMenuAndPerms).not.toHaveBeenCalled();
     expect(permissionStore.getPermCodeList).toEqual(['b2b:admin:dashboard']);
   });
+
+  it('falls back to local route icons when backend menus omit icon fields', async () => {
+    const { useUserStoreWithOut } = require('/@/stores/modules/user');
+    const { usePermissionStoreWithOut } = require('/@/stores/modules/permission');
+
+    const userStore = useUserStoreWithOut();
+    userStore.setUserInfo({
+      id: 'u-2',
+      username: 'store',
+      realName: '门店账号',
+      email: 'store@example.com',
+      avatar: '',
+      role: 'STORE',
+      roleCode: 'b2b_store',
+      permissions: [],
+    });
+
+    const permissionStore = usePermissionStoreWithOut();
+    permissionStore.setBackMenuPermissionPayload({
+      codeList: ['b2b:credit:account'],
+      menu: [
+        {
+          path: '/b2b/store/credit',
+          name: 'StoreCredit',
+          component: 'store/CreditAccount',
+          route: 1,
+          menuType: 1,
+          meta: { title: '授信账户' },
+        },
+      ],
+    });
+
+    const routes = await permissionStore.changePermissionCode();
+    expect(routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'StoreCredit',
+          meta: expect.objectContaining({
+            title: '授信账户',
+            icon: 'Wallet',
+          }),
+        }),
+      ]),
+    );
+  });
 });

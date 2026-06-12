@@ -47,8 +47,8 @@ const columns: BasicColumn[] = [
   { field: 'amount', title: '付款金额', width: 130, align: 'right', formatter: ({ cellValue }) => formatCurrency(cellValue) },
   { field: 'method', title: '支付方式', width: 130, formatter: ({ cellValue }) => STORE_PAYMENT_METHOD_LABEL[cellValue as keyof typeof STORE_PAYMENT_METHOD_LABEL] || '-' },
   { field: 'status', title: '状态', width: 110, slots: { default: 'status' } },
-  { field: 'submittedAt', title: '提交时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
-  { field: 'confirmedAt', title: '确认时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'submittedAt', title: '创建时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
+  { field: 'confirmedAt', title: '支付时间', width: 170, formatter: ({ cellValue }) => formatDateTime(cellValue) },
   { field: 'action', title: '操作', width: 160, fixed: 'right', slots: { default: 'action' } },
 ];
 
@@ -73,7 +73,7 @@ function onReset() {
 </script>
 
 <template>
-  <PageWrapper title="我的付款记录" subtitle="展示当前门店发起的付款及平台确认状态">
+  <PageWrapper title="我的付款记录" subtitle="展示当前门店发起的银联在线支付和授信支付状态">
     <SearchBar @search="onSearch" @reset="onReset">
       <div class="flex items-center gap-2">
         <Label class="text-xs text-muted-foreground">关键词</Label>
@@ -106,14 +106,14 @@ function onReset() {
       <template #action="{ row }">
         <TableAction
           :actions="[
-            { label: '查看凭证', onClick: () => viewDetail(row) },
+            { label: '查看详情', onClick: () => viewDetail(row) },
             { label: '查看订单', onClick: () => viewOrder(row) },
           ]"
         />
       </template>
     </BasicTable>
 
-    <BasicModal v-model:open="detailModal.visible.value" title="付款凭证详情" hide-footer width="560px">
+    <BasicModal v-model:open="detailModal.visible.value" title="付款记录详情" hide-footer width="560px">
       <div v-if="detailModal.data.value" class="space-y-3 text-sm">
         <div class="flex justify-between"><span class="text-muted-foreground">付款编号</span><span class="font-mono">{{ detailModal.data.value.paymentNo }}</span></div>
         <div class="flex justify-between"><span class="text-muted-foreground">关联订单</span><span class="font-mono">{{ detailModal.data.value.orderNo }}</span></div>
@@ -125,10 +125,6 @@ function onReset() {
         </div>
         <div v-if="detailModal.data.value.transactionNo" class="flex justify-between">
           <span class="text-muted-foreground">流水号</span><span class="font-mono">{{ detailModal.data.value.transactionNo }}</span>
-        </div>
-        <div v-if="detailModal.data.value.voucherUrl">
-          <div class="text-muted-foreground mb-1.5">凭证图</div>
-          <img :src="detailModal.data.value.voucherUrl" class="w-full rounded border border-border" />
         </div>
         <div v-if="detailModal.data.value.rejectReason" class="bg-destructive/10 text-destructive rounded p-3 text-xs">
           驳回原因：{{ detailModal.data.value.rejectReason }}
